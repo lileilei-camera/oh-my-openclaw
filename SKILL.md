@@ -22,7 +22,7 @@ Oh-My-OpenClaw ports the proven patterns from oh-my-opencode into OpenClaw-nativ
 ## Installation
 
 ```bash
-openclaw plugins install @happycastle/oh-my-openclaw
+openclaw plugins install @lileilei-camera/oh-my-openclaw
 ```
 
 Skills, hooks, and tools are registered automatically. Run `openclaw omoc-setup` to inject agent configs.

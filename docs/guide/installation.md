@@ -32,7 +32,7 @@ Before installing Oh-My-OpenClaw, ensure the following are in place:
 The fastest path to a working installation:
 
 ```bash
-openclaw plugins install @happycastle/oh-my-openclaw
+openclaw plugins install @lileilei-camera/oh-my-openclaw
 ```
 
 That's it. The plugin registers skills, hooks, and tools automatically. Restart the gateway and you're done.
@@ -41,12 +41,12 @@ That's it. The plugin registers skills, hooks, and tools automatically. Restart 
 
 
 ## Plugin Installation
-Oh-My-OpenClaw ships as an npm plugin (`@happycastle/oh-my-openclaw`) with full `openclaw.plugin.json` manifest support.
+Oh-My-OpenClaw ships as an npm plugin (`@lileilei-camera/oh-my-openclaw`) with full `openclaw.plugin.json` manifest support.
 
 ### Via OpenClaw CLI (Recommended)
 
 ```bash
-openclaw plugins install @happycastle/oh-my-openclaw
+openclaw plugins install @lileilei-camera/oh-my-openclaw
 ```
 
 This installs the plugin, registers all hooks/tools/commands, and loads bundled skills automatically.

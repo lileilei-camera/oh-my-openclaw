@@ -137,7 +137,7 @@ Get running in two steps.
 **1. Install the plugin.**
 
 ```bash
-openclaw plugins install @happycastle/oh-my-openclaw
+openclaw plugins install @lileilei-camera/oh-my-openclaw
 ```
 
 **2. Start working.**
@@ -154,7 +154,7 @@ The orchestration pipeline starts immediately. Prometheus plans. Atlas dispatche
 
 ## Plugin Structure
 
-OhMyClaw ships as a single TypeScript plugin: `@happycastle/oh-my-openclaw@0.5.0`
+OhMyClaw ships as a single TypeScript plugin: `@lileilei-camera/oh-my-openclaw@0.5.0`
 
 The plugin registers:
 

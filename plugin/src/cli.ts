@@ -2,9 +2,9 @@
  * Oh-My-OpenClaw CLI Installer
  *
  * Usage:
- *   npx @happycastle/oh-my-openclaw install   — Clone repo, symlink skills, init workspace, build plugin
- *   npx @happycastle/oh-my-openclaw status    — Check installation health
- *   npx @happycastle/oh-my-openclaw init      — Initialize workspace only (notepads, plans)
+ *   npx @lileilei-camera/oh-my-openclaw install   — Clone repo, symlink skills, init workspace, build plugin
+ *   npx @lileilei-camera/oh-my-openclaw status    — Check installation health
+ *   npx @lileilei-camera/oh-my-openclaw init      — Initialize workspace only (notepads, plans)
  */
 
 import { execSync } from 'node:child_process';
@@ -247,7 +247,7 @@ function status(): void {
   } else if (existsSync(installDir)) {
     warn(`${installDir} exists but is not a git repo`);
   } else {
-    fail(`Not installed. Run: npx @happycastle/oh-my-openclaw install`);
+    fail(`Not installed. Run: npx @lileilei-camera/oh-my-openclaw install`);
     return;
   }
 
@@ -270,7 +270,7 @@ function status(): void {
     const dirs = WORKSPACE_DIRS.filter(d => existsSync(join(workspaceRoot, d)));
     ok(`Workspace: ${dirs.length}/${WORKSPACE_DIRS.length} directories`);
   } else {
-    warn('Workspace not initialized. Run: npx @happycastle/oh-my-openclaw init');
+    warn('Workspace not initialized. Run: npx @lileilei-camera/oh-my-openclaw init');
   }
 
   // Check plugin build
@@ -309,9 +309,9 @@ switch (command) {
 ${BLUE}Oh-My-OpenClaw${RESET} — Multi-agent orchestration for OpenClaw
 
 ${BLUE}Usage:${RESET}
-  npx @happycastle/oh-my-openclaw install   Clone repo, set up skills, build plugin
-  npx @happycastle/oh-my-openclaw status    Check installation health
-  npx @happycastle/oh-my-openclaw init      Initialize workspace only
+  npx @lileilei-camera/oh-my-openclaw install   Clone repo, set up skills, build plugin
+  npx @lileilei-camera/oh-my-openclaw status    Check installation health
+  npx @lileilei-camera/oh-my-openclaw init      Initialize workspace only
 
 ${BLUE}Options:${RESET}
   --dir <path>   Custom install directory (default: ~/.oh-my-openclaw)

@@ -1,6 +1,6 @@
 # Features Reference
 
-Complete reference for every feature in Oh-My-OpenClaw (`@happycastle/oh-my-openclaw@0.6.0`).
+Complete reference for every feature in Oh-My-OpenClaw (`@lileilei-camera/oh-my-openclaw@0.6.0`).
 
 This document covers agents, plugin hooks, plugin tools, commands, services, skills, workflows, the category system, and tmux integration.
 
