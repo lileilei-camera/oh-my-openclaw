@@ -20,7 +20,7 @@ Agent orchestration for [OpenClaw](https://openclaw.ai) — the patterns that ma
 For the impatient:
 
 ```bash
-openclaw plugins install @happycastle/oh-my-openclaw
+openclaw plugins install @lileilei-camera/oh-my-openclaw
 openclaw omoc-setup
 ```
 
@@ -86,7 +86,7 @@ These aren't generic "assistant" prompts. Each agent has a personality and a man
 ## Installation
 
 ```bash
-openclaw plugins install @happycastle/oh-my-openclaw
+openclaw plugins install @lileilei-camera/oh-my-openclaw
 ```
 
 One command. Skills, hooks, tools — all registered automatically.
@@ -275,7 +275,7 @@ Same DNA. Different runtime.
 
 ---
 
-## Plugin (`@happycastle/oh-my-openclaw`)
+## Plugin (`@lileilei-camera/oh-my-openclaw`)
 
 The TypeScript plugin. Enforces orchestration patterns at the code level via the OpenClaw Plugin API.
 
@@ -355,7 +355,7 @@ Requires `NPM_TOKEN` secret in GitHub repo settings.
 ### Installation
 
 ```bash
-openclaw plugins install @happycastle/oh-my-openclaw
+openclaw plugins install @lileilei-camera/oh-my-openclaw
 ```
 
 One command to install the plugin. Skills, hooks, and tools are all registered automatically.

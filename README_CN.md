@@ -21,7 +21,7 @@
 适合急性子：
 
 ```bash
-openclaw plugins install @happycastle/oh-my-openclaw
+openclaw plugins install @lileilei-camera/oh-my-openclaw
 openclaw omoc-setup
 ```
 
@@ -91,7 +91,7 @@ OmO 风格的多智能体编排，用于 OpenClaw。你的 AI 智能体获得 11
 ### 安装
 
 ```bash
-openclaw plugins install @happycastle/oh-my-openclaw
+openclaw plugins install @lileilei-camera/oh-my-openclaw
 ```
 
 一个命令。技能、钩子、工具 —— 全部自动注册。
@@ -280,7 +280,7 @@ openclaw omoc-setup
 
 ---
 
-## 插件（`@happycastle/oh-my-openclaw`）
+## 插件（`@lileilei-camera/oh-my-openclaw`）
 
 TypeScript 插件。通过 OpenClaw 插件 API 在代码级别强制执行编排模式。
 
