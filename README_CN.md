@@ -357,8 +357,11 @@ This project is a fork and adaptation of [Oh-My-OpenCode (OmO)](https://github.c
 - **原作者 / Original Author**: [@code-yeongyu](https://github.com/code-yeongyu) — 创造了原始 OmO 架构、11 智能体系统和编排模式。
   Created the original OmO architecture, 11-agent system, and orchestration patterns.
 
-- **移植与适配 / Fork & Adaptation**: [@lileilei-camera](https://github.com/lileilei-camera) — 将 OmO 从 OpenCode 移植到 OpenClaw，添加了 Plugin SDK 集成、基于类别的路由和消息渠道支持。
-  Ported OmO from OpenCode to OpenClaw, added Plugin SDK integration, category-based model routing, and messaging channel support.
+- **初始 OpenClaw 移植 / Initial OpenClaw Port**: [@happycastle114](https://github.com/happycastle114) — 创建了首个 OpenClaw 适配版本，建立了插件结构，开创了 SDK 集成工作。
+  Created the first OpenClaw adaptation, established the plugin structure, and pioneered the SDK integration.
+
+- **分支与持续开发 / Fork & Continued Development**: [@lileilei-camera](https://github.com/lileilei-camera) — 在 happycastle114 的工作基础上，完成了 Plugin SDK 迁移，优化了模型路由，添加了完整文档。
+  Built upon happycastle114's work, completed Plugin SDK migration, optimized model routing, and added comprehensive documentation.
 
 - **运行平台 / Runtime Platform**: [OpenClaw](https://openclaw.ai) — 使 AI 智能体能够在 Discord、Telegram 等消息渠道中进行编排。
   Enables AI agent orchestration across Discord, Telegram, and other messaging channels.
