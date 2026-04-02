@@ -1,54 +1,54 @@
 {
-  "_comment": "oh-my-openclaw configuration file. Change models, tool restrictions, and skill triggers per category here.",
+  "_comment": "oh-my-openclaw configuration file - 百炼模型优化配置",
   "categories": {
     "quick": {
-      "model": "claude-sonnet-4-6",
-      "description": "Simple fixes, searches, small tasks, file operations, codebase exploration, documentation lookup",
+      "model": "bailian/qwen3-coder-next",
+      "description": "简单修复、搜索、小任务、文件操作、代码库探索、文档查找",
       "agents": ["sisyphus-junior", "explore", "librarian"],
-      "alternatives": ["gpt-5.3-codex-spark", "gemini-3-flash"]
+      "alternatives": ["bailian/qwen3.5-plus", "bailian/glm-4.7"]
     },
     "deep": {
-      "model": "claude-opus-4-6-thinking",
-      "description": "Complex refactoring, analysis, gap detection, plan review. Goal-oriented autonomous problem-solving.",
+      "model": "bailian/qwen3-coder-plus",
+      "description": "复杂重构、分析、差距检测、计划审查。面向目标的自主问题解决。",
       "agents": ["hephaestus", "metis", "momus"],
-      "alternatives": ["gpt-5.3-codex", "gemini-3.1-pro"]
+      "alternatives": ["bailian/qwen3-max-2026-01-23", "bailian/MiniMax-M2.5"]
     },
     "ultrabrain": {
-      "model": "gpt-5.3-codex",
-      "description": "Deep logical reasoning, complex architecture decisions requiring extensive analysis",
+      "model": "bailian/qwen3-max-2026-01-23",
+      "description": "深度逻辑推理、复杂架构决策需要广泛分析",
       "agents": ["prometheus", "atlas", "oracle"],
-      "alternatives": ["claude-opus-4-6-thinking", "gemini-3.1-pro-high"]
+      "alternatives": ["bailian/qwen3-coder-plus", "bailian/MiniMax-M2.5"]
     },
     "visual-engineering": {
-      "model": "gemini-3.1-pro",
-      "description": "Frontend, UI/UX, design, styling, animation, visual analysis",
+      "model": "bailian/qwen3.5-plus",
+      "description": "前端、UI/UX、设计、样式、动画、视觉分析",
       "agents": ["frontend", "multimodal-looker"],
-      "alternatives": ["claude-opus-4-6-thinking", "gemini-2.5-pro"]
+      "alternatives": ["bailian/kimi-k2.5"]
     },
     "multimodal": {
-      "model": "gemini-3-flash",
-      "description": "PDF/image/video analysis. Run via Gemini CLI tmux session.",
+      "model": "bailian/qwen3.5-plus",
+      "description": "PDF/图像/视频分析。通过 Gemini CLI tmux 会话运行。",
       "agents": ["multimodal-looker"],
       "tool": "gemini-cli",
-      "alternatives": ["gemini-3.1-pro"]
+      "alternatives": ["bailian/kimi-k2.5"]
     },
     "artistry": {
-      "model": "claude-opus-4-6-thinking",
-      "description": "Highly creative/artistic tasks, novel ideas, design exploration",
-      "alternatives": ["gemini-3.1-pro"]
+      "model": "bailian/qwen3-max-2026-01-23",
+      "description": "高度创意/艺术性任务、新颖想法、设计探索",
+      "alternatives": ["bailian/qwen3-coder-plus"]
     },
     "unspecified-low": {
-      "model": "claude-sonnet-4-6",
-      "description": "Tasks that don't fit other categories, low effort required"
+      "model": "bailian/qwen3-coder-next",
+      "description": "不适合其他类别的任务，需要较少的精力"
     },
     "unspecified-high": {
-      "model": "claude-opus-4-6-thinking",
-      "description": "Tasks that don't fit other categories, high effort required"
+      "model": "bailian/qwen3-max-2026-01-23",
+      "description": "不适合其他类别的任务，需要较多的精力"
     },
     "writing": {
-      "model": "claude-sonnet-4-6",
-      "description": "Documentation, prose, technical writing",
-      "alternatives": ["gemini-3.1-pro"]
+      "model": "bailian/qwen3.5-plus",
+      "description": "文档、散文、技术写作",
+      "alternatives": ["bailian/qwen3-coder-plus"]
     }
   },
   "defaults": {
@@ -58,49 +58,49 @@
     "plans_dir": "workspace/plans"
   },
   "tmux": {
-    "_comment": "tmux session configuration. Support parallel work via multiple concurrent sessions. Add additional sessions with -2, -3 suffixes to session names.",
+    "_comment": "tmux 会话配置。支持通过多个并发会话并行工作。向会话名称添加 -2、-3 后缀以添加额外会话。",
     "socket": "/tmp/openclaw-tmux-sockets/openclaw.sock",
     "max_concurrent_sessions": 6,
     "session_templates": {
       "opencode": {
-        "description": "OmO (OpenCode) coding agent — multiple concurrent execution possible (opencode, opencode-2, ...)",
+        "description": "OmO (OpenCode) 编码代理 — 可多个并发执行 (opencode, opencode-2, ...)",
         "default_agent": "sisyphus",
         "agents": {
-          "sisyphus": { "switch": "default", "description": "Quick implementation" },
-          "hephaestus": { "switch": "Tab x1", "description": "Deep autonomous work" },
-          "prometheus": { "switch": "Tab x2", "description": "Strategic planning" }
+          "sisyphus": { "switch": "default", "description": "快速实现" },
+          "hephaestus": { "switch": "Tab x1", "description": "深度自主工作" },
+          "prometheus": { "switch": "Tab x2", "description": "战略规划" }
         },
         "startup": "export NODE_OPTIONS=\"--max-old-space-size=8192\" && cd $PROJECT_DIR && opencode",
         "ram_per_session": "2-4GB"
       },
       "gemini": {
-        "description": "Gemini CLI multimodal analysis — multiple concurrent execution possible (gemini, gemini-2, ...)",
-        "default_model": "gemini-3-flash",
+        "description": "Gemini CLI 多模态分析 — 可多个并发执行 (gemini, gemini-2, ...)",
+        "default_model": "bailian/qwen3.5-plus",
         "models": {
-          "gemini-3-flash": { "flag": "-m gemini-3-flash", "speed": "fast", "description": "Quick verification" },
-          "gemini-3.1-pro": { "flag": "-m gemini-3.1-pro", "speed": "medium", "description": "Detailed analysis / highest quality" }
+          "bailian/qwen3.5-plus": { "flag": "-m bailian/qwen3.5-plus", "speed": "fast", "description": "快速验证" },
+          "bailian/qwen3-max-2026-01-23": { "flag": "-m bailian/qwen3-max-2026-01-23", "speed": "medium", "description": "详细分析/最高质量" }
         },
         "ram_per_session": "~200MB"
       },
       "build": {
-        "description": "Build/test monitoring session only",
+        "description": "仅构建/测试监控会话",
         "startup": "cd $PROJECT_DIR && npm run dev"
       },
       "research": {
-        "description": "Research-only session (Gemini CLI or custom tools)"
+        "description": "仅研究会话 (Gemini CLI 或自定义工具)"
       }
     },
     "naming_convention": {
-      "_comment": "Session naming convention: {template}-{index} (e.g.: opencode-2, gemini-3)",
+      "_comment": "会话命名约定：{template}-{index} (例如：opencode-2, gemini-3)",
       "examples": ["opencode", "opencode-2", "opencode-auth", "gemini", "gemini-2", "build", "research"]
     }
   },
   "todo_enforcer": {
     "enabled": true,
-    "directive": "[SYSTEM DIRECTIVE: OH-MY-OPENCLAW - TODO CONTINUATION]\nYou MUST continue working on incomplete todos.\n- Do NOT stop until all tasks are marked complete\n- Do NOT ask for permission to continue\n- Mark each task complete immediately when finished\n- If blocked, document the blocker and move to next task"
+    "directive": "[SYSTEM DIRECTIVE: OH-MY-OPENCLAW - TODO CONTINUATION]\n你必须继续完成未完成的 todo。\n- 不要停止直到所有任务都标记为完成\n- 不要请求许可继续\n- 每个任务完成后立即标记为完成\n- 如果被阻塞，记录阻塞原因并继续下一个任务"
   },
   "tool_restrictions": {
-    "_comment": "Prompt-level guidance. For runtime enforcement, run: openclaw omoc-setup",
+    "_comment": "提示级别的指导。运行时执行请运行：openclaw omoc-setup",
     "oracle": { "deny": ["write", "edit", "apply_patch", "sessions_spawn"] },
     "librarian": { "deny": ["write", "edit", "apply_patch", "sessions_spawn"] },
     "explore": { "deny": ["write", "edit", "apply_patch", "sessions_spawn"] },
