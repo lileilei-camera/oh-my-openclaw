@@ -43,6 +43,17 @@ export const PROVIDER_PRESETS: Record<string, ProviderPreset> = {
     research: { primary: 'google/gemini-3-flash', fallbacks: [] },
     visual: { primary: 'google/gemini-3.1-pro', fallbacks: ['google/gemini-3-flash'] },
   },
+  bailian: {
+    planner: { primary: 'bailian/qwen3-max-2026-01-23', fallbacks: ['bailian/qwen3-coder-plus'] },
+    orchestrator: { primary: 'bailian/qwen3-coder-plus', fallbacks: ['bailian/qwen3.5-plus'] },
+    reasoning: { primary: 'bailian/qwen3-max-2026-01-23', fallbacks: ['bailian/qwen3-coder-plus'] },
+    analysis: { primary: 'bailian/qwen3.5-plus', fallbacks: ['bailian/glm-4.7'] },
+    worker: { primary: 'bailian/qwen3-coder-next', fallbacks: ['bailian/qwen3.5-plus'] },
+    'deep-worker': { primary: 'bailian/qwen3-coder-plus', fallbacks: ['bailian/qwen3-max-2026-01-23'] },
+    search: { primary: 'bailian/qwen3-coder-next', fallbacks: [] },
+    research: { primary: 'bailian/qwen3.5-plus', fallbacks: [] },
+    visual: { primary: 'bailian/qwen3.5-plus', fallbacks: ['bailian/kimi-k2.5'] },
+  },
 };
 
 export { AGENT_TIER_MAP };
@@ -51,6 +62,7 @@ export const PROVIDER_LABELS: Record<string, string> = {
   anthropic: 'Anthropic (Claude)',
   openai: 'OpenAI (GPT)',
   google: 'Google (Gemini)',
+  bailian: 'Alibaba Bailian (Qwen)',
   custom: 'Custom (enter model IDs manually)',
 };
 
