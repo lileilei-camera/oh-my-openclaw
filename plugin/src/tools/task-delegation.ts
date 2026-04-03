@@ -74,26 +74,20 @@ export function registerDelegateTool(api: OpenClawPluginApi) {
       const { model, alternatives } = getRecommendedModelForCategory(category, api);
       const agentId = params.agent_id || DEFAULT_CATEGORY_AGENTS[category];
 
-       api.logger.info(`${LOG_PREFIX} Delegating task:`, { category, model, agentId });
+      api.logger.info(`${LOG_PREFIX} Delegating task:`, { category, model, agentId });
 
       const instruction = [
         `Category "${category}" → agent "${agentId}" → model "${model}"`,
         '',
-        '⚡ NOW CALL sessions_spawn with these parameters:',
+        '⚡ NOW CALL sessions_spawn:',
         `  task: "${params.task_description}"`,
         `  mode: "run"`,
         `  agentId: "${agentId}"`,
-        `  # recommended model (do NOT pass to sessions_spawn): ${model}`,
-        alternatives?.length ? `  Recommended fallback models (informational only): ${alternatives.join(', ')}` : '',
-        params.background ? '  (background execution — results will arrive via push notification)' : '',
+        alternatives?.length ? `  # Fallback models: ${alternatives.join(', ')}` : '',
+        params.background ? '  (background execution)' : '',
         '',
-        'Do NOT set sessions_spawn model unless explicitly asked by user.',
-        'Do NOT just return this metadata. Actually call sessions_spawn NOW.',
-        '',
-        '⚠️ AFTER the subagent completes:',
-        '  1. Check the result immediately',
-        '  2. Verify against success criteria',
-        '  3. Proceed to next task — do NOT stop',
+        'Do NOT set model unless explicitly asked.',
+        'Actually call sessions_spawn NOW.',
       ].filter(Boolean).join('\n');
 
        return toolResponse(instruction);

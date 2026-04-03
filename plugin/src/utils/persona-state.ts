@@ -103,7 +103,7 @@ export async function restoreAgentsMdToDefault(workspaceDir?: string): Promise<v
   await writeFile(agentsPath, DEFAULT_AGENTS_MD, 'utf-8');
 }
 
-const DEFAULT_AGENTS_MD = `# AGENTS.md - Your Workspace
+export const DEFAULT_AGENTS_MD = `# AGENTS.md - Your Workspace
 
 This folder is home. Treat it that way.
 
