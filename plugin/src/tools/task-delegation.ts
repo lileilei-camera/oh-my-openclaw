@@ -3,8 +3,23 @@ import type { OpenClawPluginApi } from '../types.js';
 import { TOOL_PREFIX, LOG_PREFIX } from '../constants.js';
 import { isValidCategory } from '../utils/validation.js';
 import { type Category } from '../constants.js';
-import { getPluginConfig } from '../types.js';
 import { toolResponse, toolError } from '../utils/helpers.js';
+import { readFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+// dist/tools/ -> plugin root is dist/../.. = plugin/
+const PLUGIN_DIST_ROOT = join(__dirname, '..', '..');
+
+// Load agent-models.json at module load time
+let AGENT_MODELS: Record<string, { primary: string; fallbacks?: string[] }> = {};
+try {
+  const configPath = join(PLUGIN_DIST_ROOT, 'config', 'agent-models.json');
+  AGENT_MODELS = JSON.parse(readFileSync(configPath, 'utf-8')).agents;
+} catch (err) {
+  // Fallback to defaults if config file not found
+}
 
 const DEFAULT_CATEGORY_MODELS: Record<Category, string> = {
   quick: 'claude-sonnet-4-6',
@@ -41,12 +56,13 @@ const DelegateParamsSchema = Type.Object({
 
 type DelegateParams = Static<typeof DelegateParamsSchema>;
 
-function getRecommendedModelForCategory(category: Category, api: OpenClawPluginApi): { model: string; alternatives?: string[] } {
-  const config = getPluginConfig(api);
-  const override = config.model_routing?.[category];
-  if (override?.model) {
-    return { model: override.model, alternatives: override.alternatives };
+function getRecommendedModelForCategory(category: Category, agentId: string): { model: string; alternatives?: string[] } {
+  // First try agent-specific model from config/agent-models.json
+  const agentConfig = AGENT_MODELS[agentId];
+  if (agentConfig?.primary) {
+    return { model: agentConfig.primary, alternatives: agentConfig.fallbacks };
   }
+  // Fallback to category default
   return { model: DEFAULT_CATEGORY_MODELS[category], alternatives: undefined };
 }
 
@@ -71,8 +87,8 @@ export function registerDelegateTool(api: OpenClawPluginApi) {
        }
 
       const category = params.category as Category;
-      const { model, alternatives } = getRecommendedModelForCategory(category, api);
       const agentId = params.agent_id || DEFAULT_CATEGORY_AGENTS[category];
+      const { model, alternatives } = getRecommendedModelForCategory(category, agentId);
 
       api.logger.info(`${LOG_PREFIX} Delegating task:`, { category, model, agentId });
 
