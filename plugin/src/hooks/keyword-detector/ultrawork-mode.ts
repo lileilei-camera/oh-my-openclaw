@@ -4,12 +4,12 @@ export const ULTRAWORK_MESSAGE = `[ultrawork-mode]
 ULTRAWORK MODE ACTIVATED. Maximum precision engaged. ALL channels available.
 
 MANDATORY WORKFLOW:
-1. PLANNING: omoc_delegate(agent_id="omoc_prometheus") — strategic breakdown
-2. REVIEW: omoc_delegate(agent_id="omoc_momus") — plan critique before execution
-3. EXECUTION: tmux opencode session for coding, omoc_delegate for non-coding tasks
+1. PLANNING: omoc_delegate_task(agent_id="omoc_prometheus") — strategic breakdown
+2. REVIEW: omoc_delegate_task(agent_id="omoc_momus") — plan critique before execution
+3. EXECUTION: tmux opencode session for coding, omoc_delegate_task for non-coding tasks
 4. VERIFICATION: Run diagnostics, tests, build after completion
 
-AGENT DELEGATION (omoc_delegate):
+AGENT DELEGATION (omoc_delegate_task):
 - Prometheus — strategic planning
 - Oracle — architecture decisions, root cause analysis
 - Explore/Librarian — context gathering (parallel, background=true)

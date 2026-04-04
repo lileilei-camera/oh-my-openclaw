@@ -15,7 +15,7 @@ export const SEARCH_PATTERN =
 export const SEARCH_MESSAGE = `[search-mode]
 MAXIMIZE SEARCH EFFORT. Use ALL available channels IN PARALLEL:
 
-AGENT DELEGATION (omoc_delegate):
+AGENT DELEGATION (omoc_delegate_task):
 - agent_id="omoc_explore" — codebase patterns, file structures, cross-module references
 - agent_id="omoc_librarian" — external docs, OSS examples, API references
 

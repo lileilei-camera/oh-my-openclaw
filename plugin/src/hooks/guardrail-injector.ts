@@ -23,7 +23,7 @@ These rules are NON-NEGOTIABLE. Violating them is a critical failure.
 - NEVER present memory/context as if you just verified it with a tool call.
 
 ### Rule 4: Sub-agent Delegation Honesty
-- If asked to delegate to a sub-agent, you MUST actually call \`sessions_spawn\` or \`omoc_delegate\`.
+- If asked to delegate to a sub-agent, you MUST actually call \`sessions_spawn\` or \`omoc_delegate_task\`.
 - Saying "Sub-agent call completed" or "子代理调用完成" or "서브에이전트 호출 완료" without a tool call = CRITICAL VIOLATION.
 - If the spawn fails, report the failure honestly.
 </anti-hallucination-guardrails>

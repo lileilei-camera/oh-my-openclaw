@@ -16,8 +16,8 @@ export const ANALYZE_MESSAGE = `[analyze-mode]
 ANALYSIS MODE. Gather context from ALL channels before diving deep:
 
 CONTEXT GATHERING (parallel):
-- omoc_delegate(agent_id="omoc_explore") — codebase patterns, implementations
-- omoc_delegate(agent_id="omoc_librarian") — external docs, API references
+- omoc_delegate_task(agent_id="omoc_explore") — codebase patterns, implementations
+- omoc_delegate_task(agent_id="omoc_librarian") — external docs, API references
 - web-search-prime / context7 — official docs, known issues, changelogs
 - grep_app.search — how others solved similar problems in OSS
 - gemini CLI with @google — Google Search grounding for real-time info
@@ -27,7 +27,7 @@ VISUAL/MULTIMODAL ANALYSIS (if needed):
 - omoc_look_at — quick multimodal analysis of images/screenshots
 
 IF COMPLEX — delegate to specialists:
-- omoc_delegate(agent_id="omoc_oracle") — architecture, debugging, complex logic
-- omoc_delegate(category="artistry") — unconventional approaches
+- omoc_delegate_task(agent_id="omoc_oracle") — architecture, debugging, complex logic
+- omoc_delegate_task(category="artistry") — unconventional approaches
 
 SYNTHESIZE findings before proceeding.`;

@@ -1,7 +1,7 @@
 {
   "name": "@happycastle/oh-my-openclaw",
   "version": "0.21.3",
-  "description": "Oh-My-OpenClaw plugin \u2014 multi-agent orchestration, todo enforcer, ralph loop, and custom tools for OpenClaw",
+  "description": "Oh-My-OpenClaw plugin — multi-agent orchestration, todo enforcer, ralph loop, and custom tools for OpenClaw",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -50,11 +50,14 @@
   "license": "MIT",
   "author": "happycastle",
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
     "@sinclair/typebox": "^0.34.0",
+    "js-yaml": "^4.1.0",
     "json5": "^2.2.3",
     "openclaw": "^2026.4.1"
   },
   "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^25.3.0",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
