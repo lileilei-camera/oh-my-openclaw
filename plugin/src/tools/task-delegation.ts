@@ -22,15 +22,15 @@ try {
 }
 
 const DEFAULT_CATEGORY_MODELS: Record<Category, string> = {
-  quick: 'claude-sonnet-4-6',
-  deep: 'claude-opus-4-6-thinking',
-  ultrabrain: 'gpt-5.3-codex',
-  'visual-engineering': 'gemini-3.1-pro',
-  multimodal: 'gemini-3-flash',
-  artistry: 'claude-opus-4-6-thinking',
-  'unspecified-low': 'claude-sonnet-4-6',
-  'unspecified-high': 'claude-opus-4-6-thinking',
-  writing: 'claude-sonnet-4-6',
+  quick: 'bailian/qwen3-coder-plus',
+  deep: 'bailian/qwen3-coder-plus',
+  ultrabrain: 'bailian/qwen3-max-2026-01-23',
+  'visual-engineering': 'bailian/kimi-k2.5',
+  multimodal: 'bailian/kimi-k2.5',
+  artistry: 'bailian/qwen3-coder-plus',
+  'unspecified-low': 'bailian/qwen3-coder-plus',
+  'unspecified-high': 'bailian/qwen3-coder-plus',
+  writing: 'bailian/qwen3-coder-plus',
 };
 
 /** Maps each category to its best-fit sub-agent persona */
@@ -95,15 +95,21 @@ export function registerDelegateTool(api: OpenClawPluginApi) {
       const instruction = [
         `Category "${category}" → agent "${agentId}" → model "${model}"`,
         '',
-        '⚡ NOW CALL sessions_spawn:',
+        '⚡ NOW CALL sessions_spawn with these parameters:',
         `  task: "${params.task_description}"`,
         `  mode: "run"`,
         `  agentId: "${agentId}"`,
-        alternatives?.length ? `  # Fallback models: ${alternatives.join(', ')}` : '',
-        params.background ? '  (background execution)' : '',
+        `  # recommended model (do NOT pass to sessions_spawn): ${model}`,
+        alternatives?.length ? `  Recommended fallback models (informational only): ${alternatives.join(', ')}` : '',
+        params.background ? '  (background execution — results will arrive via push notification)' : '',
         '',
-        'Do NOT set model unless explicitly asked.',
-        'Actually call sessions_spawn NOW.',
+        'Do NOT set sessions_spawn model unless explicitly asked by user.',
+        'Do NOT just return this metadata. Actually call sessions_spawn NOW.',
+        '',
+        '⚠️ AFTER the subagent completes:',
+        '  1. Check the result immediately',
+        '  2. Verify against success criteria',
+        '  3. Proceed to next task — do NOT stop',
       ].filter(Boolean).join('\n');
 
        return toolResponse(instruction);

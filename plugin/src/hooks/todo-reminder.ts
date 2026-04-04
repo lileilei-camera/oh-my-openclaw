@@ -1,4 +1,4 @@
-import type { OpenClawPluginApi, PluginHookAgentEndEvent, PluginHookSessionStartEvent, PluginHookSessionEndEvent } from 'openclaw/plugin-sdk';
+import type { OpenClawPluginApi, PluginHookAgentEndEvent, PluginHookSessionStartEvent, PluginHookSessionEndEvent } from '../types.js';
 import { TOOL_PREFIX, LOG_PREFIX } from '../constants.js';
 import { getIncompleteTodos, resetStore } from '../tools/todo/store.js';
 import { getPluginConfig } from '../types.js';
@@ -76,9 +76,9 @@ export function registerTodoReminder(api: OpenClawPluginApi): void {
 }
 
 export function registerAgentEndReminder(api: OpenClawPluginApi): void {
-  api.on<AgentEndEvent, void>(
+  api.on<PluginHookAgentEndEvent, void>(
     'agent_end',
-    async (_event: AgentEndEvent): Promise<void> => {
+    async (_event: PluginHookAgentEndEvent): Promise<void> => {
       try {
         const sessionKey = (api.config.sessionKey as string) ?? (api.config.sessionId as string);
         const incomplete = getIncompleteTodos(sessionKey);
@@ -92,7 +92,7 @@ export function registerAgentEndReminder(api: OpenClawPluginApi): void {
           `⚠️ [OMOC] ${incomplete.length} incomplete todo(s):\n${summary}\n\n` +
           `Call \`${TOOL_PREFIX}todo_list\` to review and resume work.`;
 
-        if (sessionKey && api.runtime.system) {
+        if (sessionKey) {
           api.runtime.system.enqueueSystemEvent(warning, { sessionKey });
         }
 
@@ -139,7 +139,7 @@ function clearSession(sessionKey: string, api: OpenClawPluginApi, reason: string
 }
 
 export function registerSessionCleanup(api: OpenClawPluginApi): void {
-  api.on<SessionStartEvent, void>(
+  api.on<PluginHookSessionStartEvent, void>(
     'session_start',
     async (event: PluginHookSessionStartEvent): Promise<void> => {
       if (event.resumedFrom) return;
@@ -152,7 +152,7 @@ export function registerSessionCleanup(api: OpenClawPluginApi): void {
     { priority: 190 },
   );
 
-  api.on<SessionEndEvent, void>(
+  api.on<PluginHookSessionEndEvent, void>(
     'session_end',
     async (event: PluginHookSessionEndEvent): Promise<void> => {
       const sessionKey = (api.config.sessionId as string) ?? event.sessionId;
