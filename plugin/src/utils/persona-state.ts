@@ -26,14 +26,14 @@ export async function initPersonaState(_api: OpenClawPluginApi): Promise<void> {
   await loadFromDisk();
 }
 
-export async function setActivePersonaId(id: string | null): Promise<void> {
+export async function setActivePersonaId(id: string | null, workspaceDir?: string): Promise<void> {
   activePersonaId = id;
   loaded = true;
-  await saveToDisk();
+  await saveToDisk(workspaceDir);
 }
 
-export async function setActivePersona(id: string | null): Promise<void> {
-  await setActivePersonaId(id);
+export async function setActivePersona(id: string | null, workspaceDir?: string): Promise<void> {
+  await setActivePersonaId(id, workspaceDir);
 }
 
 export async function getActivePersona(workspaceDir?: string, agentId?: string): Promise<string | null> {
@@ -46,10 +46,10 @@ export async function getActivePersona(workspaceDir?: string, agentId?: string):
   return null;
 }
 
-export async function resetPersonaState(): Promise<void> {
+export async function resetPersonaState(workspaceDir?: string): Promise<void> {
   activePersonaId = null;
   loaded = true;
-  await saveOffState();
+  await saveOffState(workspaceDir);
 }
 
 async function loadFromDisk(workspaceDir?: string): Promise<void> {
@@ -68,19 +68,19 @@ async function loadFromDisk(workspaceDir?: string): Promise<void> {
 
 export const OFF_MARKER = '__OFF__';
 
-async function saveToDisk(): Promise<void> {
+async function saveToDisk(workspaceDir?: string): Promise<void> {
   try {
-    await mkdir(resolveStateDir(), { recursive: true });
-    await writeFile(resolveStateFilePath(), activePersonaId ?? '', 'utf-8');
+    await mkdir(resolveStateDir(workspaceDir), { recursive: true });
+    await writeFile(resolveStateFilePath(workspaceDir), activePersonaId ?? '', 'utf-8');
   } catch (error) {
     console.warn('[omoc] Failed to persist persona state to disk:', error);
   }
 }
 
-async function saveOffState(): Promise<void> {
+async function saveOffState(workspaceDir?: string): Promise<void> {
   try {
-    await mkdir(resolveStateDir(), { recursive: true });
-    await writeFile(resolveStateFilePath(), OFF_MARKER, 'utf-8');
+    await mkdir(resolveStateDir(workspaceDir), { recursive: true });
+    await writeFile(resolveStateFilePath(workspaceDir), OFF_MARKER, 'utf-8');
   } catch (error) {
     console.warn('[omoc] Failed to persist persona off-state to disk:', error);
   }
