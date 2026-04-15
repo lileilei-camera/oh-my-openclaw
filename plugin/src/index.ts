@@ -25,6 +25,7 @@ import { registerPersonaCommands } from './commands/persona-commands.js';
 import { registerTodoCommands } from './commands/todo-commands.js';
 import { registerContextInjector } from './hooks/context-injector.js';
 import { registerGuardrailInjector } from './hooks/guardrail-injector.js';
+// superpowers injector removed - not useful
 import { registerSessionSync } from './hooks/session-sync.js';
 import { registerSpawnGuard } from './hooks/spawn-guard.js';
 import { registerKeywordDetector } from './hooks/keyword-detector/hook.js';
@@ -93,6 +94,7 @@ export default async function register(api: OpenClawPluginApi) {
   registerSubagentTracker(api); hookCount++;
   registerContextInjector(api); hookCount++;
   registerGuardrailInjector(api); hookCount++;
+  // registerSuperpowersInjector(api); // removed
   registerSessionSync(api); hookCount++;
   registerSpawnGuard(api); hookCount++;
   registerKeywordDetector(api); hookCount++;
