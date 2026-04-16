@@ -16,7 +16,7 @@ const DelegateTaskParamsSchema = Type.Object({
 
 type DelegateTaskParams = Static<typeof DelegateTaskParamsSchema>;
 
-const categoryNames = [...CATEGORIES];
+const categoryNames: string[] = [...CATEGORIES];
 
 const DEFAULT_MODEL = 'claude-sonnet-4-6';
 

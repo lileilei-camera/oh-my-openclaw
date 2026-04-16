@@ -63,7 +63,7 @@ let serviceCount = 0;
 /**
  * Oh-My-OpenClaw Plugin Registration
  */
-export default async function register(api: OpenClawPluginApi) {
+export default function register(api: OpenClawPluginApi) {
   hookCount = 0;
   toolCount = 0;
   commandCount = 0;
@@ -77,16 +77,7 @@ export default async function register(api: OpenClawPluginApi) {
   // Initialize persona state
   initPersonaState(api);
 
-  // Load skills and initialize MCP manager
-  const loadedSkills = mergeSkills(
-    await discoverBuiltinSkills(),
-    await discoverUserSkills(),
-    await discoverProjectSkills(api.workspaceDir || process.cwd())
-  )
-  const skillMcpManager = new SkillMcpManager()
-  const getSessionID = () => `openclaw-${Date.now()}`
-
-  // Register hooks
+  // Register hooks (synchronous — no skill discovery dependency)
   registerStartupHook(api); hookCount++;
   registerTodoEnforcer(api); hookCount++;
   registerCommentChecker(api); hookCount++;
@@ -122,16 +113,32 @@ export default async function register(api: OpenClawPluginApi) {
   registerLspPrepareRenameTool(api); toolCount++; // lsp-prepare-rename tool
   registerLspRenameTool(api); toolCount++; // lsp-rename tool
   registerAstGrepTools(api); toolCount += 2; // ast-grep-search, ast-grep-replace tools
-  registerSkillMcpTool(api, {
-    manager: skillMcpManager,
-    getLoadedSkills: () => loadedSkills,
-    getSessionID,
-  }); toolCount++; // skill_mcp tool
-  registerSkillTool(api, {
-    mcpManager: skillMcpManager,
-    getSessionID,
-  }); toolCount++; // skill tool
   registerCallOmoAgentTool(api); toolCount++; // call-omo-agent tool
+
+  // Defer skill-dependent registrations until async discovery completes
+  ;(async () => {
+    try {
+      const loadedSkills = mergeSkills(
+        await discoverBuiltinSkills(),
+        await discoverUserSkills(),
+        await discoverProjectSkills(api.workspaceDir || process.cwd())
+      )
+      const skillMcpManager = new SkillMcpManager()
+      const getSessionID = () => `openclaw-${Date.now()}`
+      registerSkillMcpTool(api, {
+        manager: skillMcpManager,
+        getLoadedSkills: () => loadedSkills,
+        getSessionID,
+      }); toolCount++; // skill_mcp tool
+      registerSkillTool(api, {
+        mcpManager: skillMcpManager,
+        getSessionID,
+      }); toolCount++; // skill tool
+      api.logger.info(`[${PLUGIN_ID}] Skill discovery complete: ${loadedSkills.length} skills loaded`)
+    } catch (err) {
+      api.logger.error(`[${PLUGIN_ID}] Skill discovery failed:`, err)
+    }
+  })()
 
   // Register commands
   registerRalphCommands(api); commandCount += 2; // /ralph_loop, /ralph_stop
