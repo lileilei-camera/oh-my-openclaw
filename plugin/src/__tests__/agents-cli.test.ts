@@ -610,8 +610,8 @@ describe('runSetup', () => {
 });
 
 describe('model-presets', () => {
-  it('should have 3 provider presets', () => {
-    expect(getProviderNames()).toEqual(['anthropic', 'openai', 'google']);
+  it('should have 4 provider presets', () => {
+    expect(getProviderNames()).toEqual(['anthropic', 'openai', 'google', 'bailian']);
   });
 
   it('should have all 11 agents mapped to tiers', () => {

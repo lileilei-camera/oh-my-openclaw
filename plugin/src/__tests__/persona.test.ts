@@ -325,7 +325,7 @@ describe('persona-commands (/omoc)', () => {
     expect(result.text).toContain('prometheus');
     expect(result.text).toContain('oracle');
     expect(result.text).toContain('Command');
-    expect(result.text).toContain('Role');
+    expect(result.text).toContain('描述');
   });
 
   it('/omoc list marks active persona', async () => {
@@ -336,7 +336,7 @@ describe('persona-commands (/omoc)', () => {
     const handler = api.registerCommand.mock.calls[0][0].handler;
     const result = await handler({ args: 'list' });
 
-    expect(result.text).toContain('← active');
+    expect(result.text).toContain('← **active**');
     expect(result.text).toContain('Oracle');
   });
 

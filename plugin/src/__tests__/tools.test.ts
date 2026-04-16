@@ -14,6 +14,7 @@ vi.mock('fs', () => ({
 }));
 
 vi.mock('child_process', () => ({
+  exec: vi.fn(),
   execSync: vi.fn(),
   execFile: vi.fn(),
 }));
@@ -32,8 +33,8 @@ vi.mock('../utils/config.js', () => ({
 
 import { execFile } from 'child_process';
 import { promises as fs } from 'fs';
-import { registerDelegateTool } from '../tools/task-delegation.js';
-import { registerLookAtTool } from '../tools/look-at.js';
+import { registerDelegateTaskTool } from '../tools/delegate-task/index.js';
+import { registerLookAtTool } from '../tools/look-at/index.js';
 import { registerWebSearchTool } from '../tools/web-search.js';
 import { registerCheckpointTool } from '../tools/checkpoint.js';
 import { readState, writeState, ensureDir } from '../utils/state.js';
@@ -44,7 +45,7 @@ const mockedExecFile = vi.mocked(execFile) as any;
 
 // ─── Delegate Tool Tests ────────────────────────────────────────────
 
-describe('registerDelegateTool', () => {
+describe('registerDelegateTaskTool', () => {
   let mockApi: any;
 
   beforeEach(() => {
@@ -53,7 +54,7 @@ describe('registerDelegateTool', () => {
   });
 
   it("registers with name 'omoc_delegate' and optional=true", () => {
-    registerDelegateTool(mockApi);
+    registerDelegateTaskTool(mockApi);
 
     expect(mockApi.registerTool).toHaveBeenCalledOnce();
     const toolConfig = mockApi.registerTool.mock.calls[0][0];
@@ -62,7 +63,7 @@ describe('registerDelegateTool', () => {
   });
 
   it('execute returns sessions_spawn instruction for valid category', async () => {
-    registerDelegateTool(mockApi);
+    registerDelegateTaskTool(mockApi);
     const toolConfig = mockApi.registerTool.mock.calls[0][0];
 
     const result = await toolConfig.execute('test-call-id', {
@@ -80,7 +81,7 @@ describe('registerDelegateTool', () => {
     const customApi = createMockApiAny({
       config: createMockConfig({ model_routing: { quick: { model: 'custom-model-v1', alternatives: ['fallback-1'] } } }),
     });
-    registerDelegateTool(customApi);
+    registerDelegateTaskTool(customApi);
     const toolConfig = customApi.registerTool.mock.calls[0][0];
 
     const result = await toolConfig.execute('test-call-id', { task_description: 'test', category: 'quick' });
@@ -90,7 +91,7 @@ describe('registerDelegateTool', () => {
   });
 
   it('returns error for empty task_description', async () => {
-    registerDelegateTool(mockApi);
+    registerDelegateTaskTool(mockApi);
     const toolConfig = mockApi.registerTool.mock.calls[0][0];
 
     const result = await toolConfig.execute('test-call-id', {
@@ -102,7 +103,7 @@ describe('registerDelegateTool', () => {
   });
 
   it('returns error for overly long task_description', async () => {
-    registerDelegateTool(mockApi);
+    registerDelegateTaskTool(mockApi);
     const toolConfig = mockApi.registerTool.mock.calls[0][0];
 
     const result = await toolConfig.execute('test-call-id', {
@@ -124,7 +125,7 @@ describe('registerDelegateTool', () => {
         },
       }),
     });
-    registerDelegateTool(customApi);
+    registerDelegateTaskTool(customApi);
     const toolConfig = customApi.registerTool.mock.calls[0][0];
 
     const result = await toolConfig.execute('test-call-id', {
@@ -136,7 +137,7 @@ describe('registerDelegateTool', () => {
   });
 
   it('execute returns error for invalid category', async () => {
-    registerDelegateTool(mockApi);
+    registerDelegateTaskTool(mockApi);
     const toolConfig = mockApi.registerTool.mock.calls[0][0];
 
     const result = await toolConfig.execute('test-call-id', {
@@ -150,7 +151,7 @@ describe('registerDelegateTool', () => {
   });
 
   it('parameters schema has required fields', () => {
-    registerDelegateTool(mockApi);
+    registerDelegateTaskTool(mockApi);
     const toolConfig = mockApi.registerTool.mock.calls[0][0];
     const schema = toolConfig.parameters;
 
