@@ -185,6 +185,143 @@ Frontend-focused visual engineering specialist for UI/UX implementation.
 
 ---
 
+## Personas
+
+Oh-My-OpenClaw defines **11 specialized personas** — each is a complete system prompt that transforms the agent's behavior, personality, and capabilities.
+
+### What is a Persona?
+
+A persona is a pre-written system prompt that defines an agent's identity, role, operating philosophy, and tool access. When a persona is active, it **replaces** the default AGENTS.md content at runtime — no file modification required.
+
+### Persona Switching Mechanism
+
+Persona switching works through a **runtime injection** system, not disk modification:
+
+```
+/omoc <name>  →  Write persona ID to state file  →  Next message triggers injection
+```
+
+**Step-by-step:**
+
+1. **User runs `/omoc <name>`** (e.g., `/omoc atlas`)
+   - The command resolves the persona name to a canonical ID (e.g., `omoc_atlas`)
+   - Writes the persona ID to `.omoc-state/active-persona` in the workspace
+   - Returns confirmation to the user
+
+2. **User sends their next message**
+   - OpenClaw fires the `agent:bootstrap` internal hook
+   - The `persona-bootstrap` hook reads `.omoc-state/active-persona`
+   - Finds the corresponding persona prompt from `plugin/agents/<name>.md`
+   - Replaces AGENTS.md content in `context.bootstrapFiles` with the persona prompt
+
+3. **Agent responds with the persona's system prompt**
+   - The LLM sees the persona's identity, not the default AGENTS.md
+   - Behavior, tool access, and personality match the selected persona
+
+### Key Design Decisions
+
+| Aspect | Approach | Reason |
+|--------|----------|--------|
+| **Storage** | `.omoc-state/active-persona` (single file) | Simple, persistent across restarts |
+| **Injection** | `agent:bootstrap` internal hook | Replaces AGENTS.md at runtime, no disk writes |
+| **Isolation** | Per-workspace state file | Multi-agent support — each agent has its own persona |
+| **Caching** | mtime-based file cache | Avoids re-reading persona files on every message |
+
+### State File
+
+```
+~/.openclaw/workspace/.omoc-state/active-persona
+```
+
+Contains a single line with the persona ID (e.g., `omoc_atlas`) or `__OFF__` to disable.
+
+### Workspace Resolution
+
+The hook determines which workspace to check based on:
+
+1. **`OPENCLAW_PROFILE` env var** → `~/.openclaw/workspace-<profile>`
+2. **Agent ID from sessionKey** → `~/.openclaw/workspace-<agentId>` (except `main`, `default`)
+3. **Fallback** → `~/.openclaw/workspace`
+
+This enables per-agent persona isolation in multi-agent setups.
+
+### All Personas
+
+| Command | ID | Name | 描述 | Model |
+|---------|-----|------|------|-------|
+| `/omoc prometheus` | `omoc_prometheus` | Prometheus | 战略规划师 | gpt-5.3-codex |
+| `/omoc atlas` | `omoc_atlas` | Atlas | 任务编排师 | gpt-5.3-codex |
+| `/omoc sisyphus` | `omoc_sisyphus` | Sisyphus-Junior | 主要编码员 | claude-sonnet-4-6 |
+| `/omoc hephaestus` | `omoc_hephaestus` | Hephaestus | 深度编码专家 | claude-opus-4-6-thinking |
+| `/omoc oracle` | `omoc_oracle` | Oracle | 架构顾问 | gpt-5.3-codex |
+| `/omoc explore` | `omoc_explore` | Explore | 代码搜索专家 | claude-sonnet-4-6 |
+| `/omoc librarian` | `omoc_librarian` | Librarian | 文档研究专家 | claude-sonnet-4-6 |
+| `/omoc metis` | `omoc_metis` | Metis | 预规划分析师 | claude-opus-4-6-thinking |
+| `/omoc momus` | `omoc_momus` | Momus | 计划审查员 | claude-opus-4-6-thinking |
+| `/omoc looker` | `omoc_looker` | Multimodal Looker | 视觉分析专家 | gemini-3.1-pro |
+| `/omoc frontend` | `omoc_frontend` | Frontend | 前端工程师 | gemini-3.1-pro |
+
+**Default persona**: `omoc_atlas` (used when `/omoc` is run without arguments)
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `/omoc` | Activate default persona (Atlas) |
+| `/omoc <name>` | Switch to specific persona |
+| `/omoc off` | Deactivate persona, return to default AGENTS.md |
+| `/omoc list` | Show all personas with active indicator |
+
+### Internal Hook Configuration
+
+The persona-bootstrap hook requires the following config in `openclaw.json`:
+
+```json
+{
+  "hooks": {
+    "internal": {
+      "enabled": true,
+      "entries": {
+        "persona-bootstrap": { "enabled": true }
+      },
+      "load": {
+        "extraDirs": [
+          "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/hooks"
+        ]
+      }
+    }
+  }
+}
+```
+
+Run `openclaw omoc-setup` to automatically configure this.
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────┐
+│                    User Message                      │
+└──────────────────────┬──────────────────────────────┘
+                       │
+                       ▼
+┌─────────────────────────────────────────────────────┐
+│  agent:bootstrap internal hook fires                 │
+│  ┌───────────────────────────────────────────────┐  │
+│  │ 1. Read .omoc-state/active-persona            │  │
+│  │ 2. Resolve persona ID → plugin/agents/<name>.md│  │
+│  │ 3. Replace AGENTS.md in bootstrapFiles        │  │
+│  └───────────────────────────────────────────────┘  │
+└──────────────────────┬──────────────────────────────┘
+                       │
+                       ▼
+┌─────────────────────────────────────────────────────┐
+│  LLM receives persona system prompt                 │
+│  (instead of default AGENTS.md)                      │
+└─────────────────────────────────────────────────────┘
+```
+
+---
+
 ## CLI Commands
 
 ### omoc-setup
@@ -322,6 +459,34 @@ Consider removing these obvious/narrating comments to keep code clean.
 - Emits a startup log when the plugin is activated by the gateway
 - Returns `undefined` (observability-only hook)
 
+### 6. persona-bootstrap (internal hook)
+
+| Property | Value |
+|----------|-------|
+| **Hook Event** | `agent:bootstrap` |
+| **Type** | Internal hook (NOT Plugin SDK) |
+| **Location** | `plugin/hooks/persona-bootstrap/handler.ts` |
+| **Purpose** | Replace AGENTS.md with active persona content at runtime |
+| **Configurable** | Via `hooks.internal.entries.persona-bootstrap.enabled` |
+
+**Mechanism:**
+1. Reads `.omoc-state/active-persona` to get the active persona ID
+2. Resolves persona ID to a prompt file in `plugin/agents/<name>.md`
+3. Finds AGENTS.md in `context.bootstrapFiles`
+4. Replaces its content with the persona prompt
+5. Skips silently if no persona is active or state file is missing
+
+**Edge Cases:**
+| Condition | Behavior |
+|-----------|----------|
+| No state file | Skip injection (use default AGENTS.md) |
+| State file contains `__OFF__` | Skip injection |
+| Persona ID not found in registry | Skip injection |
+| Persona file missing | Skip injection |
+| AGENTS.md not in bootstrapFiles | Skip injection |
+
+**Why internal hook?** The Plugin SDK's `before_prompt_build` hook can only *append* context. The `agent:bootstrap` internal hook can *replace* bootstrap file contents, which is required for persona switching.
+
 ---
 
 ## Plugin Tools
@@ -448,7 +613,48 @@ The plugin registers 3 custom tools, all prefixed with `omoc_`.
 
 ## Commands
 
-The plugin registers 8 slash commands across three modules.
+The plugin registers 9 slash commands across four modules.
+
+### Persona Commands
+
+#### /omoc
+
+| Property | Value |
+|----------|-------|
+| **Name** | `omoc` |
+| **Description** | Activate, switch, or list personas |
+| **Arguments** | Persona name, `off`, `list`, or none |
+
+**Behavior:**
+
+| Input | Action |
+|-------|--------|
+| *(no args)* | Activate default persona (`omoc_atlas`) |
+| `off` | Deactivate current persona, return to default AGENTS.md |
+| `list` | Show all 11 personas with active indicator |
+| `<name>` | Switch to the specified persona (e.g., `atlas`, `prometheus`) |
+
+**State Management:**
+- Writes persona ID to `.omoc-state/active-persona` in the workspace
+- Uses `__OFF__` marker when persona is turned off
+- Per-workspace isolation for multi-agent support
+
+**Resolution Logic:**
+- Accepts short names (`atlas`), full IDs (`omoc_atlas`), or display names (`Atlas`)
+- Case-insensitive matching
+- Returns error with available personas if name not found
+
+**Example Output (`/omoc list`):**
+```
+OmOC Personas
+Active: Atlas
+
+| | Command | Name | 描述 | 模型 |
+|---|---------|------|------|------|
+| 🔨 | `atlas` | Atlas | 任务编排师 | gpt-5.3-codex | ← active
+| 🏛️ | `prometheus` | Prometheus | 战略规划师 | gpt-5.3-codex |
+...
+```
 
 ### Workflow Commands
 
