@@ -415,6 +415,80 @@ export interface SetupOptions {
   logger: Logger;
 }
 
+/**
+ * Path to the plugin hooks directory.
+ * Source: plugin/src/cli/setup.ts, Compiled: plugin/dist/cli/setup.js
+ * Hooks dir: plugin/hooks/
+ */
+function resolvePluginHooksPath(): string {
+  const metaDir = (import.meta as any).dirname;
+  if (typeof metaDir === 'string') {
+    // Compiled: dist/cli/setup.js → go up 2 levels → plugin/
+    return path.resolve(metaDir, '..', '..', 'hooks');
+  }
+  // Fallback: assume CWD is plugin/
+  return path.join(process.cwd(), 'hooks');
+}
+
+/**
+ * Inject internal hooks configuration into openclaw.json.
+ * Idempotent: safe to run multiple times without duplicating entries.
+ *
+ * Ensures:
+ *   - hooks.internal.enabled = true
+ *   - hooks.internal.entries["persona-bootstrap"].enabled = true
+ *   - hooks.internal.load.extraDirs contains the plugin hooks path
+ */
+export function applyInternalHooksConfig(
+  config: ConfigShape,
+  logger: Logger,
+): void {
+  const hooksDir = resolvePluginHooksPath();
+
+  // Ensure hooks.internal structure exists
+  if (!config.hooks) {
+    config.hooks = {};
+  }
+  const hooks = config.hooks as Record<string, unknown>;
+  if (!hooks.internal) {
+    hooks.internal = {};
+  }
+  const internal = hooks.internal as Record<string, unknown>;
+
+  // 1. Enable internal hooks
+  if (internal.enabled !== true) {
+    internal.enabled = true;
+    logger.info('Internal hooks enabled');
+  }
+
+  // 2. Register persona-bootstrap entry
+  if (!internal.entries || typeof internal.entries !== 'object') {
+    internal.entries = {};
+  }
+  const entries = internal.entries as Record<string, unknown>;
+  if (!entries['persona-bootstrap']) {
+    entries['persona-bootstrap'] = { enabled: true };
+    logger.info('persona-bootstrap hook entry added');
+  } else if ((entries['persona-bootstrap'] as Record<string, unknown>)?.enabled !== true) {
+    (entries['persona-bootstrap'] as Record<string, unknown>).enabled = true;
+    logger.info('persona-bootstrap hook entry enabled');
+  }
+
+  // 3. Add extraDirs if not already present
+  if (!internal.load || typeof internal.load !== 'object') {
+    internal.load = {};
+  }
+  const load = internal.load as Record<string, unknown>;
+  if (!Array.isArray(load.extraDirs)) {
+    load.extraDirs = [];
+  }
+  const extraDirs = load.extraDirs as string[];
+  if (!extraDirs.includes(hooksDir)) {
+    extraDirs.push(hooksDir);
+    logger.info(`Hooks extraDir added: ${hooksDir}`);
+  }
+}
+
 export function applyPlannerGuard(
   agentList: Array<{ id: string; tools?: { deny?: string[]; [key: string]: unknown }; [key: string]: unknown }>,
 ): void {
@@ -542,6 +616,12 @@ export function runSetup(options: SetupOptions): MergeResult {
       fs.writeFileSync(configPath, serializeConfig(config), 'utf-8');
     }
     logger.info('Webhook bridge enabled with hooks token configured');
+  }
+
+  // Apply internal hooks config for persona-bootstrap (idempotent)
+  applyInternalHooksConfig(config, logger);
+  if (!dryRun) {
+    fs.writeFileSync(configPath, serializeConfig(config), 'utf-8');
   }
 
   if (options.setupMcporter) {

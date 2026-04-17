@@ -29,8 +29,6 @@ import {
   setActivePersona,
   getActivePersona,
   resetPersonaState,
-  replaceAgentsMd,
-  restoreAgentsMdToDefault,
 } from '../utils/persona-state.js';
 import {
   resolvePersonaId,
@@ -41,7 +39,7 @@ import {
   clearPersonaCache,
 } from '../agents/persona-prompts.js';
 import { registerPersonaCommands } from '../commands/persona-commands.js';
-import { registerSessionSync } from '../hooks/session-sync.js';
+// session-sync removed — AGENTS.md no longer modified
 import { registerSpawnGuard } from '../hooks/spawn-guard.js';
 import { createMockApi } from './helpers/mock-factory.js';
 
@@ -211,45 +209,7 @@ describe('persona-prompts', () => {
   });
 });
 
-describe('AGENTS.md manager (replaceAgentsMd / restoreAgentsMdToDefault)', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('replaceAgentsMd writes persona content to AGENTS.md', async () => {
-    await replaceAgentsMd('# Persona Content');
-
-    expect(fsPromises.mkdir).toHaveBeenCalled();
-    expect(fsPromises.writeFile).toHaveBeenCalledWith(
-      expect.stringContaining('AGENTS.md'),
-      expect.stringMatching(/# AGENTS\.md - Your Workspace[\s\S]*---\n\n# Persona Content/),
-      'utf-8',
-    );
-  });
-
-  it('restoreAgentsMdToDefault writes default template to AGENTS.md', async () => {
-    await restoreAgentsMdToDefault();
-
-    expect(fsPromises.writeFile).toHaveBeenCalledWith(
-      expect.stringContaining('AGENTS.md'),
-      expect.stringContaining('# AGENTS.md - Your Workspace'),
-      'utf-8',
-    );
-  });
-
-  it('restoreAgentsMdToDefault includes essential sections', async () => {
-    await restoreAgentsMdToDefault();
-
-    const writeCall = vi.mocked(fsPromises.writeFile).mock.calls.find(
-      (c) => String(c[0]).includes('AGENTS.md'),
-    );
-    expect(writeCall).toBeDefined();
-    const content = writeCall![1] as string;
-    expect(content).toContain('## Every Session');
-    expect(content).toContain('## Memory');
-    expect(content).toContain('## Safety');
-  });
-});
+// AGENTS.md manager tests removed — AGENTS.md no longer modified in new approach
 
 describe('persona-commands (/omoc)', () => {
   beforeEach(async () => {
@@ -266,7 +226,7 @@ describe('persona-commands (/omoc)', () => {
     expect(api.registerCommand.mock.calls[0][0].acceptsArgs).toBe(true);
   });
 
-  it('/omoc (no args) activates default persona and writes AGENTS.md', async () => {
+  it('/omoc (no args) activates default persona (no AGENTS.md write)', async () => {
     const api = createMockApi();
     registerPersonaCommands(api);
 
@@ -276,15 +236,15 @@ describe('persona-commands (/omoc)', () => {
     expect(await getActivePersona()).toBe('omoc_atlas');
     expect(result.text).toContain('OmOC Mode: ON');
     expect(result.text).toContain('Atlas');
-    expect(result.text).toContain('AGENTS.md replaced');
-    expect(fsPromises.writeFile).toHaveBeenCalledWith(
-      expect.stringContaining('AGENTS.md'),
-      expect.stringContaining('Mock Persona Content'),
-      'utf-8',
+    expect(result.text).toContain('injected into system prompt');
+    // New approach: only writes state file, not AGENTS.md
+    const stateWrites = fsPromises.writeFile.mock.calls.filter(
+      (c) => String(c[0]).includes('active-persona'),
     );
+    expect(stateWrites.length).toBeGreaterThan(0);
   });
 
-  it('/omoc off deactivates persona and restores AGENTS.md to default', async () => {
+  it('/omoc off deactivates persona (no AGENTS.md write)', async () => {
     await setActivePersona('omoc_atlas');
     const api = createMockApi();
     registerPersonaCommands(api);
@@ -295,12 +255,12 @@ describe('persona-commands (/omoc)', () => {
     expect(await getActivePersona()).toBeNull();
     expect(result.text).toContain('OmOC Mode: OFF');
     expect(result.text).toContain('Atlas');
-    expect(result.text).toContain('restored to default');
-    expect(fsPromises.writeFile).toHaveBeenCalledWith(
-      expect.stringContaining('AGENTS.md'),
-      expect.stringContaining('# AGENTS.md - Your Workspace'),
-      'utf-8',
+    expect(result.text).toContain('default AGENTS.md');
+    // New approach: only writes __OFF__ to state file, not AGENTS.md
+    const offWrite = fsPromises.writeFile.mock.calls.find(
+      (c) => String(c[0]).includes('active-persona') && c[1] === '__OFF__',
     );
+    expect(offWrite).toBeDefined();
   });
 
   it('/omoc off when no persona active', async () => {
@@ -377,54 +337,7 @@ describe('persona-commands (/omoc)', () => {
   });
 });
 
-describe('session-sync (session_start)', () => {
-  let hookHandler: (event: { sessionId: string }, ctx: { agentId?: string }) => Promise<void>;
-
-  beforeEach(async () => {
-    vi.clearAllMocks();
-    clearPersonaCache();
-    await resetPersonaState();
-    vi.mocked(readFileSync).mockReturnValue('# Mock Persona Content\nYou are Atlas.');
-    vi.mocked(statSync).mockReturnValue({ mtimeMs: Date.now() } as ReturnType<typeof statSync>);
-    const api = createMockApi();
-    registerSessionSync(api);
-    hookHandler = (api.on as ReturnType<typeof vi.fn>).mock.calls[0][1];
-  });
-
-  it('does nothing when no active persona', async () => {
-    vi.mocked(fsPromises.writeFile).mockClear();
-    await hookHandler({ sessionId: 'sess-1' }, {});
-    expect(fsPromises.writeFile).not.toHaveBeenCalled();
-  });
-
-  it('syncs AGENTS.md when persona is active and file is stale', async () => {
-    await setActivePersona('omoc_atlas');
-    vi.mocked(fsPromises.writeFile).mockClear();
-    vi.mocked(readFileSync).mockImplementation((path: unknown) => {
-      if (String(path).includes('AGENTS.md')) return 'old content';
-      return '# Mock Persona Content\nYou are Atlas.';
-    });
-
-    await hookHandler({ sessionId: 'sess-1' }, {});
-    expect(fsPromises.writeFile).toHaveBeenCalled();
-    const writeCall = vi.mocked(fsPromises.writeFile).mock.calls[0];
-    expect(String(writeCall[0])).toContain('AGENTS.md');
-  });
-
-  it('skips sync when AGENTS.md already contains persona content', async () => {
-    await setActivePersona('omoc_atlas');
-    vi.mocked(readFileSync).mockImplementation((path: unknown) => {
-      if (String(path).includes('AGENTS.md')) return '# Mock Persona Content\nYou are Atlas.';
-      return '# Mock Persona Content\nYou are Atlas.';
-    });
-
-    // writeFile was called once by setActivePersona, clear it
-    vi.mocked(fsPromises.writeFile).mockClear();
-
-    await hookHandler({ sessionId: 'sess-1' }, {});
-    expect(fsPromises.writeFile).not.toHaveBeenCalled();
-  });
-});
+// session-sync tests removed — AGENTS.md no longer modified
 
 describe('spawn-guard (before_tool_call)', () => {
   let hookHandler: (

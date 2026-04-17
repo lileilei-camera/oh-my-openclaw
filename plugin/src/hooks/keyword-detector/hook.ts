@@ -1,8 +1,7 @@
 import type { OpenClawPluginApi, PluginHookBeforePromptBuildEvent, PluginHookBeforePromptBuildResult } from '../../types.js';
 import { LOG_PREFIX } from '../../constants.js';
 import { detectKeywords, WORKFLOW_PERSONA_MAP } from './detector.js';
-import { setActivePersonaId, replaceAgentsMd } from '../../utils/persona-state.js';
-import { readPersonaPrompt } from '../../agents/persona-prompts.js';
+import { setActivePersonaId } from '../../utils/persona-state.js';
 
 export function registerKeywordDetector(api: OpenClawPluginApi): void {
   api.on<PluginHookBeforePromptBuildEvent, PluginHookBeforePromptBuildResult>(
@@ -34,8 +33,6 @@ export function registerKeywordDetector(api: OpenClawPluginApi): void {
 
 function switchPersona(api: OpenClawPluginApi, personaId: string): void {
   setActivePersonaId(personaId)
-    .then(() => readPersonaPrompt(personaId))
-    .then((content) => replaceAgentsMd(content))
     .then(() => api.logger.info(`${LOG_PREFIX} Keyword detector: persona switched to ${personaId}`))
     .catch((err) => api.logger.error(`${LOG_PREFIX} Keyword detector: persona switch failed`, err));
 }

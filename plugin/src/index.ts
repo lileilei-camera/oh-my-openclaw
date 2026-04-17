@@ -25,8 +25,9 @@ import { registerPersonaCommands } from './commands/persona-commands.js';
 import { registerTodoCommands } from './commands/todo-commands.js';
 import { registerContextInjector } from './hooks/context-injector.js';
 import { registerGuardrailInjector } from './hooks/guardrail-injector.js';
+// registerPersonaBootstrap removed — replaced by agent:bootstrap internal hook
 // superpowers injector removed - not useful
-import { registerSessionSync } from './hooks/session-sync.js';
+// session-sync removed — AGENTS.md is no longer modified in new approach
 import { registerSpawnGuard } from './hooks/spawn-guard.js';
 import { registerKeywordDetector } from './hooks/keyword-detector/hook.js';
 import { registerTodoReminder, registerAgentEndReminder, registerSessionCleanup } from './hooks/todo-reminder.js';
@@ -85,8 +86,9 @@ export default function register(api: OpenClawPluginApi) {
   registerSubagentTracker(api); hookCount++;
   registerContextInjector(api); hookCount++;
   registerGuardrailInjector(api); hookCount++;
+  // persona-bootstrap removed — replaced by agent:bootstrap internal hook
   // registerSuperpowersInjector(api); // removed
-  registerSessionSync(api); hookCount++;
+  // registerSessionSync removed — AGENTS.md no longer modified
   registerSpawnGuard(api); hookCount++;
   registerKeywordDetector(api); hookCount++;
   registerTodoReminder(api); hookCount += 3; // 3 hooks

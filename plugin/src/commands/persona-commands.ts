@@ -1,6 +1,6 @@
 import type { OpenClawPluginApi } from '../types.js';
 import { LOG_PREFIX } from '../constants.js';
-import { getActivePersona, setActivePersonaId, resetPersonaState, replaceAgentsMd, restoreAgentsMdToDefault } from '../utils/persona-state.js';
+import { getActivePersona, setActivePersonaId, resetPersonaState } from '../utils/persona-state.js';
 import { resolvePersonaId, listPersonas, readPersonaPrompt, DEFAULT_PERSONA_ID } from '../agents/persona-prompts.js';
 import { homedir } from 'os';
 import { join, resolve } from 'path';
@@ -78,8 +78,6 @@ export function registerPersonaCommands(api: OpenClawPluginApi) {
       if (!args) {
         const previousId = await getActivePersona(workspaceDir);
         await setActivePersonaId(DEFAULT_PERSONA_ID, workspaceDir);
-        const content = await readPersonaPrompt(DEFAULT_PERSONA_ID);
-        await replaceAgentsMd(content, workspaceDir);
         const name = getDisplayName(DEFAULT_PERSONA_ID);
 
         const switchNote =
@@ -88,7 +86,7 @@ export function registerPersonaCommands(api: OpenClawPluginApi) {
             : '';
 
         return {
-          text: `# OmOC Mode: ON\n\nActive persona: **${name}**${switchNote}\n\nAGENTS.md replaced with persona prompt. Your next message will use this persona.\n\nUse \`/omoc list\` to see available personas, or \`/omoc <name>\` to switch.`,
+          text: `# OmOC Mode: ON\n\nActive persona: **${name}**${switchNote}\n\nPersona will be injected into system prompt at runtime. Your next message will use this persona.\n\nUse \`/omoc list\` to see available personas, or \`/omoc <name>\` to switch.`,
         };
       }
 
@@ -96,11 +94,10 @@ export function registerPersonaCommands(api: OpenClawPluginApi) {
         const wasActive = await getActivePersona(workspaceDir);
         const wasName = wasActive ? getDisplayName(wasActive) : null;
         await resetPersonaState(workspaceDir);
-        await restoreAgentsMdToDefault(workspaceDir);
         return {
           text: wasName
-            ? `# OmOC Mode: OFF\n\nPersona **${wasName}** deactivated. AGENTS.md restored to default.`
-            : '# OmOC Mode: OFF\n\nNo persona was active. AGENTS.md restored to default.',
+            ? `# OmOC Mode: OFF\n\nPersona **${wasName}** deactivated. System prompt will use default AGENTS.md on next message.`
+            : '# OmOC Mode: OFF\n\nNo persona was active.',
         };
       }
 
@@ -138,8 +135,6 @@ export function registerPersonaCommands(api: OpenClawPluginApi) {
 
       const previousId = await getActivePersona(workspaceDir);
       await setActivePersonaId(resolvedId, workspaceDir);
-      const content = await readPersonaPrompt(resolvedId);
-      await replaceAgentsMd(content, workspaceDir);
       const displayName = getDisplayName(resolvedId);
       const switched = listPersonas().find((p) => p.id === resolvedId);
 
@@ -149,7 +144,7 @@ export function registerPersonaCommands(api: OpenClawPluginApi) {
           : '';
 
       return {
-        text: `# Persona Switched\n\nActive persona: **${displayName}**${switchNote}\n\nAGENTS.md replaced. Your next message will use the ${switched?.theme ?? 'persona'} prompt.`,
+        text: `# Persona Switched\n\nActive persona: **${displayName}**${switchNote}\n\nPersona will be injected at runtime. Your next message will use the ${switched?.theme ?? 'persona'} prompt.`,
       };
     },
   });
