@@ -177,7 +177,7 @@ Skills inject specialized knowledge and workflows into agents. Load them via `lo
 | **git-master**      | commit, rebase, squash, blame             | Atomic commits, rebase surgery, history archaeology. Auto-detects commit style.        |
 | **frontend-ui-ux**  | UI, UX, frontend, design, CSS             | Designer-turned-developer. Bold aesthetics, distinctive typography, cohesive palettes. |
 | **comment-checker** | comment check, AI slop, code quality      | Anti-AI-slop guard. Removes obvious comments, keeps WHY comments.                      |
-| **gemini-look-at**  | look at, PDF, screenshot, diagram, visual | Gemini CLI-based multimodal analysis. Native PDF/image/video analysis via tmux gemini session.   |
+| **openclaw-look-at** | look at, PDF, screenshot, diagram, visual | OpenClaw built-in multimodal analysis. Uses `image`/`pdf`/`summarize` tools natively. No API key required.   |
 | **web-search**      | web search, exa, context7, grep.app | OmO web search pattern integration. Exa/Context7/grep.app MCP + web_fetch + web-search-prime.       |
 
 ### Category + Skill Combos
@@ -187,7 +187,7 @@ Skills inject specialized knowledge and workflows into agents. Load them via `lo
 | **The Designer**   | visual-engineering | frontend-ui-ux  | Implements aesthetic UI with design-first approach        |
 | **The Maintainer** | quick              | git-master      | Quick fixes with clean atomic commits                     |
 | **The Reviewer**   | deep               | comment-checker | Deep code review with AI slop detection                   |
-| **The Looker**     | visual-engineering | gemini-look-at  | Gemini CLI for native multimodal analysis of PDF/image/diagram |
+| **The Looker**     | visual-engineering | openclaw-look-at | OpenClaw native `image`/`pdf` tools for multimodal analysis |
 | **The Researcher** | quick              | web-search      | Web search + code search + documentation search via Exa/Context7/grep.app |
 
 
@@ -219,7 +219,7 @@ oh-my-openclaw/
       git-master.md       # Git expert skill (commits, rebase, history)
       frontend-ui-ux.md   # Design-first UI development skill
       comment-checker.md  # Anti-AI-slop code quality skill
-      gemini-look-at.md   # Gemini CLI multimodal analysis (PDF/image/video)
+      openclaw-look-at.md # OpenClaw native multimodal analysis (image/pdf/summarize)
       web-search.md       # Web search integration (Exa/Context7/grep.app MCP)
       opencode-controller.md  # OpenCode/OmO delegation patterns
       tmux.md             # tmux session orchestration patterns
