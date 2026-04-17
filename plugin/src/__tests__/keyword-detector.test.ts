@@ -101,16 +101,16 @@ describe('keyword-detector', () => {
   });
 
   describe('WORKFLOW_PERSONA_MAP', () => {
-    it('maps ultrawork to omoc_atlas', () => {
-      expect(WORKFLOW_PERSONA_MAP.ultrawork).toBe('omoc_atlas');
+    it('maps ultrawork to omoc_delegate', () => {
+      expect(WORKFLOW_PERSONA_MAP.ultrawork).toBe('omoc_delegate');
     });
 
-    it('maps plan to omoc_prometheus', () => {
-      expect(WORKFLOW_PERSONA_MAP.plan).toBe('omoc_prometheus');
+    it('maps plan to omoc_planner', () => {
+      expect(WORKFLOW_PERSONA_MAP.plan).toBe('omoc_planner');
     });
 
-    it('maps start_work to omoc_atlas', () => {
-      expect(WORKFLOW_PERSONA_MAP.start_work).toBe('omoc_atlas');
+    it('maps start_work to omoc_delegate', () => {
+      expect(WORKFLOW_PERSONA_MAP.start_work).toBe('omoc_delegate');
     });
   });
 

@@ -76,12 +76,12 @@ export type OmocAgentConfig = {
 export const OMOC_AGENT_CONFIGS: OmocAgentConfig[] = [
   // Strategic planning agent - needs best reasoning for complex planning.
   {
-    id: 'omoc_prometheus',
-    name: 'Prometheus',
-    model: getModelForAgent('omoc_prometheus'),
+    id: 'omoc_planner',
+    name: 'Planner',
+    model: getModelForAgent('omoc_planner'),
     identity: {
-      name: 'Prometheus',
-      emoji: '🔥',
+      name: 'Planner',
+      emoji: '📋',
       theme: 'Strategic Planner',
     },
     tools: { profile: 'full' },
@@ -89,11 +89,11 @@ export const OMOC_AGENT_CONFIGS: OmocAgentConfig[] = [
   },
   // Task orchestration coordinator - balanced speed/quality for coordination.
   {
-    id: 'omoc_atlas',
-    name: 'Atlas',
-    model: getModelForAgent('omoc_atlas'),
+    id: 'omoc_delegate',
+    name: 'Delegate',
+    model: getModelForAgent('omoc_delegate'),
     identity: {
-      name: 'Atlas',
+      name: 'Delegate',
       emoji: '🗺️',
       theme: 'Task Orchestrator',
     },
@@ -102,42 +102,42 @@ export const OMOC_AGENT_CONFIGS: OmocAgentConfig[] = [
   },
   // Primary implementation worker - needs best coding model.
   {
-    id: 'omoc_sisyphus',
-    name: 'Sisyphus-Junior',
-    model: getModelForAgent('omoc_sisyphus'),
+    id: 'omoc_coder',
+    name: 'Coder',
+    model: getModelForAgent('omoc_coder'),
     identity: {
-      name: 'Sisyphus-Junior',
-      emoji: '🪨',
+      name: 'Coder',
+      emoji: '💻',
       theme: 'Implementation Worker',
     },
     tools: { profile: 'full' },
     subagents: {
-      allowAgents: ['omoc_explore', 'omoc_librarian', 'omoc_oracle'],
+      allowAgents: ['omoc_explorer', 'omoc_researcher', 'omoc_architect'],
     },
   },
   // Deep implementation specialist - complex coding tasks.
   {
-    id: 'omoc_hephaestus',
-    name: 'Hephaestus',
-    model: getModelForAgent('omoc_hephaestus'),
+    id: 'omoc_expert',
+    name: 'Expert',
+    model: getModelForAgent('omoc_expert'),
     identity: {
-      name: 'Hephaestus',
-      emoji: '🔨',
+      name: 'Expert',
+      emoji: '⚙️',
       theme: 'Deep Implementation',
     },
     tools: { profile: 'full' },
     subagents: {
-      allowAgents: ['omoc_explore', 'omoc_librarian', 'omoc_oracle'],
+      allowAgents: ['omoc_explorer', 'omoc_researcher', 'omoc_architect'],
     },
   },
   // Read-only architecture consultant - reasoning for architecture decisions.
   {
-    id: 'omoc_oracle',
-    name: 'Oracle',
-    model: getModelForAgent('omoc_oracle'),
+    id: 'omoc_architect',
+    name: 'Architect',
+    model: getModelForAgent('omoc_architect'),
     identity: {
-      name: 'Oracle',
-      emoji: '🏛️',
+      name: 'Architect',
+      emoji: '🏗️',
       theme: 'Architecture Consultant',
     },
     tools: {
@@ -147,12 +147,12 @@ export const OMOC_AGENT_CONFIGS: OmocAgentConfig[] = [
   },
   // Read-only codebase search specialist - fast search with good context.
   {
-    id: 'omoc_explore',
-    name: 'Explore',
-    model: getModelForAgent('omoc_explore'),
+    id: 'omoc_explorer',
+    name: 'Explorer',
+    model: getModelForAgent('omoc_explorer'),
     identity: {
-      name: 'Explore',
-      emoji: '🔍',
+      name: 'Explorer',
+      emoji: '🔎',
       theme: 'Codebase Search',
     },
     tools: {
@@ -162,12 +162,12 @@ export const OMOC_AGENT_CONFIGS: OmocAgentConfig[] = [
   },
   // Read-only documentation research specialist - large context for docs.
   {
-    id: 'omoc_librarian',
-    name: 'Librarian',
-    model: getModelForAgent('omoc_librarian'),
+    id: 'omoc_researcher',
+    name: 'Researcher',
+    model: getModelForAgent('omoc_researcher'),
     identity: {
-      name: 'Librarian',
-      emoji: '📚',
+      name: 'Researcher',
+      emoji: '🔬',
       theme: 'Documentation Research',
     },
     tools: {
@@ -177,12 +177,12 @@ export const OMOC_AGENT_CONFIGS: OmocAgentConfig[] = [
   },
   // Read-only pre-planning analyst - analysis before planning.
   {
-    id: 'omoc_metis',
-    name: 'Metis',
-    model: getModelForAgent('omoc_metis'),
+    id: 'omoc_advisor',
+    name: 'Advisor',
+    model: getModelForAgent('omoc_advisor'),
     identity: {
-      name: 'Metis',
-      emoji: '🧠',
+      name: 'Advisor',
+      emoji: '💡',
       theme: 'Pre-Planning Analyst',
     },
     tools: {
@@ -192,12 +192,12 @@ export const OMOC_AGENT_CONFIGS: OmocAgentConfig[] = [
   },
   // Read-only plan review specialist - critical review needs reasoning.
   {
-    id: 'omoc_momus',
-    name: 'Momus',
-    model: getModelForAgent('omoc_momus'),
+    id: 'omoc_reviewer',
+    name: 'Reviewer',
+    model: getModelForAgent('omoc_reviewer'),
     identity: {
-      name: 'Momus',
-      emoji: '🎭',
+      name: 'Reviewer',
+      emoji: '📝',
       theme: 'Plan Reviewer',
     },
     tools: {
@@ -231,6 +231,6 @@ export const OMOC_AGENT_CONFIGS: OmocAgentConfig[] = [
       theme: 'Visual Engineering',
     },
     tools: { profile: 'coding' },
-    subagents: { allowAgents: ['omoc_explore', 'omoc_librarian'] },
+    subagents: { allowAgents: ['omoc_explorer', 'omoc_researcher'] },
   },
 ];

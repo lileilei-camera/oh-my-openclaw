@@ -16,15 +16,15 @@ const OFF_MARKER = '__OFF__';
 
 // Persona ID → filename mapping
 const AGENT_MD_MAP: Record<string, string> = {
-  omoc_prometheus: 'prometheus',
-  omoc_atlas: 'atlas',
-  omoc_sisyphus: 'sisyphus-junior',
-  omoc_hephaestus: 'hephaestus',
-  omoc_oracle: 'oracle',
-  omoc_explore: 'explore',
-  omoc_librarian: 'librarian',
-  omoc_metis: 'metis',
-  omoc_momus: 'momus',
+  omoc_planner: 'planner',
+  omoc_delegate: 'delegate',
+  omoc_coder: 'coder',
+  omoc_expert: 'expert',
+  omoc_architect: 'architect',
+  omoc_explorer: 'explorer',
+  omoc_researcher: 'researcher',
+  omoc_advisor: 'advisor',
+  omoc_reviewer: 'reviewer',
   omoc_looker: 'multimodal-looker',
   omoc_frontend: 'frontend',
 };

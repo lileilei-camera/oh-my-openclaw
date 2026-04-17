@@ -2,137 +2,359 @@
 
 **日期**: 2026-04-18  
 **状态**: 草案（待审核）  
-**目标**: 将希腊神话风格的 Persona 名称替换为功能缩写名称（方案二）
+**目标**: 将希腊神话风格的 Persona 名称替换为功能缩写名称（方案二）  
+**注意**: 
+- Looker 和 Frontend 保留原名不变
+- **中文描述（persona-prompts.ts）不替换，保持原样**
+- Hephaestus → **Expert**
+- Atlas → **Delegate**（"任务委派"的英文）
 
 ---
 
-## 🎯 目标映射表
+## 🎯 全局映射表
 
-| 旧名 (ID) | 旧文件名 | 新名 (ID) | 新文件名 | 职责 |
-|-----------|---------|-----------|---------|------|
-| `omoc_prometheus` | `prometheus.md` | `omoc_planner` | `planner.md` | 规划师 |
-| `omoc_atlas` | `atlas.md` | `omoc_orchestrator` | `orchestrator.md` | 编排者 |
-| `omoc_sisyphus` | `sisyphus-junior.md` | `omoc_coder` | `coder.md` | 编码员 |
-| `omoc_hephaestus` | `hephaestus.md` | `omoc_specialist` | `specialist.md` | 专家 |
-| `omoc_oracle` | `oracle.md` | `omoc_architect` | `architect.md` | 架构师 |
-| `omoc_explore` | `explore.md` | `omoc_explorer` | `explorer.md` | 探索者 |
-| `omoc_librarian` | `librarian.md` | `omoc_researcher` | `researcher.md` | 研究员 |
-| `omoc_metis` | `metis.md` | `omoc_advisor` | `advisor.md` | 顾问 |
-| `omoc_momus` | `momus.md` | `omoc_reviewer` | `reviewer.md` | 审查员 |
-| `omoc_looker` | `multimodal-looker.md` | `omoc_analyst` | `analyst.md` | 分析师 |
-| `omoc_frontend` | `frontend.md` | `omoc_frontend` | `frontend.md` | 前端（不变） |
+| 旧 ID | 新 ID | 旧文件名 | 新文件名 | 旧显示名 | 新显示名 | 备注 |
+|-------|-------|---------|---------|---------|---------|------|
+| `omoc_planner` | `omoc_planner` | `prometheus.md` | `planner.md` | Prometheus | Planner | |
+| `omoc_delegate` | `omoc_delegate` | `atlas.md` | `delegate.md` | Atlas | Delegate | |
+| `omoc_coder` | `omoc_coder` | `sisyphus-junior.md` | `coder.md` | Sisyphus-Junior | Coder | |
+| `omoc_expert` | `omoc_expert` | `hephaestus.md` | `expert.md` | Hephaestus | Expert | |
+| `omoc_architect` | `omoc_architect` | `oracle.md` | `architect.md` | Oracle | Architect | |
+| `omoc_explorer` | `omoc_explorerr` | `explore.md` | `explorer.md` | Explore | Explorer | |
+| `omoc_researcher` | `omoc_researcher` | `librarian.md` | `researcher.md` | Librarian | Researcher | |
+| `omoc_advisor` | `omoc_advisor` | `metis.md` | `advisor.md` | Metis | Advisor | |
+| `omoc_reviewer` | `omoc_reviewer` | `momus.md` | `reviewer.md` | Momus | Reviewer | |
+| `omoc_looker` | `omoc_looker` | `multimodal-looker.md` | `multimodal-looker.md` | Multimodal Looker | Multimodal Looker | **不变** |
+| `omoc_frontend` | `omoc_frontend` | `frontend.md` | `frontend.md` | Frontend | Frontend | **不变** |
 
 ---
 
-## 📁 Phase 1: 插件源码替换
+## 📁 Phase 1: 插件源码替换（逐 Persona 执行）
 
-### 1.1 Persona 文件重命名
+### 涉及文件清单
 
-**目录**: `plugin/agents/`
+以下文件需要替换：
+
+```
+plugin/agents/                          (9 个 .md 文件重命名, 2 个不变)
+plugin/src/agents/agent-ids.ts          (AGENT_MD_MAP, AGENT_TIER_MAP, ORCHESTRATOR_IDS, WORKER_IDS, ALL_AGENT_IDS)
+plugin/src/agents/agent-configs.ts      (OMOC_AGENT_CONFIGS 数组)
+plugin/src/agents/persona-prompts.ts    (PERSONA_DESCRIPTIONS_CN, DEFAULT_PERSONA_ID)
+plugin/hooks/persona-bootstrap/handler.ts    (AGENT_MD_MAP)
+plugin/hooks/persona-bootstrap/handler.test.ts (测试用例)
+plugin/src/commands/persona-commands.ts (命令处理)
+plugin/src/cli/setup.ts                 (setup 配置)
+plugin/src/hooks/keyword-detector/*.ts  (模式文件)
+plugin/src/shared/case-insensitive.ts   (大小写处理)
+plugin/src/__tests__/*.test.ts          (测试文件)
+plugin/src/tools/*/constants.ts,tools.ts (工具常量)
+```
+
+---
+
+### 1.1 Prometheus → Planner
 
 ```bash
-# 需要重命名的文件（10 个）
-prometheus.md        → planner.md
-atlas.md             → orchestrator.md
-sisyphus-junior.md   → coder.md
-hephaestus.md        → specialist.md
-oracle.md            → architect.md
-explore.md           → explorer.md
-librarian.md         → researcher.md
-metis.md             → advisor.md
-momus.md             → reviewer.md
-multimodal-looker.md → analyst.md
-frontend.md          → （保持不变）
+cd ~/.openclaw/workspace/oh-my-openclaw
+
+mv plugin/agents/prometheus.md plugin/agents/planner.md
+
+find plugin/src plugin/hooks -name "*.ts" -not -path "*/node_modules/*" -exec sed -i \
+  "s/omoc_planner/omoc_planner/g" {} +
+
+find plugin/src plugin/hooks -name "*.ts" -not -path "*/node_modules/*" -exec sed -i \
+  -e "s/'Prometheus'/'Planner'/g" \
+  -e "s/\"Prometheus\"/\"Planner\"/g" \
+  -e "s/🔥/📋/g" \
+  {} +
+
+sed -i "s/omoc_planner: 'prometheus'/omoc_planner: 'planner'/" \
+  plugin/src/agents/agent-ids.ts \
+  plugin/hooks/persona-bootstrap/handler.ts
+
+sed -i \
+  -e "s/name: 'Prometheus'/name: 'Planner'/" \
+  -e "s/emoji: '🔥'/emoji: '📋'/" \
+  -e "s/theme: 'Strategic Planner'/theme: 'Planner'/" \
+  plugin/src/agents/agent-configs.ts
+
+# ⚠️ 不替换 persona-prompts.ts 中的中文描述（保持原样）
 ```
 
-### 1.2 核心代码映射表替换
+---
 
-**文件**: `plugin/hooks/persona-bootstrap/handler.ts`
-
-```typescript
-// 当前内容（约第 18-29 行）
-const AGENT_MD_MAP: Record<string, string> = {
-  omoc_prometheus: 'prometheus',
-  omoc_atlas: 'atlas',
-  omoc_sisyphus: 'sisyphus-junior',
-  omoc_hephaestus: 'hephaestus',
-  omoc_oracle: 'oracle',
-  omoc_explore: 'explore',
-  omoc_librarian: 'librarian',
-  omoc_metis: 'metis',
-  omoc_momus: 'momus',
-  omoc_looker: 'multimodal-looker',
-  omoc_frontend: 'frontend',
-};
-
-// 替换为
-const AGENT_MD_MAP: Record<string, string> = {
-  omoc_planner: 'planner',
-  omoc_orchestrator: 'orchestrator',
-  omoc_coder: 'coder',
-  omoc_specialist: 'specialist',
-  omoc_architect: 'architect',
-  omoc_explorer: 'explorer',
-  omoc_researcher: 'researcher',
-  omoc_advisor: 'advisor',
-  omoc_reviewer: 'reviewer',
-  omoc_analyst: 'analyst',
-  omoc_frontend: 'frontend',
-};
-```
-
-### 1.3 命令与描述替换
-
-**文件**: `plugin/src/commands/persona-commands.ts`
-
-需要替换的位置：
-- `DEFAULT_PERSONA_ID` → `'omoc_orchestrator'`
-- `AGENT_MD_MAP` 或类似映射表
-- `PERSONA_DESCRIPTIONS_CN` 显示名
-- `WORKFLOW_PERSONA_MAP` 工作流映射
-- 任何硬编码的旧 persona ID
-
-**文件**: `plugin/src/agents/persona-prompts.ts`（如存在）
-- persona 加载逻辑中的 ID 引用
-- `listPersonas()` 返回的数据
-
-### 1.4 测试文件更新
-
-**文件**: `plugin/src/__tests__/persona.test.ts`
-- 所有测试用例中的 persona ID
-- 断言中的显示名
-- 命令行测试参数（如 `/omoc atlas` → `/omoc orchestrator`）
-
-**文件**: `plugin/src/__tests__/persona-bootstrap.test.ts`
-- 钩子测试中的 persona ID
-- 状态文件断言
-
-**文件**: `plugin/hooks/persona-bootstrap/handler.test.ts`
-- 钩子实现测试中的 persona ID
-- 文件名断言
-
-### 1.5 其他源码文件搜索
+### 1.2 Atlas → Delegate
 
 ```bash
-# 全局搜索旧名字引用
-grep -rn "prometheus\|omoc_prometheus" plugin/src/ plugin/hooks/ --include="*.ts"
-grep -rn "atlas\|omoc_atlas" plugin/src/ plugin/hooks/ --include="*.ts"
-grep -rn "sisyphus\|omoc_sisyphus" plugin/src/ plugin/hooks/ --include="*.ts"
-grep -rn "hephaestus\|omoc_hephaestus" plugin/src/ plugin/hooks/ --include="*.ts"
-grep -rn "oracle\|omoc_oracle" plugin/src/ plugin/hooks/ --include="*.ts"
-grep -rn "metis\|omoc_metis" plugin/src/ plugin/hooks/ --include="*.ts"
-grep -rn "momus\|omoc_momus" plugin/src/ plugin/hooks/ --include="*.ts"
-grep -rn "librarian\|omoc_librarian" plugin/src/ plugin/hooks/ --include="*.ts"
-grep -rn "looker\|omoc_looker" plugin/src/ plugin/hooks/ --include="*.ts"
-grep -rn "explore\|omoc_explore" plugin/src/ plugin/hooks/ --include="*.ts"
+cd ~/.openclaw/workspace/oh-my-openclaw
+
+mv plugin/agents/atlas.md plugin/agents/delegate.md
+
+find plugin/src plugin/hooks -name "*.ts" -not -path "*/node_modules/*" -exec sed -i \
+  "s/omoc_delegate/omoc_delegate/g" {} +
+
+find plugin/src plugin/hooks -name "*.ts" -not -path "*/node_modules/*" -exec sed -i \
+  -e "s/'Atlas'/'Delegate'/g" \
+  -e "s/\"Atlas\"/\"Delegate\"/g" \
+  {} +
+
+sed -i "s/omoc_delegate: 'atlas'/omoc_delegate: 'delegate'/" \
+  plugin/src/agents/agent-ids.ts \
+  plugin/hooks/persona-bootstrap/handler.ts
+
+sed -i \
+  -e "s/name: 'Atlas'/name: 'Delegate'/" \
+  -e "s/theme: 'Task Orchestrator'/theme: 'Delegate'/" \
+  plugin/src/agents/agent-configs.ts
+
+sed -i "s/DEFAULT_PERSONA_ID = 'omoc_delegate'/DEFAULT_PERSONA_ID = 'omoc_delegate'/" \
+  plugin/src/agents/persona-prompts.ts
+
+sed -i "s/omoc_delegate: 'planner'/omoc_delegate: 'orchestrator'/" \
+  plugin/src/agents/agent-ids.ts
+
+# ⚠️ 不替换 persona-prompts.ts 中的中文描述（保持原样）
 ```
 
-可能涉及的文件：
-- `plugin/src/hooks/keyword-detector/hook.ts`
-- `plugin/src/utils/persona-state.ts`
-- `plugin/src/cli/setup.ts`
-- `plugin/src/index.ts`
-- 其他可能有硬编码引用的文件
+---
+
+### 1.3 Sisyphus → Coder
+
+```bash
+cd ~/.openclaw/workspace/oh-my-openclaw
+
+mv plugin/agents/sisyphus-junior.md plugin/agents/coder.md
+
+find plugin/src plugin/hooks -name "*.ts" -not -path "*/node_modules/*" -exec sed -i \
+  "s/omoc_coder/omoc_coder/g" {} +
+
+find plugin/src plugin/hooks -name "*.ts" -not -path "*/node_modules/*" -exec sed -i \
+  -e "s/'Sisyphus-Junior'/'Coder'/g" \
+  -e "s/\"Sisyphus-Junior\"/\"Coder\"/g" \
+  -e "s/🪨/💻/g" \
+  {} +
+
+sed -i "s/omoc_coder: 'sisyphus-junior'/omoc_coder: 'coder'/" \
+  plugin/src/agents/agent-ids.ts \
+  plugin/hooks/persona-bootstrap/handler.ts
+
+sed -i \
+  -e "s/name: 'Sisyphus-Junior'/name: 'Coder'/" \
+  -e "s/emoji: '🪨'/emoji: '💻'/" \
+  -e "s/theme: 'Implementation Worker'/theme: 'Coder'/" \
+  plugin/src/agents/agent-configs.ts
+
+# ⚠️ 不替换 persona-prompts.ts 中的中文描述（保持原样）
+```
+
+---
+
+### 1.4 Hephaestus → Expert
+
+```bash
+cd ~/.openclaw/workspace/oh-my-openclaw
+
+mv plugin/agents/hephaestus.md plugin/agents/expert.md
+
+find plugin/src plugin/hooks -name "*.ts" -not -path "*/node_modules/*" -exec sed -i \
+  "s/omoc_expert/omoc_expert/g" {} +
+
+find plugin/src plugin/hooks -name "*.ts" -not -path "*/node_modules/*" -exec sed -i \
+  -e "s/'Hephaestus'/'Expert'/g" \
+  -e "s/\"Hephaestus\"/\"Expert\"/g" \
+  -e "s/🔨/⚙️/g" \
+  {} +
+
+sed -i "s/omoc_expert: 'hephaestus'/omoc_expert: 'expert'/" \
+  plugin/src/agents/agent-ids.ts \
+  plugin/hooks/persona-bootstrap/handler.ts
+
+sed -i \
+  -e "s/name: 'Hephaestus'/name: 'Expert'/" \
+  -e "s/emoji: '🔨'/emoji: '⚙️'/" \
+  -e "s/theme: 'Deep Implementation'/theme: 'Expert'/" \
+  plugin/src/agents/agent-configs.ts
+
+# ⚠️ 不替换 persona-prompts.ts 中的中文描述（保持原样）
+```
+
+---
+
+### 1.5 Oracle → Architect
+
+```bash
+cd ~/.openclaw/workspace/oh-my-openclaw
+
+mv plugin/agents/oracle.md plugin/agents/architect.md
+
+find plugin/src plugin/hooks -name "*.ts" -not -path "*/node_modules/*" -exec sed -i \
+  "s/omoc_architect/omoc_architect/g" {} +
+
+find plugin/src plugin/hooks -name "*.ts" -not -path "*/node_modules/*" -exec sed -i \
+  -e "s/'Oracle'/'Architect'/g" \
+  -e "s/\"Oracle\"/\"Architect\"/g" \
+  -e "s/🏛️/🏗️/g" \
+  {} +
+
+sed -i "s/omoc_architect: 'oracle'/omoc_architect: 'architect'/" \
+  plugin/src/agents/agent-ids.ts \
+  plugin/hooks/persona-bootstrap/handler.ts
+
+sed -i \
+  -e "s/name: 'Oracle'/name: 'Architect'/" \
+  -e "s/emoji: '🏛️'/emoji: '🏗️'/" \
+  -e "s/theme: 'Architecture Consultant'/theme: 'Architect'/" \
+  plugin/src/agents/agent-configs.ts
+
+# ⚠️ 不替换 persona-prompts.ts 中的中文描述（保持原样）
+```
+
+---
+
+### 1.6 Explore → Explorer
+
+```bash
+cd ~/.openclaw/workspace/oh-my-openclaw
+
+mv plugin/agents/explore.md plugin/agents/explorer.md
+
+find plugin/src plugin/hooks -name "*.ts" -not -path "*/node_modules/*" -exec sed -i \
+  "s/omoc_explorer/omoc_explorerr/g" {} +
+
+find plugin/src plugin/hooks -name "*.ts" -not -path "*/node_modules/*" -exec sed -i \
+  -e "s/'Explore'/'Explorer'/g" \
+  -e "s/\"Explore\"/\"Explorer\"/g" \
+  -e "s/🔍/🔎/g" \
+  {} +
+
+sed -i "s/omoc_explorerr: 'explore'/omoc_explorerr: 'explorer'/" \
+  plugin/src/agents/agent-ids.ts \
+  plugin/hooks/persona-bootstrap/handler.ts
+
+sed -i \
+  -e "s/name: 'Explore'/name: 'Explorer'/" \
+  -e "s/emoji: '🔍'/emoji: '🔎'/" \
+  -e "s/theme: 'Codebase Search'/theme: 'Explorer'/" \
+  plugin/src/agents/agent-configs.ts
+
+# ⚠️ 不替换 persona-prompts.ts 中的中文描述（保持原样）
+```
+
+---
+
+### 1.7 Librarian → Researcher
+
+```bash
+cd ~/.openclaw/workspace/oh-my-openclaw
+
+mv plugin/agents/librarian.md plugin/agents/researcher.md
+
+find plugin/src plugin/hooks -name "*.ts" -not -path "*/node_modules/*" -exec sed -i \
+  "s/omoc_researcher/omoc_researcher/g" {} +
+
+find plugin/src plugin/hooks -name "*.ts" -not -path "*/node_modules/*" -exec sed -i \
+  -e "s/'Librarian'/'Researcher'/g" \
+  -e "s/\"Librarian\"/\"Researcher\"/g" \
+  -e "s/📚/🔬/g" \
+  {} +
+
+sed -i "s/omoc_researcher: 'librarian'/omoc_researcher: 'researcher'/" \
+  plugin/src/agents/agent-ids.ts \
+  plugin/hooks/persona-bootstrap/handler.ts
+
+sed -i \
+  -e "s/name: 'Librarian'/name: 'Researcher'/" \
+  -e "s/emoji: '📚'/emoji: '🔬'/" \
+  -e "s/theme: 'Documentation Research'/theme: 'Researcher'/" \
+  plugin/src/agents/agent-configs.ts
+
+# ⚠️ 不替换 persona-prompts.ts 中的中文描述（保持原样）
+```
+
+---
+
+### 1.8 Metis → Advisor
+
+```bash
+cd ~/.openclaw/workspace/oh-my-openclaw
+
+mv plugin/agents/metis.md plugin/agents/advisor.md
+
+find plugin/src plugin/hooks -name "*.ts" -not -path "*/node_modules/*" -exec sed -i \
+  "s/omoc_advisor/omoc_advisor/g" {} +
+
+find plugin/src plugin/hooks -name "*.ts" -not -path "*/node_modules/*" -exec sed -i \
+  -e "s/'Metis'/'Advisor'/g" \
+  -e "s/\"Metis\"/\"Advisor\"/g" \
+  -e "s/🧠/💡/g" \
+  {} +
+
+sed -i "s/omoc_advisor: 'metis'/omoc_advisor: 'advisor'/" \
+  plugin/src/agents/agent-ids.ts \
+  plugin/hooks/persona-bootstrap/handler.ts
+
+sed -i \
+  -e "s/name: 'Metis'/name: 'Advisor'/" \
+  -e "s/emoji: '🧠'/emoji: '💡'/" \
+  -e "s/theme: 'Pre-Planning Analyst'/theme: 'Advisor'/" \
+  plugin/src/agents/agent-configs.ts
+
+# ⚠️ 不替换 persona-prompts.ts 中的中文描述（保持原样）
+```
+
+---
+
+### 1.9 Momus → Reviewer
+
+```bash
+cd ~/.openclaw/workspace/oh-my-openclaw
+
+mv plugin/agents/momus.md plugin/agents/reviewer.md
+
+find plugin/src plugin/hooks -name "*.ts" -not -path "*/node_modules/*" -exec sed -i \
+  "s/omoc_reviewer/omoc_reviewer/g" {} +
+
+find plugin/src plugin/hooks -name "*.ts" -not -path "*/node_modules/*" -exec sed -i \
+  -e "s/'Momus'/'Reviewer'/g" \
+  -e "s/\"Momus\"/\"Reviewer\"/g" \
+  -e "s/🎭/📝/g" \
+  {} +
+
+sed -i "s/omoc_reviewer: 'momus'/omoc_reviewer: 'reviewer'/" \
+  plugin/src/agents/agent-ids.ts \
+  plugin/hooks/persona-bootstrap/handler.ts
+
+sed -i \
+  -e "s/name: 'Momus'/name: 'Reviewer'/" \
+  -e "s/emoji: '🎭'/emoji: '📝'/" \
+  -e "s/theme: 'Plan Reviewer'/theme: 'Reviewer'/" \
+  plugin/src/agents/agent-configs.ts
+
+# ⚠️ 不替换 persona-prompts.ts 中的中文描述（保持原样）
+```
+
+---
+
+### 1.10 Looker（不变）
+
+**Looker 保留原名，不做任何替换。**
+
+### 1.11 Frontend（不变）
+
+**Frontend 保留原名，不做任何替换。**
+
+---
+
+### Phase 1 验证
+
+```bash
+# 全局搜索确认无残留旧名（排除 looker 和 frontend）
+grep -rn "omoc_planner\|omoc_delegate\|omoc_coder\|omoc_expert\|omoc_architect\|omoc_explorer\|omoc_researcher\|omoc_advisor\|omoc_reviewer" \
+  plugin/src/ plugin/hooks/ --include="*.ts" | grep -v node_modules
+
+# 应该返回空（如果没有遗漏）
+# 注意: omoc_looker 和 omoc_frontend 是保留名，不需要搜索
+```
 
 ---
 
@@ -140,38 +362,88 @@ grep -rn "explore\|omoc_explore" plugin/src/ plugin/hooks/ --include="*.ts"
 
 ### 2.1 features.md
 
-**文件**: `docs/reference/features.md`
+```bash
+cd ~/.openclaw/workspace/oh-my-openclaw
 
-需要替换的部分：
-- **Personas 章节**（约第 188-312 行）：11 行表格全部替换
-- **/omoc 命令示例**：命令参数替换
-- **描述文本**：所有提到旧名字的地方
+sed -i \
+  -e "s/omoc_planner/omoc_planner/g" \
+  -e "s/omoc_delegate/omoc_delegate/g" \
+  -e "s/omoc_coder/omoc_coder/g" \
+  -e "s/omoc_expert/omoc_expert/g" \
+  -e "s/omoc_architect/omoc_architect/g" \
+  -e "s/omoc_explorer/omoc_explorerr/g" \
+  -e "s/omoc_researcher/omoc_researcher/g" \
+  -e "s/omoc_advisor/omoc_advisor/g" \
+  -e "s/omoc_reviewer/omoc_reviewer/g" \
+  docs/reference/features.md
+
+sed -i \
+  -e "s/Prometheus/Planner/g" \
+  -e "s/Atlas/Delegate/g" \
+  -e "s/Sisyphus-Junior/Coder/g" \
+  -e "s/Hephaestus/Expert/g" \
+  -e "s/Oracle/Architect/g" \
+  -e "s/Explore/Explorer/g" \
+  -e "s/Librarian/Researcher/g" \
+  -e "s/Metis/Advisor/g" \
+  -e "s/Momus/Reviewer/g" \
+  docs/reference/features.md
+```
 
 ### 2.2 README.md
 
-**文件**: `README.md`
-
-需要替换的部分：
-- 快速开始示例
-- Persona 列表
-- 命令示例
-
-### 2.3 HOOK.md
-
-**文件**: `plugin/hooks/persona-bootstrap/HOOK.md`
-
-如果其中引用了 persona 名字，需要更新。
-
-### 2.4 其他文档搜索
-
 ```bash
-grep -rn "prometheus\|atlas\|sisyphus\|hephaestus\|oracle\|metis\|momus\|librarian\|looker" docs/ --include="*.md"
+sed -i \
+  -e "s/omoc_planner/omoc_planner/g" \
+  -e "s/omoc_delegate/omoc_delegate/g" \
+  -e "s/omoc_coder/omoc_coder/g" \
+  -e "s/omoc_expert/omoc_expert/g" \
+  -e "s/omoc_architect/omoc_architect/g" \
+  -e "s/omoc_explorer/omoc_explorerr/g" \
+  -e "s/omoc_researcher/omoc_researcher/g" \
+  -e "s/omoc_advisor/omoc_advisor/g" \
+  -e "s/omoc_reviewer/omoc_reviewer/g" \
+  -e "s/Prometheus/Planner/g" \
+  -e "s/Atlas/Delegate/g" \
+  -e "s/Sisyphus-Junior/Coder/g" \
+  -e "s/Hephaestus/Expert/g" \
+  -e "s/Oracle/Architect/g" \
+  -e "s/Explore/Explorer/g" \
+  -e "s/Librarian/Researcher/g" \
+  -e "s/Metis/Advisor/g" \
+  -e "s/Momus/Reviewer/g" \
+  README.md
 ```
 
-可能涉及：
-- `docs/guide/overview.md`
-- `docs/reference/configuration.md`
-- 其他指南文档
+---
+
+## 📁 Phase 2.5: 全局校验
+
+> **目的**：确保整个 `plugin/` 目录中所有旧名称已被完全替换，无遗漏。
+
+```bash
+cd ~/.openclaw/workspace/oh-my-openclaw
+
+# 1. 搜索所有旧 ID（所有文件类型，应该返回空）
+echo "=== 检查旧 ID ==="
+grep -rn "omoc_planner\|omoc_delegate\|omoc_coder\|omoc_expert\|omoc_architect\|omoc_explorer\|omoc_researcher\|omoc_advisor\|omoc_reviewer" \
+  plugin/ | grep -v node_modules
+
+# 2. 搜索所有旧显示名（所有文件类型，应该返回空）
+echo "=== 检查旧显示名 ==="
+grep -rn "'Prometheus'\|\"Prometheus\"\|'Atlas'\|\"Atlas\"\|'Sisyphus-Junior'\|\"Sisyphus-Junior\"\|'Hephaestus'\|\"Hephaestus\"\|'Oracle'\|\"Oracle\"\|'Explore'\|\"Explore\"\|'Librarian'\|\"Librarian\"\|'Metis'\|\"Metis\"\|'Momus'\|\"Momus\"" \
+  plugin/ | grep -v node_modules
+
+# 3. 搜索所有旧 .md 文件名（应该返回空）
+echo "=== 检查旧文件名 ==="
+ls plugin/agents/prometheus.md plugin/agents/atlas.md plugin/agents/sisyphus-junior.md plugin/agents/hephaestus.md plugin/agents/oracle.md plugin/agents/explore.md plugin/agents/librarian.md plugin/agents/metis.md plugin/agents/momus.md 2>/dev/null
+
+# 4. 确认新文件已存在
+echo "=== 确认新文件 ==="
+ls plugin/agents/planner.md plugin/agents/delegate.md plugin/agents/coder.md plugin/agents/expert.md plugin/agents/architect.md plugin/agents/explorer.md plugin/agents/researcher.md plugin/agents/advisor.md plugin/agents/reviewer.md
+```
+
+**通过标准**：前三项搜索全部返回空，第四项列出所有新文件 ✅
 
 ---
 
@@ -179,151 +451,130 @@ grep -rn "prometheus\|atlas\|sisyphus\|hephaestus\|oracle\|metis\|momus\|librari
 
 ### 3.1 openclaw.json
 
-**文件**: `~/.openclaw/openclaw.json`
-
-需要修改的 JSON 路径：
-```json
-{
-  "agents": {
-    "list": [
-      // 每个 agent 对象的 id 字段
-      { "id": "omoc_prometheus" } → { "id": "omoc_planner" }
-      { "id": "omoc_atlas" } → { "id": "omoc_orchestrator" }
-      // ... 共 11 个
-    ]
-  }
-}
-```
-
-### 3.2 Agent 工作空间目录
-
-**目录**: `~/.openclaw/workspace-*/`
-
-需要检查并重命名：
 ```bash
-~/.openclaw/workspace-omoc_prometheus/   → ~/.openclaw/workspace-omoc_planner/
-~/.openclaw/workspace-omoc_atlas/        → ~/.openclaw/workspace-omoc_orchestrator/
-~/.openclaw/workspace-omoc_sisyphus/     → ~/.openclaw/workspace-omoc_coder/
-# ... 以此类推
+cp ~/.openclaw/openclaw.json ~/.openclaw/openclaw.json.bak
+
+sed -i \
+  -e "s/omoc_planner/omoc_planner/g" \
+  -e "s/omoc_delegate/omoc_delegate/g" \
+  -e "s/omoc_coder/omoc_coder/g" \
+  -e "s/omoc_expert/omoc_expert/g" \
+  -e "s/omoc_architect/omoc_architect/g" \
+  -e "s/omoc_explorer/omoc_explorerr/g" \
+  -e "s/omoc_researcher/omoc_researcher/g" \
+  -e "s/omoc_advisor/omoc_advisor/g" \
+  -e "s/omoc_reviewer/omoc_reviewer/g" \
+  ~/.openclaw/openclaw.json
+
+python3 -c "import json; json.load(open('$HOME/.openclaw/openclaw.json'))" && echo "✅ JSON 正确" || echo "❌ JSON 错误"
 ```
 
-**注意**: 需要同时更新 `openclaw.json` 中对应的 `workspace` 字段（如果有）。
+### 3.2 删除工作空间目录
 
-### 3.3 运行时状态文件
+```bash
+# 删除旧的 Agent 工作空间目录
+for dir in \
+  "$HOME/.openclaw/workspace-omoc_planner" \
+  "$HOME/.openclaw/workspace-omoc_planner" \
+  "$HOME/.openclaw/workspace-omoc_delegate" \
+  "$HOME/.openclaw/workspace-omoc_delegate" \
+  "$HOME/.openclaw/workspace-omoc_coder" \
+  "$HOME/.openclaw/workspace-omoc_coder" \
+  "$HOME/.openclaw/workspace-omoc_expert" \
+  "$HOME/.openclaw/workspace-omoc_expert" \
+  "$HOME/.openclaw/workspace-omoc_architect" \
+  "$HOME/.openclaw/workspace-omoc_architect" \
+  "$HOME/.openclaw/workspace-omoc_explorer" \
+  "$HOME/.openclaw/workspace-omoc_explorerr" \
+  "$HOME/.openclaw/workspace-omoc_researcher" \
+  "$HOME/.openclaw/workspace-omoc_researcher" \
+  "$HOME/.openclaw/workspace-omoc_advisor" \
+  "$HOME/.openclaw/workspace-omoc_advisor" \
+  "$HOME/.openclaw/workspace-omoc_reviewer" \
+  "$HOME/.openclaw/workspace-omoc_reviewer"; do
+  if [ -d "$dir" ]; then
+    rm -rf "$dir"
+    echo "已删除工作目录: $dir"
+  fi
+done
+```
 
-**文件**: `~/.openclaw/workspace/.omoc-state/active-persona`
+### 3.3 删除 Agent 运行时目录
 
-- 如果当前值是旧 ID（如 `omoc_atlas`），需要更新为 `omoc_orchestrator`
-- 检查是否有其他状态文件引用旧 ID
+```bash
+# 删除 ~/.openclaw/agents/ 目录下的 Omoc Agent（旧名+新名）
+for dir in \
+  "$HOME/.openclaw/agents/omoc_planner" \
+  "$HOME/.openclaw/agents/omoc_planner" \
+  "$HOME/.openclaw/agents/omoc_delegate" \
+  "$HOME/.openclaw/agents/omoc_delegate" \
+  "$HOME/.openclaw/agents/omoc_coder" \
+  "$HOME/.openclaw/agents/omoc_coder" \
+  "$HOME/.openclaw/agents/omoc_expert" \
+  "$HOME/.openclaw/agents/omoc_expert" \
+  "$HOME/.openclaw/agents/omoc_architect" \
+  "$HOME/.openclaw/agents/omoc_architect" \
+  "$HOME/.openclaw/agents/omoc_explorer" \
+  "$HOME/.openclaw/agents/omoc_explorerr" \
+  "$HOME/.openclaw/agents/omoc_researcher" \
+  "$HOME/.openclaw/agents/omoc_researcher" \
+  "$HOME/.openclaw/agents/omoc_advisor" \
+  "$HOME/.openclaw/agents/omoc_advisor" \
+  "$HOME/.openclaw/agents/omoc_reviewer" \
+  "$HOME/.openclaw/agents/omoc_reviewer"; do
+  if [ -d "$dir" ]; then
+    rm -rf "$dir"
+    echo "已删除 Agent 运行时: $dir"
+  fi
+done
+```
+
+### 3.4 active-persona 状态文件
+
+```bash
+cat ~/.openclaw/workspace/.omoc-state/active-persona 2>/dev/null
+# 如果是旧 ID，记录日志即可（运行时会重新创建）
+```
 
 ---
 
 ## 📁 Phase 4: 编译与验证
 
-### 4.1 重新编译插件
+### 4.1 编译
 
 ```bash
-cd ~/.openclaw/workspace/oh-my-openclaw/plugin
-npm run build
+cd ~/.openclaw/workspace/oh-my-openclaw/plugin && npm run build
 ```
 
-### 4.2 运行全量测试
+### 4.2 测试
 
 ```bash
-cd ~/.openclaw/workspace/oh-my-openclaw/plugin
 npm test
 ```
 
-确保所有测试通过。
-
-### 4.3 验证 OpenClaw 配置
+### 4.3 配置验证
 
 ```bash
 openclaw doctor
 ```
 
-确保配置无错误。
-
-### 4.4 功能验证
-
-1. 测试 `/omoc list` 命令
-2. 测试 `/omoc orchestrator` 切换
-3. 测试 `/omoc off` 关闭
-4. 验证 persona 注入是否正常工作
-
-### 4.5 Git 提交
-
-```bash
-cd ~/.openclaw/workspace/oh-my-openclaw
-git add -A
-git commit -m "rename: replace mythological persona names with functional abbreviations"
-```
-
 ---
 
-## ⚠️ 风险点分析
+## ⚠️ 注意事项
 
-| 风险 | 影响 | 缓解措施 |
-|------|------|---------|
-| 遗漏某个引用 | 插件运行时错误 | 全局 grep 验证，逐个文件检查 |
-| 测试未更新 | 测试失败 | 运行全量测试，修复所有失败用例 |
-| 配置不一致 | Agent 无法启动 | openclaw doctor 验证，手动检查 JSON |
-| 工作空间迁移失败 | 丢失运行时状态 | **先备份再操作** |
-| 编译失败 | 无法使用新插件 | 保留旧版本备份，可回退 |
-
----
-
-## 📋 执行顺序
-
-```
-1. 备份当前状态
-   ├── 备份 plugin/agents/ 目录
-   ├── 备份 ~/.openclaw/openclaw.json
-   └── 备份 ~/.openclaw/workspace/.omoc-state/
-
-2. Phase 1: 插件源码替换
-   ├── 重命名 .md 文件
-   ├── 更新 handler.ts
-   ├── 更新 persona-commands.ts
-   ├── 更新测试文件
-   └── 全局搜索验证
-
-3. Phase 2: 文档替换
-   ├── features.md
-   ├── README.md
-   └── 其他文档
-
-4. Phase 3: 配置替换
-   ├── openclaw.json
-   ├── 工作空间目录迁移
-   └── active-persona 状态更新
-
-5. Phase 4: 编译验证
-   ├── npm run build
-   ├── npm test
-   ├── openclaw doctor
-   └── 功能验证
-
-6. Git 提交
-```
-
----
-
-## ⏱️ 预估工作量
-
-| 阶段 | 预计时间 | 复杂度 |
-|------|---------|--------|
-| Phase 1: 源码 | 15-20 分钟 | 中 |
-| Phase 2: 文档 | 10 分钟 | 低 |
-| Phase 3: 配置 | 10 分钟 | 中 |
-| Phase 4: 验证 | 5 分钟 | 低 |
-| **总计** | **40-45 分钟** | |
+1. **替换顺序**: 先 ID（`omoc_xxx`），再显示名，最后文件名映射
+2. **大小写敏感**: 处理所有大小写变体
+3. **Emoji 替换**: 每个 persona 的 emoji 一并更新
+4. **中文描述**: persona-prompts.ts 中的中文描述**不替换**，保持原样
+5. **测试文件**: 断言和 mock 数据与源码同步更新
+6. **JSON 配置**: openclaw.json 修改后必须验证格式
 
 ---
 
 ## 📝 待确认事项
 
 - [ ] 新名字是否都满意？
+- [ ] 新 emoji 是否合适？
 - [ ] 是否需要保留旧名字作为别名（向后兼容）？
 - [ ] 工作空间目录是否需要迁移？
-- [ ] 是否需要同时更新 git 远程仓库？
+- [ ] agent-models.json 是否需要更新 key？

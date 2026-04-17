@@ -204,7 +204,7 @@ Persona switching works through a **runtime injection** system, not disk modific
 **Step-by-step:**
 
 1. **User runs `/omoc <name>`** (e.g., `/omoc atlas`)
-   - The command resolves the persona name to a canonical ID (e.g., `omoc_atlas`)
+   - The command resolves the persona name to a canonical ID (e.g., `omoc_delegate`)
    - Writes the persona ID to `.omoc-state/active-persona` in the workspace
    - Returns confirmation to the user
 
@@ -233,7 +233,7 @@ Persona switching works through a **runtime injection** system, not disk modific
 ~/.openclaw/workspace/.omoc-state/active-persona
 ```
 
-Contains a single line with the persona ID (e.g., `omoc_atlas`) or `__OFF__` to disable.
+Contains a single line with the persona ID (e.g., `omoc_delegate`) or `__OFF__` to disable.
 
 ### Workspace Resolution
 
@@ -249,19 +249,19 @@ This enables per-agent persona isolation in multi-agent setups.
 
 | Command | ID | Name | 描述 | Model |
 |---------|-----|------|------|-------|
-| `/omoc prometheus` | `omoc_prometheus` | Prometheus | 战略规划师 | gpt-5.3-codex |
-| `/omoc atlas` | `omoc_atlas` | Atlas | 任务编排师 | gpt-5.3-codex |
-| `/omoc sisyphus` | `omoc_sisyphus` | Sisyphus-Junior | 主要编码员 | claude-sonnet-4-6 |
-| `/omoc hephaestus` | `omoc_hephaestus` | Hephaestus | 深度编码专家 | claude-opus-4-6-thinking |
-| `/omoc oracle` | `omoc_oracle` | Oracle | 架构顾问 | gpt-5.3-codex |
-| `/omoc explore` | `omoc_explore` | Explore | 代码搜索专家 | claude-sonnet-4-6 |
-| `/omoc librarian` | `omoc_librarian` | Librarian | 文档研究专家 | claude-sonnet-4-6 |
-| `/omoc metis` | `omoc_metis` | Metis | 预规划分析师 | claude-opus-4-6-thinking |
-| `/omoc momus` | `omoc_momus` | Momus | 计划审查员 | claude-opus-4-6-thinking |
+| `/omoc prometheus` | `omoc_planner` | Prometheus | 战略规划师 | gpt-5.3-codex |
+| `/omoc atlas` | `omoc_delegate` | Atlas | 任务编排师 | gpt-5.3-codex |
+| `/omoc sisyphus` | `omoc_coder` | Sisyphus-Junior | 主要编码员 | claude-sonnet-4-6 |
+| `/omoc hephaestus` | `omoc_expert` | Hephaestus | 深度编码专家 | claude-opus-4-6-thinking |
+| `/omoc oracle` | `omoc_architect` | Oracle | 架构顾问 | gpt-5.3-codex |
+| `/omoc explore` | `omoc_explorer` | Explore | 代码搜索专家 | claude-sonnet-4-6 |
+| `/omoc librarian` | `omoc_researcher` | Librarian | 文档研究专家 | claude-sonnet-4-6 |
+| `/omoc metis` | `omoc_advisor` | Metis | 预规划分析师 | claude-opus-4-6-thinking |
+| `/omoc momus` | `omoc_reviewer` | Momus | 计划审查员 | claude-opus-4-6-thinking |
 | `/omoc looker` | `omoc_looker` | Multimodal Looker | 视觉分析专家 | gemini-3.1-pro |
 | `/omoc frontend` | `omoc_frontend` | Frontend | 前端工程师 | gemini-3.1-pro |
 
-**Default persona**: `omoc_atlas` (used when `/omoc` is run without arguments)
+**Default persona**: `omoc_delegate` (used when `/omoc` is run without arguments)
 
 ### Commands
 
@@ -340,7 +340,7 @@ Run `openclaw omoc-setup` to automatically configure this.
 5. Skips existing agents by default (use `--force` to overwrite)
 6. Reports added/skipped/updated counts
 
-**Agent IDs injected:** `omoc_prometheus`, `omoc_atlas`, `omoc_sisyphus`, `omoc_hephaestus`, `omoc_oracle`, `omoc_explore`, `omoc_librarian`, `omoc_metis`, `omoc_momus`, `omoc_looker`, `omoc_frontend`
+**Agent IDs injected:** `omoc_planner`, `omoc_delegate`, `omoc_coder`, `omoc_expert`, `omoc_architect`, `omoc_explorer`, `omoc_researcher`, `omoc_advisor`, `omoc_reviewer`, `omoc_looker`, `omoc_frontend`
 
 ---
 
@@ -629,7 +629,7 @@ The plugin registers 9 slash commands across four modules.
 
 | Input | Action |
 |-------|--------|
-| *(no args)* | Activate default persona (`omoc_atlas`) |
+| *(no args)* | Activate default persona (`omoc_delegate`) |
 | `off` | Deactivate current persona, return to default AGENTS.md |
 | `list` | Show all 11 personas with active indicator |
 | `<name>` | Switch to the specified persona (e.g., `atlas`, `prometheus`) |
@@ -640,7 +640,7 @@ The plugin registers 9 slash commands across four modules.
 - Per-workspace isolation for multi-agent support
 
 **Resolution Logic:**
-- Accepts short names (`atlas`), full IDs (`omoc_atlas`), or display names (`Atlas`)
+- Accepts short names (`atlas`), full IDs (`omoc_delegate`), or display names (`Atlas`)
 - Case-insensitive matching
 - Returns error with available personas if name not found
 

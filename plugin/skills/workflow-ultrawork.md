@@ -9,15 +9,15 @@ When the user invokes `/ultrawork [task]` or says "ultrawork", execute the full 
 
 ## Persona
 
-This workflow runs under **Atlas** (omoc_atlas) — the orchestrator. If you are not already Atlas, the system will switch you automatically.
+This workflow runs under **Atlas** (omoc_delegate) — the orchestrator. If you are not already Atlas, the system will switch you automatically.
 
 ## Execution Pipeline
 
 ### Phase 1: Planning (Prometheus)
 1. Analyze the task description
-2. Explore the codebase: `omoc_delegate(task_description="...", category="quick", agent_id="omoc_explore", background=true)`
-3. Create a structured plan via: `omoc_delegate(task_description="...", category="ultrabrain", agent_id="omoc_prometheus")`
-4. Review the plan: `omoc_delegate(task_description="...", category="deep", agent_id="omoc_momus")`
+2. Explore the codebase: `omoc_delegate(task_description="...", category="quick", agent_id="omoc_explorer", background=true)`
+3. Create a structured plan via: `omoc_delegate(task_description="...", category="ultrabrain", agent_id="omoc_planner")`
+4. Review the plan: `omoc_delegate(task_description="...", category="deep", agent_id="omoc_reviewer")`
 
 ### Phase 2: Execution (Atlas → Workers)
 5. For each task in the plan:

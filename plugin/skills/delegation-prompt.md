@@ -31,7 +31,7 @@ This replaces the old "5-minute rule." The decision criterion is **not time** bu
 omoc_delegate(
   task_description="7-element prompt (see below)",
   category="deep",           # Category determines both model AND agent
-  agent_id="omoc_oracle",    # Override auto-selected agent (optional)
+  agent_id="omoc_architect",    # Override auto-selected agent (optional)
   skills=["git-master"],     # Skills to load (optional)
   background=false            # Run in background (optional)
 )
@@ -45,29 +45,29 @@ Each category automatically selects the best-fit agent. You can override with `a
 
 | Category | Default Agent | Model | Use Case |
 |----------|--------------|-------|----------|
-| quick | `omoc_sisyphus` | claude-sonnet-4-6 | Simple fixes, search, grep |
-| deep | `omoc_hephaestus` | claude-opus-4-6-thinking | Complex refactoring, analysis |
-| ultrabrain | `omoc_oracle` | gpt-5.3-codex | Architecture, deep reasoning |
+| quick | `omoc_coder` | claude-sonnet-4-6 | Simple fixes, search, grep |
+| deep | `omoc_expert` | claude-opus-4-6-thinking | Complex refactoring, analysis |
+| ultrabrain | `omoc_architect` | gpt-5.3-codex | Architecture, deep reasoning |
 | visual-engineering | `omoc_frontend` | gemini-3.1-pro | Frontend, UI/UX, design |
 | multimodal | `omoc_looker` | gemini-3-flash | PDF, image, video analysis |
-| artistry | `omoc_hephaestus` | claude-opus-4-6-thinking | Creative complex problems |
-| unspecified-low | `omoc_sisyphus` | claude-sonnet-4-6 | General low-effort tasks |
-| unspecified-high | `omoc_hephaestus` | claude-opus-4-6-thinking | General high-effort tasks |
-| writing | `omoc_sisyphus` | claude-sonnet-4-6 | Documentation, prose |
+| artistry | `omoc_expert` | claude-opus-4-6-thinking | Creative complex problems |
+| unspecified-low | `omoc_coder` | claude-sonnet-4-6 | General low-effort tasks |
+| unspecified-high | `omoc_expert` | claude-opus-4-6-thinking | General high-effort tasks |
+| writing | `omoc_coder` | claude-sonnet-4-6 | Documentation, prose |
 
 ### Available Agents
 
 | agentId | Role | Permissions |
 |---------|------|-------------|
-| `omoc_prometheus` | Strategic planning | read-only |
-| `omoc_atlas` | Orchestration | full |
-| `omoc_sisyphus` | Implementation worker | full |
-| `omoc_hephaestus` | Deep implementation | full |
-| `omoc_oracle` | Architecture consulting | read-only |
-| `omoc_explore` | Codebase search | read-only |
-| `omoc_librarian` | Documentation research | read-only |
-| `omoc_metis` | Gap analysis | read-only |
-| `omoc_momus` | Plan review | read-only |
+| `omoc_planner` | Strategic planning | read-only |
+| `omoc_delegate` | Orchestration | full |
+| `omoc_coder` | Implementation worker | full |
+| `omoc_expert` | Deep implementation | full |
+| `omoc_architect` | Architecture consulting | read-only |
+| `omoc_explorer` | Codebase search | read-only |
+| `omoc_researcher` | Documentation research | read-only |
+| `omoc_advisor` | Gap analysis | read-only |
+| `omoc_reviewer` | Plan review | read-only |
 | `omoc_looker` | Multimodal visual analysis | read-only |
 | `omoc_frontend` | Visual engineering | full |
 
@@ -163,7 +163,7 @@ omoc_delegate(
   """,
   category="deep"
 )
-# → omoc_delegate auto-selects omoc_hephaestus + claude-opus-4-6-thinking
+# → omoc_delegate auto-selects omoc_expert + claude-opus-4-6-thinking
 # → Execute the returned sessions_spawn instruction immediately
 ```
 
@@ -181,10 +181,10 @@ omoc_delegate(
   7) CONTEXT: Currently using Next.js 14, evaluating upgrade
   """,
   category="quick",
-  agent_id="omoc_librarian",
+  agent_id="omoc_researcher",
   skills=["web-search"]
 )
-# → Uses omoc_librarian (overrides default omoc_sisyphus for research tasks)
+# → Uses omoc_researcher (overrides default omoc_coder for research tasks)
 ```
 
 ### Example 3: Parallel Tasks (multiple delegates)
@@ -193,7 +193,7 @@ omoc_delegate(
 omoc_delegate(task_description="Refactor file A...", category="deep", background=true)
 omoc_delegate(task_description="Refactor file B...", category="deep", background=true)
 omoc_delegate(task_description="Write tests...", category="quick", background=true)
-# → Each gets the right agent: omoc_hephaestus for deep, omoc_sisyphus for quick
+# → Each gets the right agent: omoc_expert for deep, omoc_coder for quick
 ```
 
 ## Mandatory Delegation Flow

@@ -37,7 +37,7 @@ describe('spawn-guard hook', () => {
 
   it('allows sessions_spawn when agentId is provided', async () => {
     const api = createMockApi({
-      config: createMockConfig({ agentId: 'omoc_atlas' }),
+      config: createMockConfig({ agentId: 'omoc_delegate' }),
     }) as unknown as MockApi;
 
     registerSpawnGuard(api);
@@ -49,7 +49,7 @@ describe('spawn-guard hook', () => {
     const event: PluginHookBeforeToolCallEvent = {
       toolName: 'sessions_spawn',
       params: {
-        agentId: 'omoc_sisyphus',
+        agentId: 'omoc_coder',
         task_description: 'Test task',
       },
     };
@@ -62,7 +62,7 @@ describe('spawn-guard hook', () => {
 
   it('blocks sessions_spawn when agentId is empty string', async () => {
     const api = createMockApi({
-      config: createMockConfig({ agentId: 'omoc_atlas' }),
+      config: createMockConfig({ agentId: 'omoc_delegate' }),
     }) as unknown as MockApi;
 
     registerSpawnGuard(api);
@@ -92,7 +92,7 @@ describe('spawn-guard hook', () => {
 
   it('blocks sessions_spawn when agentId is whitespace only', async () => {
     const api = createMockApi({
-      config: createMockConfig({ agentId: 'omoc_atlas' }),
+      config: createMockConfig({ agentId: 'omoc_delegate' }),
     }) as unknown as MockApi;
 
     registerSpawnGuard(api);
@@ -118,7 +118,7 @@ describe('spawn-guard hook', () => {
 
   it('blocks sessions_spawn when agentId is missing from params', async () => {
     const api = createMockApi({
-      config: createMockConfig({ agentId: 'omoc_atlas' }),
+      config: createMockConfig({ agentId: 'omoc_delegate' }),
     }) as unknown as MockApi;
 
     registerSpawnGuard(api);
@@ -143,7 +143,7 @@ describe('spawn-guard hook', () => {
 
   it('allows other tools to pass through without blocking', async () => {
     const api = createMockApi({
-      config: createMockConfig({ agentId: 'omoc_atlas' }),
+      config: createMockConfig({ agentId: 'omoc_delegate' }),
     }) as unknown as MockApi;
 
     registerSpawnGuard(api);
@@ -167,7 +167,7 @@ describe('spawn-guard hook', () => {
 
   it('allows sessions_spawn when agentId is provided and valid', async () => {
     const api = createMockApi({
-      config: createMockConfig({ agentId: 'omoc_atlas' }),
+      config: createMockConfig({ agentId: 'omoc_delegate' }),
     }) as unknown as MockApi;
 
     registerSpawnGuard(api);
@@ -179,7 +179,7 @@ describe('spawn-guard hook', () => {
     const event: PluginHookBeforeToolCallEvent = {
       toolName: 'sessions_spawn',
       params: {
-        agentId: 'omoc_sisyphus',
+        agentId: 'omoc_coder',
         task_description: 'Test task',
       },
     };
@@ -194,7 +194,7 @@ describe('spawn-guard hook', () => {
     // This test verifies the guard doesn't block when persona check fails
     // In practice, getActivePersona may fail if workspaceDir is not available
     const api = createMockApi({
-      config: createMockConfig({ agentId: 'omoc_atlas' }),
+      config: createMockConfig({ agentId: 'omoc_delegate' }),
     }) as unknown as MockApi;
 
     registerSpawnGuard(api);
@@ -221,7 +221,7 @@ describe('spawn-guard hook', () => {
 
   it('includes available agents in block reason (without omoc_ prefix)', async () => {
     const api = createMockApi({
-      config: createMockConfig({ agentId: 'omoc_atlas' }),
+      config: createMockConfig({ agentId: 'omoc_delegate' }),
     }) as unknown as MockApi;
 
     registerSpawnGuard(api);
@@ -242,14 +242,14 @@ describe('spawn-guard hook', () => {
     expect(result).toBeDefined();
     expect(result!.blockReason).toContain('Available agents:');
     // Available agents list strips the 'omoc_' prefix
-    expect(result!.blockReason).toContain('prometheus');
-    expect(result!.blockReason).toContain('atlas');
-    expect(result!.blockReason).toContain('sisyphus');
+    expect(result!.blockReason).toContain('planner');
+    expect(result!.blockReason).toContain('delegate');
+    expect(result!.blockReason).toContain('coder');
   });
 
   it('logs the active persona when blocking', async () => {
     const api = createMockApi({
-      config: createMockConfig({ agentId: 'omoc_atlas' }),
+      config: createMockConfig({ agentId: 'omoc_delegate' }),
     }) as unknown as MockApi;
 
     registerSpawnGuard(api);

@@ -66,11 +66,11 @@ describe('todo-enforcer hook', () => {
     registerTodoEnforcer(api);
 
     const handler = api.registerHook.mock.calls[0][1] as (event: AgentBootstrapEvent) => void;
-    const event: AgentBootstrapEvent = { context: { agentId: 'omoc_atlas', bootstrapFiles: [] } };
+    const event: AgentBootstrapEvent = { context: { agentId: 'omoc_delegate', bootstrapFiles: [] } };
     handler(event);
 
     expect(event.context.bootstrapFiles).toHaveLength(0);
-    const entries = contextCollector.getEntries('omoc_atlas');
+    const entries = contextCollector.getEntries('omoc_delegate');
     expect(entries).toHaveLength(1);
     expect(entries[0].id).toBe('todo-enforcer');
     expect(entries[0].source).toBe('todo-enforcer');
@@ -123,7 +123,7 @@ describe('todo-enforcer hook', () => {
 
     const handler = api.registerHook.mock.calls[0][1] as (event: { context: { agentId?: string; bootstrapFiles?: BootstrapFile[] } }) => void;
 
-    for (const agentId of ['omoc_explore', 'omoc_librarian', 'omoc_oracle', 'omoc_metis', 'omoc_momus', 'omoc_looker']) {
+    for (const agentId of ['omoc_explorer', 'omoc_researcher', 'omoc_architect', 'omoc_advisor', 'omoc_reviewer', 'omoc_looker']) {
       const event = { context: { agentId, bootstrapFiles: [] as BootstrapFile[] } };
       handler(event);
       expect(contextCollector.getEntries(agentId)).toHaveLength(0);
@@ -136,9 +136,9 @@ describe('todo-enforcer hook', () => {
 
     const handler = api.registerHook.mock.calls[0][1] as (event: { context: { agentId?: string; bootstrapFiles?: BootstrapFile[] } }) => void;
 
-    const event = { context: { agentId: 'omoc_atlas', bootstrapFiles: [] as BootstrapFile[] } };
+    const event = { context: { agentId: 'omoc_delegate', bootstrapFiles: [] as BootstrapFile[] } };
     handler(event);
-    const entries = contextCollector.getEntries('omoc_atlas');
+    const entries = contextCollector.getEntries('omoc_delegate');
     expect(entries).toHaveLength(1);
     expect(entries[0].content).toContain('TODO CONTINUATION');
     expect(entries[0].content).toContain('subagent completion');
@@ -150,9 +150,9 @@ describe('todo-enforcer hook', () => {
 
     const handler = api.registerHook.mock.calls[0][1] as (event: { context: { agentId?: string; bootstrapFiles?: BootstrapFile[] } }) => void;
 
-    const event = { context: { agentId: 'omoc_sisyphus', bootstrapFiles: [] as BootstrapFile[] } };
+    const event = { context: { agentId: 'omoc_coder', bootstrapFiles: [] as BootstrapFile[] } };
     handler(event);
-    const entries = contextCollector.getEntries('omoc_sisyphus');
+    const entries = contextCollector.getEntries('omoc_coder');
     expect(entries).toHaveLength(1);
     expect(entries[0].content).toContain('TASK COMPLETION');
     expect(entries[0].content).not.toContain('subagent completion');
@@ -176,13 +176,13 @@ describe('todo-enforcer hook', () => {
 
     const handler = api.registerHook.mock.calls[0][1] as (event: { context: { agentId?: string; bootstrapFiles?: BootstrapFile[] } }) => void;
 
-    const orchestratorEvent = { context: { agentId: 'omoc_atlas', bootstrapFiles: [] as BootstrapFile[] } };
+    const orchestratorEvent = { context: { agentId: 'omoc_delegate', bootstrapFiles: [] as BootstrapFile[] } };
     handler(orchestratorEvent);
-    expect(contextCollector.getEntries('omoc_atlas')[0].content).toContain('Do NOT restate prior messages');
+    expect(contextCollector.getEntries('omoc_delegate')[0].content).toContain('Do NOT restate prior messages');
 
-    const workerEvent = { context: { agentId: 'omoc_sisyphus', bootstrapFiles: [] as BootstrapFile[] } };
+    const workerEvent = { context: { agentId: 'omoc_coder', bootstrapFiles: [] as BootstrapFile[] } };
     handler(workerEvent);
-    expect(contextCollector.getEntries('omoc_sisyphus')[0].content).toContain('Do NOT restate prior messages');
+    expect(contextCollector.getEntries('omoc_coder')[0].content).toContain('Do NOT restate prior messages');
   });
 
   it('resetEnforcerState and getEnforcerState remain callable (API compat)', () => {
@@ -197,7 +197,7 @@ describe('todo-enforcer hook', () => {
     registerTodoEnforcer(api);
     const handler = api.registerHook.mock.calls[0][1] as (event: AgentBootstrapEvent) => void;
 
-    handler({ context: { agentId: 'omoc_atlas', sessionKey: 'sess-1' } });
+    handler({ context: { agentId: 'omoc_delegate', sessionKey: 'sess-1' } });
 
     const firstCollect = contextCollector.collect('sess-1');
     expect(firstCollect.some((entry) => entry.id === 'todo-enforcer')).toBe(true);
@@ -349,11 +349,11 @@ describe('todo-enforcer continuation hook (before_prompt_build)', () => {
 
 describe('classifyAgentRole', () => {
   it('classifies orchestrator IDs as orchestrator', () => {
-    expect(classifyAgentRole('omoc_atlas')).toBe('orchestrator');
+    expect(classifyAgentRole('omoc_delegate')).toBe('orchestrator');
   });
 
   it('classifies worker IDs as worker', () => {
-    expect(classifyAgentRole('omoc_sisyphus')).toBe('worker');
+    expect(classifyAgentRole('omoc_coder')).toBe('worker');
   });
 
   it('classifies unknown IDs as unknown', () => {
@@ -451,17 +451,17 @@ describe('context-injector hook (typed hook)', () => {
   });
 
   it('injects collected context entries via prependContext', () => {
-    const api = createMockApi({ config: createMockConfig({ agentId: 'omoc_atlas' }) });
+    const api = createMockApi({ config: createMockConfig({ agentId: 'omoc_delegate' }) });
     registerContextInjector(api);
 
-    contextCollector.register('omoc_atlas', {
+    contextCollector.register('omoc_delegate', {
       id: 'todo-enforcer',
       content: 'todo directive',
       priority: 'normal',
       source: 'todo-enforcer',
     });
-    contextCollector.register('omoc_atlas', {
-      id: 'persona/omoc_atlas',
+    contextCollector.register('omoc_delegate', {
+      id: 'persona/omoc_delegate',
       content: 'persona prompt',
       priority: 'high',
       source: 'persona',
@@ -474,7 +474,7 @@ describe('context-injector hook (typed hook)', () => {
     expect(result).toBeDefined();
     expect(result.prependContext).toContain('persona prompt');
     expect(result.prependContext).toContain('todo directive');
-    expect(contextCollector.hasEntries('omoc_atlas')).toBe(true);
+    expect(contextCollector.hasEntries('omoc_delegate')).toBe(true);
   });
 
   it('uses default session key when agentId is missing', () => {
@@ -539,7 +539,7 @@ describe('context-injector hook (typed hook)', () => {
     const handler = api.on.mock.calls[0][1];
     const result = handler(
       { prompt: 'hello' },
-      { agentId: 'omoc_sisyphus', sessionKey: 'session-2' },
+      { agentId: 'omoc_coder', sessionKey: 'session-2' },
     );
 
     expect(result).toBeUndefined();

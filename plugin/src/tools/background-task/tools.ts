@@ -33,7 +33,7 @@ const BackgroundTaskParamsSchema = Type.Object({
     description: 'Full detailed prompt for the agent',
   }),
   agent: Type.Optional(Type.String({
-    description: 'Agent ID to use (e.g., omoc_explore, omoc_librarian). Default: omoc_sisyphus',
+    description: 'Agent ID to use (e.g., omoc_explorer, omoc_researcher). Default: omoc_coder',
   })),
 });
 

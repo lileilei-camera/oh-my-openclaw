@@ -23,7 +23,7 @@ for (const id of Object.keys(AGENT_MD_MAP)) {
 }
 
 /**
- * Resolve user input ("omoc_atlas", "atlas", or "Atlas") to a canonical agent config ID.
+ * Resolve user input ("omoc_delegate", "atlas", or "Delegate") to a canonical agent config ID.
  */
 export function resolvePersonaId(input: string): string | null {
   const lower = input.toLowerCase().trim();
@@ -81,15 +81,15 @@ export async function readPersonaPrompt(agentId: string): Promise<string> {
  * Chinese descriptions for each persona (for /omoc list display)
  */
 const PERSONA_DESCRIPTIONS_CN: Record<string, string> = {
-  omoc_prometheus: '战略规划师 - 制定高级计划和策略',
-  omoc_atlas: '任务编排师 - 协调和分配任务',
-  omoc_sisyphus: '主要编码员 - 执行核心编码任务',
-  omoc_hephaestus: '深度编码专家 - 处理复杂编码任务',
-  omoc_oracle: '架构顾问 - 提供架构建议（只读）',
-  omoc_explore: '代码搜索专家 - 搜索和分析代码库（只读）',
-  omoc_librarian: '文档研究专家 - 查找和整理文档（只读）',
-  omoc_metis: '预规划分析师 - 规划前的差距分析',
-  omoc_momus: '计划审查员 - 审查和批评计划',
+  omoc_planner: '战略规划师 - 制定高级计划和策略',
+  omoc_delegate: '任务编排师 - 协调和分配任务',
+  omoc_coder: '主要编码员 - 执行核心编码任务',
+  omoc_expert: '深度编码专家 - 处理复杂编码任务',
+  omoc_architect: '架构顾问 - 提供架构建议（只读）',
+  omoc_explorer: '代码搜索专家 - 搜索和分析代码库（只读）',
+  omoc_researcher: '文档研究专家 - 查找和整理文档（只读）',
+  omoc_advisor: '预规划分析师 - 规划前的差距分析',
+  omoc_reviewer: '计划审查员 - 审查和批评计划',
   omoc_looker: '视觉分析专家 - 分析图像和图表（只读）',
   omoc_frontend: '前端工程师 - UI/UX 设计和实现',
 };
@@ -128,4 +128,4 @@ export function listPersonas(): Array<{
   }));
 }
 
-export const DEFAULT_PERSONA_ID = 'omoc_atlas';
+export const DEFAULT_PERSONA_ID = 'omoc_delegate';

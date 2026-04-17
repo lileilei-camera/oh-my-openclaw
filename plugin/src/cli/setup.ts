@@ -493,7 +493,7 @@ export function applyPlannerGuard(
   agentList: Array<{ id: string; tools?: { deny?: string[]; [key: string]: unknown }; [key: string]: unknown }>,
 ): void {
   for (const agent of agentList) {
-    if (agent.id === 'omoc_prometheus') {
+    if (agent.id === 'omoc_planner') {
       if (!agent.tools) {
         agent.tools = {};
       }

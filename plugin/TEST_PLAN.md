@@ -65,7 +65,7 @@ cat ~/.openclaw/workspace/.omoc-state/active-persona
 **预期结果**:
 - ✅ omoc_delegate 工具被调用
 - ✅ 返回指令包含：category, agentId, model, task
-- ✅ 指令格式清晰，包含 `agentId: "omoc_sisyphus"`
+- ✅ 指令格式清晰，包含 `agentId: "omoc_coder"`
 - ✅ 指令明确说明需要调用 sessions_spawn
 
 **验证命令**:
@@ -229,9 +229,9 @@ head -50 ~/.openclaw/workspace/omoc-sisyphus/AGENTS.md
 **预期结果**:
 | Category | Expected Agent | Expected Model |
 |----------|---------------|----------------|
-| quick | omoc_sisyphus | claude-sonnet-4-6 |
-| deep | omoc_hephaestus | claude-opus-4-6-thinking |
-| ultrabrain | omoc_oracle | gpt-5.3-codex |
+| quick | omoc_coder | claude-sonnet-4-6 |
+| deep | omoc_expert | claude-opus-4-6-thinking |
+| ultrabrain | omoc_architect | gpt-5.3-codex |
 | visual-engineering | omoc_frontend | gemini-3.1-pro |
 | multimodal | omoc_looker | gemini-3-flash |
 

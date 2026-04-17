@@ -85,15 +85,15 @@ Approach:
 </Category_Context>`
 
 export const DEFAULT_CATEGORY_AGENTS: Record<string, string> = {
-  quick: "omoc_sisyphus",
-  deep: "omoc_hephaestus",
-  ultrabrain: "omoc_oracle",
+  quick: "omoc_coder",
+  deep: "omoc_expert",
+  ultrabrain: "omoc_architect",
   "visual-engineering": "omoc_frontend",
   multimodal: "omoc_looker",
-  artistry: "omoc_hephaestus",
-  "unspecified-low": "omoc_sisyphus",
-  "unspecified-high": "omoc_hephaestus",
-  writing: "omoc_sisyphus",
+  artistry: "omoc_expert",
+  "unspecified-low": "omoc_coder",
+  "unspecified-high": "omoc_expert",
+  writing: "omoc_coder",
 }
 
 export const DEFAULT_CATEGORY_MODELS: Record<string, string> = {

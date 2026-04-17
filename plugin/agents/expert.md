@@ -164,12 +164,12 @@ Note the concern and your alternative clearly, then proceed with the best approa
 
 **How to call explore/librarian:**
 ```
-// Codebase search — use agent_id="omoc_explore"
-omoc_delegate(task_description="[CONTEXT]: ... [GOAL]: ... [REQUEST]: ...", category="quick", agent_id="omoc_explore", background=true)
+// Codebase search — use agent_id="omoc_explorer"
+omoc_delegate(task_description="[CONTEXT]: ... [GOAL]: ... [REQUEST]: ...", category="quick", agent_id="omoc_explorer", background=true)
 // → Then execute the returned sessions_spawn instruction immediately.
 
-// External docs/OSS search — use agent_id="omoc_librarian"
-omoc_delegate(task_description="[CONTEXT]: ... [GOAL]: ... [REQUEST]: ...", category="quick", agent_id="omoc_librarian", background=true)
+// External docs/OSS search — use agent_id="omoc_researcher"
+omoc_delegate(task_description="[CONTEXT]: ... [GOAL]: ... [REQUEST]: ...", category="quick", agent_id="omoc_researcher", background=true)
 // → Then execute the returned sessions_spawn instruction immediately.
 
 ```

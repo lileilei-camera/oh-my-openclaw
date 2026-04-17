@@ -115,9 +115,9 @@ async function main() {
     assert(ctx.bootstrapFiles[0].content === originalContent, 'AGENTS.md content should not change');
   });
 
-  await test('should replace AGENTS.md content when valid persona is active (omoc_atlas)', async () => {
+  await test('should replace AGENTS.md content when valid persona is active (omoc_delegate)', async () => {
     const ws = join(tmpBase, 'ws-atlas');
-    setupWorkspace(ws, 'omoc_atlas');
+    setupWorkspace(ws, 'omoc_delegate');
     const ctx = createBootstrapContext(ws);
 
     handler(ctx);
@@ -130,14 +130,14 @@ async function main() {
     assert(agentsFile!.missing === false, 'missing should be false');
     // Verify it actually loaded the atlas persona file
     assert(
-      agentsFile!.content.includes('atlas') || agentsFile!.content.includes('Atlas') || agentsFile!.content.length > 100,
+      agentsFile!.content.includes('atlas') || agentsFile!.content.includes('Delegate') || agentsFile!.content.length > 100,
       'Should contain actual persona content'
     );
   });
 
-  await test('should replace AGENTS.md content for omoc_sisyphus persona', async () => {
+  await test('should replace AGENTS.md content for omoc_coder persona', async () => {
     const ws = join(tmpBase, 'ws-sisyphus');
-    setupWorkspace(ws, 'omoc_sisyphus');
+    setupWorkspace(ws, 'omoc_coder');
     const ctx = createBootstrapContext(ws);
 
     handler(ctx);
@@ -163,7 +163,7 @@ async function main() {
 
   await test('should extract agentId from sessionKey and use agent-specific workspace', async () => {
     const ws = join(tmpBase, 'ws-coder');
-    setupWorkspace(ws, 'omoc_prometheus');
+    setupWorkspace(ws, 'omoc_planner');
     const ctx = createBootstrapContext(ws);
     // Override sessionKey to simulate coder agent pointing to our temp workspace
     ctx.sessionKey = 'agent:main:feishu:direct:ou_test123';
@@ -173,7 +173,7 @@ async function main() {
 
     handler(ctx);
 
-    // Should inject omoc_prometheus content from our test workspace
+    // Should inject omoc_planner content from our test workspace
     const agentsFile = ctx.bootstrapFiles.find(f => f.name === 'AGENTS.md');
     assert(agentsFile !== undefined, 'AGENTS.md should exist');
     assert(agentsFile!.content !== originalContent,
@@ -182,7 +182,7 @@ async function main() {
 
   await test('should not crash when bootstrapFiles has no AGENTS.md', async () => {
     const ws = join(tmpBase, 'ws-no-agents');
-    setupWorkspace(ws, 'omoc_atlas');
+    setupWorkspace(ws, 'omoc_delegate');
     const ctx = {
       workspaceDir: ws,
       bootstrapFiles: [
@@ -204,9 +204,9 @@ async function main() {
 
   await test('should handle all 11 personas without crashing', async () => {
     const personas = [
-      'omoc_prometheus', 'omoc_atlas', 'omoc_sisyphus', 'omoc_hephaestus',
-      'omoc_oracle', 'omoc_explore', 'omoc_librarian', 'omoc_metis',
-      'omoc_momus', 'omoc_looker', 'omoc_frontend',
+      'omoc_planner', 'omoc_delegate', 'omoc_coder', 'omoc_expert',
+      'omoc_architect', 'omoc_explorer', 'omoc_researcher', 'omoc_advisor',
+      'omoc_reviewer', 'omoc_looker', 'omoc_frontend',
     ];
 
     for (const persona of personas) {

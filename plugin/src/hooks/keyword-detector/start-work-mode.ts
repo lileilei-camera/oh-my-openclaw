@@ -3,7 +3,7 @@ export const START_WORK_PATTERN = /\b(\/start_work|start_work)\b/i;
 export const START_WORK_MESSAGE = `[start-work-mode]
 EXECUTION MODE ACTIVATED. Load plan and execute via delegation.
 
-PERSONA: Atlas (omoc_atlas) — the orchestrator.
+PERSONA: Atlas (omoc_delegate) — the orchestrator.
 
 MANDATORY WORKFLOW:
 1. LOAD PLAN: Read most recent plan from workspace/plans/

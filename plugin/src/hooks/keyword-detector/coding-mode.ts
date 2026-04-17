@@ -20,11 +20,11 @@ PRIMARY — tmux OpenCode/OmO session (opencode-controller skill):
 - Use for: heavy coding, multi-file refactors, test writing, build/lint cycles
 
 ALTERNATIVE — omoc_delegate_task for lighter tasks:
-- omoc_delegate_task(category="quick", agent_id="omoc_sisyphus") — simple fixes, single-file changes
-- omoc_delegate_task(category="deep", agent_id="omoc_hephaestus") — complex refactoring, architecture changes
+- omoc_delegate_task(category="quick", agent_id="omoc_coder") — simple fixes, single-file changes
+- omoc_delegate_task(category="deep", agent_id="omoc_expert") — complex refactoring, architecture changes
 
 CONTEXT GATHERING (parallel, before coding):
-- omoc_delegate_task(agent_id="omoc_explore") — understand existing patterns first
+- omoc_delegate_task(agent_id="omoc_explorer") — understand existing patterns first
 - context7 / grep_app.search — check library APIs, find OSS examples
 
 VERIFICATION (after coding):

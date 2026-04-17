@@ -13,37 +13,37 @@
 ```json
 {
   "agents": {
-    "omoc_prometheus": {
+    "omoc_planner": {
       "primary": "bailian/qwen3-max-2026-01-23",
       "fallbacks": ["bailian/qwen3.5-plus"]
     },
-    "omoc_atlas": {
+    "omoc_delegate": {
       "primary": "bailian/qwen3.5-plus",
       "fallbacks": ["bailian/glm-5"]
     },
-    "omoc_sisyphus": {
+    "omoc_coder": {
       "primary": "bailian/qwen3-coder-plus",
       "fallbacks": ["bailian/qwen3-coder-next"]
     },
-    "omoc_hephaestus": {
+    "omoc_expert": {
       "primary": "bailian/qwen3-coder-plus",
       "fallbacks": ["bailian/MiniMax-M2.5"]
     },
-    "omoc_oracle": {
+    "omoc_architect": {
       "primary": "bailian/qwen3-max-2026-01-23",
       "fallbacks": ["bailian/qwen3.5-plus"]
     },
-    "omoc_explore": {
+    "omoc_explorer": {
       "primary": "bailian/qwen3-coder-next"
     },
-    "omoc_librarian": {
+    "omoc_researcher": {
       "primary": "bailian/qwen3.5-plus"
     },
-    "omoc_metis": {
+    "omoc_advisor": {
       "primary": "bailian/qwen3-max-2026-01-23",
       "fallbacks": ["bailian/qwen3.5-plus"]
     },
-    "omoc_momus": {
+    "omoc_reviewer": {
       "primary": "bailian/qwen3-max-2026-01-23",
       "fallbacks": ["bailian/qwen3.5-plus"]
     },
@@ -65,7 +65,7 @@
 
 ### 格式 1：带备用模型
 ```json
-"omoc_prometheus": {
+"omoc_planner": {
   "primary": "bailian/qwen3-max-2026-01-23",
   "fallbacks": ["bailian/qwen3.5-plus"]
 }
@@ -73,7 +73,7 @@
 
 ### 格式 2：单一模型
 ```json
-"omoc_explore": {
+"omoc_explorer": {
   "primary": "bailian/qwen3-coder-next"
 }
 ```

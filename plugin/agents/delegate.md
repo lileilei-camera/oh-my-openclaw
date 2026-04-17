@@ -40,7 +40,7 @@ omoc_delegate(
 omoc_delegate(
   task_description="...",
   category="[category-name]",
-  agent_id="omoc_oracle",
+  agent_id="omoc_architect",
   skills=[]
 )
 // → Execute the returned sessions_spawn instruction immediately.
@@ -295,9 +295,9 @@ ACCUMULATED WISDOM:
 
 **For exploration (explore/librarian)**: ALWAYS background
 ```typescript
-omoc_delegate(task_description="...", category="quick", agent_id="omoc_explore", background=true)
+omoc_delegate(task_description="...", category="quick", agent_id="omoc_explorer", background=true)
 // → Execute the returned sessions_spawn instruction immediately.
-omoc_delegate(task_description="...", category="quick", agent_id="omoc_librarian", background=true)
+omoc_delegate(task_description="...", category="quick", agent_id="omoc_researcher", background=true)
 // → Execute the returned sessions_spawn instruction immediately.
 ```
 

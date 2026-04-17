@@ -65,11 +65,11 @@ describe('Agent Configs', () => {
 
   describe('Read-only agents (oracle, explore, librarian, metis, momus)', () => {
     const readOnlyAgentIds = [
-      'omoc_oracle',
-      'omoc_explore',
-      'omoc_librarian',
-      'omoc_metis',
-      'omoc_momus',
+      'omoc_architect',
+      'omoc_explorer',
+      'omoc_researcher',
+      'omoc_advisor',
+      'omoc_reviewer',
     ];
 
     it('should not have subagents', () => {
@@ -95,10 +95,10 @@ describe('Agent Configs', () => {
 
   describe('Agents with subagents (prometheus, atlas, sisyphus, hephaestus, frontend)', () => {
     const agentsWithSubagents = [
-      'omoc_prometheus',
-      'omoc_atlas',
-      'omoc_sisyphus',
-      'omoc_hephaestus',
+      'omoc_planner',
+      'omoc_delegate',
+      'omoc_coder',
+      'omoc_expert',
       'omoc_frontend',
     ];
 
@@ -110,31 +110,31 @@ describe('Agent Configs', () => {
     });
 
     it('prometheus and atlas should have allowAgents: ["*"]', () => {
-      ['omoc_prometheus', 'omoc_atlas'].forEach((id) => {
+      ['omoc_planner', 'omoc_delegate'].forEach((id) => {
         const agent = OMOC_AGENT_CONFIGS.find((a) => a.id === id);
         expect(agent?.subagents?.allowAgents).toEqual(['*']);
       });
     });
 
     it('sisyphus, hephaestus, frontend should have specific allowAgents', () => {
-      const sisyphus = OMOC_AGENT_CONFIGS.find((a) => a.id === 'omoc_sisyphus');
+      const sisyphus = OMOC_AGENT_CONFIGS.find((a) => a.id === 'omoc_coder');
       expect(sisyphus?.subagents?.allowAgents).toEqual([
-        'omoc_explore',
-        'omoc_librarian',
-        'omoc_oracle',
+        'omoc_explorer',
+        'omoc_researcher',
+        'omoc_architect',
       ]);
 
-      const hephaestus = OMOC_AGENT_CONFIGS.find((a) => a.id === 'omoc_hephaestus');
+      const hephaestus = OMOC_AGENT_CONFIGS.find((a) => a.id === 'omoc_expert');
       expect(hephaestus?.subagents?.allowAgents).toEqual([
-        'omoc_explore',
-        'omoc_librarian',
-        'omoc_oracle',
+        'omoc_explorer',
+        'omoc_researcher',
+        'omoc_architect',
       ]);
 
       const frontend = OMOC_AGENT_CONFIGS.find((a) => a.id === 'omoc_frontend');
       expect(frontend?.subagents?.allowAgents).toEqual([
-        'omoc_explore',
-        'omoc_librarian',
+        'omoc_explorer',
+        'omoc_researcher',
       ]);
     });
   });
@@ -278,36 +278,36 @@ describe('mergeAgentConfigs', () => {
   });
 
   it('should skip existing agents when force=false', () => {
-    const existing = [{ id: 'omoc_prometheus', custom: 'value' }];
+    const existing = [{ id: 'omoc_planner', custom: 'value' }];
     const { merged, result } = mergeAgentConfigs(
       existing,
       OMOC_AGENT_CONFIGS,
       false,
     );
 
-    expect(result.skipped).toContain('omoc_prometheus');
+    expect(result.skipped).toContain('omoc_planner');
     expect(result.added).toHaveLength(OMOC_AGENT_CONFIGS.length - 1);
-    const prometheus = merged.find((a) => a.id === 'omoc_prometheus');
+    const prometheus = merged.find((a) => a.id === 'omoc_planner');
     expect(prometheus?.custom).toBe('value');
   });
 
   it('should update existing agents when force=true', () => {
-    const existing = [{ id: 'omoc_prometheus', custom: 'value' }];
+    const existing = [{ id: 'omoc_planner', custom: 'value' }];
     const { merged, result } = mergeAgentConfigs(
       existing,
       OMOC_AGENT_CONFIGS,
       true,
     );
 
-    expect(result.updated).toContain('omoc_prometheus');
+    expect(result.updated).toContain('omoc_planner');
     expect(result.skipped).toHaveLength(0);
-    const prometheus = merged.find((a) => a.id === 'omoc_prometheus');
+    const prometheus = merged.find((a) => a.id === 'omoc_planner');
     expect(prometheus?.custom).toBeUndefined();
   });
 
   it('should handle mixed: adds new + skips existing', () => {
     const existing = [
-      { id: 'omoc_prometheus', custom: 'value' },
+      { id: 'omoc_planner', custom: 'value' },
       { id: 'custom_agent', name: 'Custom' },
     ];
     const { merged, result } = mergeAgentConfigs(
@@ -317,7 +317,7 @@ describe('mergeAgentConfigs', () => {
     );
 
     expect(result.added).toHaveLength(OMOC_AGENT_CONFIGS.length - 1);
-    expect(result.skipped).toContain('omoc_prometheus');
+    expect(result.skipped).toContain('omoc_planner');
     expect(merged).toHaveLength(existing.length + result.added.length);
   });
 
@@ -469,19 +469,19 @@ describe('runSetup', () => {
 
   it('should skip existing agents by default', () => {
     const { dir, configPath } = createTempConfig(
-      '{"agents": {"list": [{"id": "omoc_prometheus", "custom": "value"}]}}',
+      '{"agents": {"list": [{"id": "omoc_planner", "custom": "value"}]}}',
     );
 
     try {
       const logger = { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
       const result = runSetup({ configPath, logger });
 
-      expect(result.skipped).toContain('omoc_prometheus');
+      expect(result.skipped).toContain('omoc_planner');
       expect(result.added).toHaveLength(OMOC_AGENT_CONFIGS.length - 1);
 
       const config = parseConfig(fs.readFileSync(configPath, 'utf-8'));
       const prometheus = (config.agents?.list as Array<{ id: string; custom?: string }>).find(
-        (a) => a.id === 'omoc_prometheus',
+        (a) => a.id === 'omoc_planner',
       );
       expect(prometheus?.custom).toBe('value');
     } finally {
@@ -491,19 +491,19 @@ describe('runSetup', () => {
 
   it('should update existing agents with force=true', () => {
     const { dir, configPath } = createTempConfig(
-      '{"agents": {"list": [{"id": "omoc_prometheus", "custom": "value"}]}}',
+      '{"agents": {"list": [{"id": "omoc_planner", "custom": "value"}]}}',
     );
 
     try {
       const logger = { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
       const result = runSetup({ configPath, logger, force: true });
 
-      expect(result.updated).toContain('omoc_prometheus');
+      expect(result.updated).toContain('omoc_planner');
       expect(result.skipped).toHaveLength(0);
 
       const config = parseConfig(fs.readFileSync(configPath, 'utf-8'));
       const prometheus = (config.agents?.list as Array<{ id: string; custom?: string }>).find(
-        (a) => a.id === 'omoc_prometheus',
+        (a) => a.id === 'omoc_planner',
       );
       expect(prometheus?.custom).toBeUndefined();
     } finally {
@@ -569,7 +569,7 @@ describe('runSetup', () => {
 
       const config = parseConfig(fs.readFileSync(configPath, 'utf-8'));
       const prometheus = (config.agents?.list as Array<{ id: string; model?: any }>).find(
-        (a) => a.id === 'omoc_prometheus',
+        (a) => a.id === 'omoc_planner',
       );
       expect(prometheus?.model?.primary).toBe('anthropic/claude-opus-4-6');
     } finally {
@@ -586,7 +586,7 @@ describe('runSetup', () => {
 
       const config = parseConfig(fs.readFileSync(configPath, 'utf-8'));
       const prometheus = (config.agents?.list as Array<{ id: string; model?: any }>).find(
-        (a) => a.id === 'omoc_prometheus',
+        (a) => a.id === 'omoc_planner',
       );
       expect(prometheus?.model?.primary).toBe('openai/gpt-5.3-codex');
     } finally {
@@ -633,7 +633,7 @@ describe('model-presets', () => {
   });
 
   it('applyProviderPreset returns model config for valid agent + provider', () => {
-    const result = applyProviderPreset('omoc_prometheus', 'anthropic');
+    const result = applyProviderPreset('omoc_planner', 'anthropic');
     expect(result).toBeDefined();
     expect(result?.primary).toBe('anthropic/claude-opus-4-6');
   });
@@ -643,7 +643,7 @@ describe('model-presets', () => {
   });
 
   it('applyProviderPreset returns undefined for unknown provider', () => {
-    expect(applyProviderPreset('omoc_atlas', 'unknown')).toBeUndefined();
+    expect(applyProviderPreset('omoc_delegate', 'unknown')).toBeUndefined();
   });
 });
 
@@ -652,23 +652,23 @@ describe('applyProviderToConfigs', () => {
     const modified = applyProviderToConfigs(OMOC_AGENT_CONFIGS, 'anthropic');
     expect(modified).toHaveLength(11);
 
-    const prometheus = modified.find((a) => a.id === 'omoc_prometheus');
+    const prometheus = modified.find((a) => a.id === 'omoc_planner');
     const model = prometheus?.model as { primary: string; fallbacks?: string[] };
     expect(model.primary).toBe('anthropic/claude-opus-4-6');
   });
 
   it('preserves non-model fields', () => {
     const modified = applyProviderToConfigs(OMOC_AGENT_CONFIGS, 'openai');
-    const oracle = modified.find((a) => a.id === 'omoc_oracle');
-    expect(oracle?.identity?.name).toBe('Oracle');
+    const oracle = modified.find((a) => a.id === 'omoc_architect');
+    expect(oracle?.identity?.name).toBe('Architect');
     expect(oracle?.tools?.deny).toContain('write');
   });
 
   it('search/research agents get string model (no fallbacks)', () => {
     const modified = applyProviderToConfigs(OMOC_AGENT_CONFIGS, 'anthropic');
-    const explore = modified.find((a) => a.id === 'omoc_explore');
+    const explore = modified.find((a) => a.id === 'omoc_explorer');
     expect(explore?.model).toBe('anthropic/claude-sonnet-4-6');
-    const librarian = modified.find((a) => a.id === 'omoc_librarian');
+    const librarian = modified.find((a) => a.id === 'omoc_researcher');
     expect(librarian?.model).toBe('anthropic/claude-sonnet-4-6');
   });
 });
@@ -900,7 +900,7 @@ describe('mcporter-setup', () => {
 
         const config = parseConfig(fs.readFileSync(configPath, 'utf-8'));
         const prometheus = (config.agents?.list as Array<{ id: string; tools?: { deny?: string[] } }>)
-          .find((a) => a.id === 'omoc_prometheus');
+          .find((a) => a.id === 'omoc_planner');
         expect(prometheus?.tools?.deny).toContain('write');
         expect(prometheus?.tools?.deny).toContain('edit');
         expect(prometheus?.tools?.deny).toContain('apply_patch');
@@ -920,7 +920,7 @@ describe('mcporter-setup', () => {
 
         const config = parseConfig(fs.readFileSync(configPath, 'utf-8'));
         const atlas = (config.agents?.list as Array<{ id: string; tools?: { deny?: string[] } }>)
-          .find((a) => a.id === 'omoc_atlas');
+          .find((a) => a.id === 'omoc_delegate');
         const deny = atlas?.tools?.deny ?? [];
         expect(deny).not.toContain('write');
         expect(deny).not.toContain('edit');
@@ -1077,8 +1077,8 @@ describe('runMcporterSetup with excludeServers', () => {
 describe('applyPlannerGuard', () => {
   it('should add deny list to prometheus only', () => {
     const agents = [
-      { id: 'omoc_prometheus', tools: { profile: 'full' as const } },
-      { id: 'omoc_atlas', tools: { profile: 'full' as const } },
+      { id: 'omoc_planner', tools: { profile: 'full' as const } },
+      { id: 'omoc_delegate', tools: { profile: 'full' as const } },
     ];
     applyPlannerGuard(agents);
 
@@ -1088,18 +1088,18 @@ describe('applyPlannerGuard', () => {
 
   it('should preserve existing fields on prometheus', () => {
     const agents = [
-      { id: 'omoc_prometheus', tools: { profile: 'full' as const }, name: 'Prometheus' },
+      { id: 'omoc_planner', tools: { profile: 'full' as const }, name: 'Planner' },
     ];
     applyPlannerGuard(agents);
 
-    expect(agents[0]!.name).toBe('Prometheus');
+    expect(agents[0]!.name).toBe('Planner');
     expect(agents[0]!.tools.profile).toBe('full');
     expect(agents[0]!.tools.deny).toBeDefined();
   });
 
   it('should create tools object if missing', () => {
     const agents: Array<{ id: string; tools?: { deny?: string[] } }> = [
-      { id: 'omoc_prometheus' },
+      { id: 'omoc_planner' },
     ];
     applyPlannerGuard(agents);
 
@@ -1225,7 +1225,11 @@ describe('runSetup with enableWebhookBridge', () => {
       runSetup({ configPath, logger });
 
       const config = parseConfig(fs.readFileSync(configPath, 'utf-8'));
-      expect((config as any).hooks).toBeUndefined();
+      // internal hooks config is always applied (even without webhook bridge)
+      expect((config as any).hooks?.internal?.enabled).toBe(true);
+      expect((config as any).hooks?.internal?.entries?.['persona-bootstrap']?.enabled).toBe(true);
+      // but webhook bridge config should NOT be present
+      expect((config as any).webhooks).toBeUndefined();
     } finally {
       fs.rmSync(dir, { recursive: true });
     }

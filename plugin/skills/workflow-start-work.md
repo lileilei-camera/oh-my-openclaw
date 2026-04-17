@@ -9,7 +9,7 @@ When the user invokes `/start_work [plan]`, load an existing plan and execute it
 
 ## Persona
 
-This workflow runs under **Atlas** (omoc_atlas) — the orchestrator. If you are not already Atlas, the system will switch you automatically.
+This workflow runs under **Atlas** (omoc_delegate) — the orchestrator. If you are not already Atlas, the system will switch you automatically.
 
 ## Hard Boundary
 
@@ -34,7 +34,7 @@ This workflow runs under **Atlas** (omoc_atlas) — the orchestrator. If you are
 
 ### Phase 3: Error Handling
 7. On failure: retry with more context (max 2 retries)
-8. Still failing: escalate to Oracle via `omoc_delegate(category="ultrabrain", agent_id="omoc_oracle")`
+8. Still failing: escalate to Oracle via `omoc_delegate(category="ultrabrain", agent_id="omoc_architect")`
 9. Oracle can't resolve: pause and ask user
 
 ### Phase 4: Completion

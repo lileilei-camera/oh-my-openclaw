@@ -9,7 +9,7 @@ When the user invokes `/plan [topic]`, create a structured execution plan withou
 
 ## Persona
 
-This workflow runs under **Prometheus** (omoc_prometheus) — the strategic planner. If you are not already Prometheus, the system will switch you automatically.
+This workflow runs under **Prometheus** (omoc_planner) — the strategic planner. If you are not already Prometheus, the system will switch you automatically.
 
 ## Hard Boundary
 
@@ -21,12 +21,12 @@ This workflow runs under **Prometheus** (omoc_prometheus) — the strategic plan
 ### Phase 1: Context Gathering
 1. Check existing plans in `workspace/plans/`
 2. Check wisdom notepads in `workspace/notepads/`
-3. Explore the codebase: `omoc_delegate(task_description="...", category="quick", agent_id="omoc_explore", background=true)`
+3. Explore the codebase: `omoc_delegate(task_description="...", category="quick", agent_id="omoc_explorer", background=true)`
 
 ### Phase 2: Gap Analysis
 4. Identify unknowns, missing information, assumptions
 5. Ask clarifying questions if needed (batch them, don't ask one at a time)
-6. Optionally consult Metis: `omoc_delegate(task_description="...", category="deep", agent_id="omoc_metis")`
+6. Optionally consult Metis: `omoc_delegate(task_description="...", category="deep", agent_id="omoc_advisor")`
 
 ### Phase 3: Plan Creation
 7. Save plan to `workspace/plans/YYYY-MM-DD_<slug>.md`
@@ -40,7 +40,7 @@ This workflow runs under **Prometheus** (omoc_prometheus) — the strategic plan
 
 ### Phase 4: Review
 9. Self-review: Is every task actionable? Dependencies correct? Criteria measurable?
-10. Optionally review via Momus: `omoc_delegate(task_description="...", category="deep", agent_id="omoc_momus")`
+10. Optionally review via Momus: `omoc_delegate(task_description="...", category="deep", agent_id="omoc_reviewer")`
 11. Present plan to user and ask for approval
 
 ## After Planning

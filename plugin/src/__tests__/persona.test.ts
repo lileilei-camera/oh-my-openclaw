@@ -53,38 +53,38 @@ describe('persona-state', () => {
   });
 
   it('sets and gets active persona', async () => {
-    await setActivePersona('omoc_atlas');
-    expect(await getActivePersona()).toBe('omoc_atlas');
+    await setActivePersona('omoc_delegate');
+    expect(await getActivePersona()).toBe('omoc_delegate');
   });
 
   it('resets persona to null', async () => {
-    await setActivePersona('omoc_prometheus');
+    await setActivePersona('omoc_planner');
     await resetPersonaState();
     expect(await getActivePersona()).toBeNull();
   });
 
   it('can overwrite active persona', async () => {
-    await setActivePersona('omoc_atlas');
-    await setActivePersona('omoc_oracle');
-    expect(await getActivePersona()).toBe('omoc_oracle');
+    await setActivePersona('omoc_delegate');
+    await setActivePersona('omoc_architect');
+    expect(await getActivePersona()).toBe('omoc_architect');
   });
 });
 
 describe('persona-prompts', () => {
   describe('resolvePersonaId', () => {
     it('resolves full ID', () => {
-      expect(resolvePersonaId('omoc_atlas')).toBe('omoc_atlas');
+      expect(resolvePersonaId('omoc_delegate')).toBe('omoc_delegate');
     });
 
     it('resolves short name', () => {
-      expect(resolvePersonaId('atlas')).toBe('omoc_atlas');
-      expect(resolvePersonaId('prometheus')).toBe('omoc_prometheus');
-      expect(resolvePersonaId('sisyphus')).toBe('omoc_sisyphus');
+      expect(resolvePersonaId('delegate')).toBe('omoc_delegate');
+      expect(resolvePersonaId('planner')).toBe('omoc_planner');
+      expect(resolvePersonaId('coder')).toBe('omoc_coder');
     });
 
     it('resolves display name (case-insensitive)', () => {
-      expect(resolvePersonaId('Atlas')).toBe('omoc_atlas');
-      expect(resolvePersonaId('Sisyphus-Junior')).toBe('omoc_sisyphus');
+      expect(resolvePersonaId('Delegate')).toBe('omoc_delegate');
+      expect(resolvePersonaId('Coder')).toBe('omoc_coder');
       expect(resolvePersonaId('Multimodal Looker')).toBe('omoc_looker');
     });
 
@@ -94,8 +94,8 @@ describe('persona-prompts', () => {
     });
 
     it('is case-insensitive for all formats', () => {
-      expect(resolvePersonaId('OMOC_ATLAS')).toBe('omoc_atlas');
-      expect(resolvePersonaId('ORACLE')).toBe('omoc_oracle');
+      expect(resolvePersonaId('OMOC_DELEGATE')).toBe('omoc_delegate');
+      expect(resolvePersonaId('ARCHITECT')).toBe('omoc_architect');
     });
   });
 
@@ -106,10 +106,10 @@ describe('persona-prompts', () => {
     });
 
     it('reads persona markdown for valid agent ID', async () => {
-      const content = await readPersonaPrompt('omoc_atlas');
+      const content = await readPersonaPrompt('omoc_delegate');
       expect(content).toContain('Mock Persona Content');
       expect(fsPromises.readFile).toHaveBeenCalledWith(
-        expect.stringContaining('atlas.md'),
+        expect.stringContaining('delegate.md'),
         'utf-8'
       );
     });
@@ -121,7 +121,7 @@ describe('persona-prompts', () => {
 
     it('returns graceful fallback when file is missing', async () => {
       vi.mocked(fsPromises.readFile).mockRejectedValueOnce(new Error('ENOENT'));
-      const content = await readPersonaPrompt('omoc_atlas');
+      const content = await readPersonaPrompt('omoc_delegate');
       expect(content).toContain('Could not read persona file');
     });
   });
@@ -135,45 +135,45 @@ describe('persona-prompts', () => {
     });
 
     it('reads from disk on first call', () => {
-      readPersonaPromptSync('omoc_atlas');
+      readPersonaPromptSync('omoc_delegate');
       expect(readFileSync).toHaveBeenCalledTimes(1);
       expect(statSync).toHaveBeenCalledTimes(1);
     });
 
     it('returns cached content on second call with same mtime', () => {
-      readPersonaPromptSync('omoc_atlas');
+      readPersonaPromptSync('omoc_delegate');
       vi.mocked(readFileSync).mockClear();
 
-      const result = readPersonaPromptSync('omoc_atlas');
+      const result = readPersonaPromptSync('omoc_delegate');
       expect(readFileSync).not.toHaveBeenCalled();
       expect(result).toContain('Mock Persona Content');
     });
 
     it('invalidates cache when mtime changes', () => {
-      readPersonaPromptSync('omoc_atlas');
+      readPersonaPromptSync('omoc_delegate');
       vi.mocked(readFileSync).mockClear();
       vi.mocked(statSync).mockReturnValue({ mtimeMs: 2000 } as any);
       vi.mocked(readFileSync).mockReturnValue('# Updated Content');
 
-      const result = readPersonaPromptSync('omoc_atlas');
+      const result = readPersonaPromptSync('omoc_delegate');
       expect(readFileSync).toHaveBeenCalledTimes(1);
       expect(result).toBe('# Updated Content');
     });
 
     it('clearPersonaCache forces re-read on next call', () => {
-      readPersonaPromptSync('omoc_atlas');
+      readPersonaPromptSync('omoc_delegate');
       clearPersonaCache();
       vi.mocked(readFileSync).mockClear();
 
-      readPersonaPromptSync('omoc_atlas');
+      readPersonaPromptSync('omoc_delegate');
       expect(readFileSync).toHaveBeenCalledTimes(1);
     });
 
     it('clears cache entry on error', () => {
-      readPersonaPromptSync('omoc_atlas');
+      readPersonaPromptSync('omoc_delegate');
       vi.mocked(statSync).mockImplementation(() => { throw new Error('ENOENT'); });
 
-      const result = readPersonaPromptSync('omoc_atlas');
+      const result = readPersonaPromptSync('omoc_delegate');
       expect(result).toContain('Could not read persona file');
     });
   });
@@ -197,14 +197,14 @@ describe('persona-prompts', () => {
 
     it('shortName strips omoc_ prefix', () => {
       const personas = listPersonas();
-      const atlas = personas.find((p) => p.id === 'omoc_atlas');
-      expect(atlas?.shortName).toBe('atlas');
+      const delegate = personas.find((p) => p.id === 'omoc_delegate');
+      expect(delegate?.shortName).toBe('delegate');
     });
   });
 
   describe('DEFAULT_PERSONA_ID', () => {
-    it('is omoc_atlas', () => {
-      expect(DEFAULT_PERSONA_ID).toBe('omoc_atlas');
+    it('is omoc_delegate', () => {
+      expect(DEFAULT_PERSONA_ID).toBe('omoc_delegate');
     });
   });
 });
@@ -233,9 +233,9 @@ describe('persona-commands (/omoc)', () => {
     const handler = api.registerCommand.mock.calls[0][0].handler;
     const result = await handler({ args: '' });
 
-    expect(await getActivePersona()).toBe('omoc_atlas');
+    expect(await getActivePersona()).toBe('omoc_delegate');
     expect(result.text).toContain('OmOC Mode: ON');
-    expect(result.text).toContain('Atlas');
+    expect(result.text).toContain('Delegate');
     expect(result.text).toContain('injected into system prompt');
     // New approach: only writes state file, not AGENTS.md
     const stateWrites = fsPromises.writeFile.mock.calls.filter(
@@ -245,7 +245,7 @@ describe('persona-commands (/omoc)', () => {
   });
 
   it('/omoc off deactivates persona (no AGENTS.md write)', async () => {
-    await setActivePersona('omoc_atlas');
+    await setActivePersona('omoc_delegate');
     const api = createMockApi();
     registerPersonaCommands(api);
 
@@ -254,7 +254,7 @@ describe('persona-commands (/omoc)', () => {
 
     expect(await getActivePersona()).toBeNull();
     expect(result.text).toContain('OmOC Mode: OFF');
-    expect(result.text).toContain('Atlas');
+    expect(result.text).toContain('Delegate');
     expect(result.text).toContain('default AGENTS.md');
     // New approach: only writes __OFF__ to state file, not AGENTS.md
     const offWrite = fsPromises.writeFile.mock.calls.find(
@@ -281,15 +281,15 @@ describe('persona-commands (/omoc)', () => {
     const result = await handler({ args: 'list' });
 
     expect(result.text).toContain('OmOC Personas');
-    expect(result.text).toContain('atlas');
-    expect(result.text).toContain('prometheus');
-    expect(result.text).toContain('oracle');
+    expect(result.text).toContain('delegate');
+    expect(result.text).toContain('planner');
+    expect(result.text).toContain('architect');
     expect(result.text).toContain('Command');
     expect(result.text).toContain('描述');
   });
 
   it('/omoc list marks active persona', async () => {
-    await setActivePersona('omoc_oracle');
+    await setActivePersona('omoc_architect');
     const api = createMockApi();
     registerPersonaCommands(api);
 
@@ -297,7 +297,7 @@ describe('persona-commands (/omoc)', () => {
     const result = await handler({ args: 'list' });
 
     expect(result.text).toContain('← **active**');
-    expect(result.text).toContain('Oracle');
+    expect(result.text).toContain('Architect');
   });
 
   it('/omoc <name> switches persona by short name', async () => {
@@ -305,11 +305,11 @@ describe('persona-commands (/omoc)', () => {
     registerPersonaCommands(api);
 
     const handler = api.registerCommand.mock.calls[0][0].handler;
-    const result = await handler({ args: 'prometheus' });
+    const result = await handler({ args: 'planner' });
 
-    expect(await getActivePersona()).toBe('omoc_prometheus');
+    expect(await getActivePersona()).toBe('omoc_planner');
     expect(result.text).toContain('Persona Switched');
-    expect(result.text).toContain('Prometheus');
+    expect(result.text).toContain('Planner');
   });
 
   it('/omoc <unknown> shows error with available list', async () => {
@@ -321,8 +321,8 @@ describe('persona-commands (/omoc)', () => {
 
     expect(await getActivePersona()).toBeNull();
     expect(result.text).toContain('Unknown Persona');
-    expect(result.text).toContain('atlas');
-    expect(result.text).toContain('prometheus');
+    expect(result.text).toContain('delegate');
+    expect(result.text).toContain('planner');
   });
 
   it('/omoc handles undefined args gracefully', async () => {
@@ -332,7 +332,7 @@ describe('persona-commands (/omoc)', () => {
     const handler = api.registerCommand.mock.calls[0][0].handler;
     const result = await handler({});
 
-    expect(await getActivePersona()).toBe('omoc_atlas');
+    expect(await getActivePersona()).toBe('omoc_delegate');
     expect(result.text).toContain('OmOC Mode: ON');
   });
 });
@@ -354,7 +354,7 @@ describe('spawn-guard (before_tool_call)', () => {
   });
 
   it('allows non-sessions_spawn tools regardless of state', async () => {
-    await setActivePersona('omoc_atlas');
+    await setActivePersona('omoc_delegate');
     const result = await hookHandler(
       { toolName: 'read', params: {} },
       {},
@@ -371,16 +371,16 @@ describe('spawn-guard (before_tool_call)', () => {
   });
 
   it('allows sessions_spawn with agentId when persona is active', async () => {
-    await setActivePersona('omoc_atlas');
+    await setActivePersona('omoc_delegate');
     const result = await hookHandler(
-      { toolName: 'sessions_spawn', params: { task: 'do something', agentId: 'omoc_explore' } },
+      { toolName: 'sessions_spawn', params: { task: 'do something', agentId: 'omoc_explorer' } },
       {},
     );
     expect(result).toBeUndefined();
   });
 
   it('blocks sessions_spawn without agentId when persona is active', async () => {
-    await setActivePersona('omoc_atlas');
+    await setActivePersona('omoc_delegate');
     const result = await hookHandler(
       { toolName: 'sessions_spawn', params: { task: 'do something' } },
       {},
@@ -388,11 +388,11 @@ describe('spawn-guard (before_tool_call)', () => {
     expect(result).toBeDefined();
     expect(result!.block).toBe(true);
     expect(result!.blockReason).toContain('agentId is required');
-    expect(result!.blockReason).toContain('omoc_atlas');
+    expect(result!.blockReason).toContain('omoc_delegate');
   });
 
   it('blocks sessions_spawn with empty agentId when persona is active', async () => {
-    await setActivePersona('omoc_atlas');
+    await setActivePersona('omoc_delegate');
     const result = await hookHandler(
       { toolName: 'sessions_spawn', params: { task: 'do something', agentId: '  ' } },
       {},
@@ -402,14 +402,14 @@ describe('spawn-guard (before_tool_call)', () => {
   });
 
   it('block reason includes available agent names', async () => {
-    await setActivePersona('omoc_atlas');
+    await setActivePersona('omoc_delegate');
     const result = await hookHandler(
       { toolName: 'sessions_spawn', params: { task: 'explore codebase' } },
       {},
     );
-    expect(result!.blockReason).toContain('explore');
-    expect(result!.blockReason).toContain('oracle');
-    expect(result!.blockReason).toContain('sisyphus');
+    expect(result!.blockReason).toContain('explorer');
+    expect(result!.blockReason).toContain('architect');
+    expect(result!.blockReason).toContain('coder');
   });
 });
 

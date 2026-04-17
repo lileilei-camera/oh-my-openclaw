@@ -16,8 +16,8 @@ export const SEARCH_MESSAGE = `[search-mode]
 MAXIMIZE SEARCH EFFORT. Use ALL available channels IN PARALLEL:
 
 AGENT DELEGATION (omoc_delegate_task):
-- agent_id="omoc_explore" — codebase patterns, file structures, cross-module references
-- agent_id="omoc_librarian" — external docs, OSS examples, API references
+- agent_id="omoc_explorer" — codebase patterns, file structures, cross-module references
+- agent_id="omoc_researcher" — external docs, OSS examples, API references
 
 WEB SEARCH (mcporter MCP + OpenClaw native):
 - web-search-prime.webSearchPrime — keyword web search (news, blogs, latest info)

@@ -23,9 +23,9 @@ interface KeywordDetector {
 
 /** Persona to auto-switch when a workflow keyword is detected */
 export const WORKFLOW_PERSONA_MAP: Partial<Record<KeywordType, string>> = {
-  ultrawork: 'omoc_atlas',
-  plan: 'omoc_prometheus',
-  start_work: 'omoc_atlas',
+  ultrawork: 'omoc_delegate',
+  plan: 'omoc_planner',
+  start_work: 'omoc_delegate',
 };
 
 const KEYWORD_DETECTORS: KeywordDetector[] = [
