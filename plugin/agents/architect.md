@@ -1,5 +1,5 @@
 ---
-name: oracle
+name: architect
 description: Read-only consultation agent. High-IQ reasoning specialist for debugging hard problems and high-difficulty architecture design.
 useWhen:
   - Architecture tradeoff decisions

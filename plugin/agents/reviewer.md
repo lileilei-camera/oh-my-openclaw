@@ -1,5 +1,5 @@
 ---
-name: momus
+name: reviewer
 description: Expert reviewer for evaluating work plans against rigorous clarity, verifiability, and completeness standards.
 useWhen:
   - Plan needs executability review before implementation
