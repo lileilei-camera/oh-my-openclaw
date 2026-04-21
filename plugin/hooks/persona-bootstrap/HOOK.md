@@ -1,9 +1,8 @@
 ---
 name: persona-bootstrap
 description: Inject persona content into AGENTS.md via agent:bootstrap internal hook
-openclaw:
-  events:
-    - agent:bootstrap
+events:
+  - agent:bootstrap
 ---
 
 # Persona Bootstrap Hook
