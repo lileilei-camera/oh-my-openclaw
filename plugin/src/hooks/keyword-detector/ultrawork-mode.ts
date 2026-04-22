@@ -1,4 +1,4 @@
-export const ULTRAWORK_PATTERN = /\b(ultrawork|ulw)\b/i;
+export const ULTRAWORK_PATTERN = /^\/(ultrawork|ulw)\b/i;
 
 export const ULTRAWORK_MESSAGE = `[ultrawork-mode]
 ULTRAWORK MODE ACTIVATED. Maximum precision engaged. ALL channels available.

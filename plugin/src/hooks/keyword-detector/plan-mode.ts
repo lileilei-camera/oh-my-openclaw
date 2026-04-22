@@ -1,4 +1,4 @@
-export const PLAN_PATTERN = /(?:^|\s)(\/plan)\b/i;
+export const PLAN_PATTERN = /^\/plan\b/i;
 
 export const PLAN_MESSAGE = `[plan-mode]
 PLANNING MODE ACTIVATED. Strategic analysis and structured plan creation.

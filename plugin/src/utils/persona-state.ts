@@ -36,6 +36,11 @@ export async function setActivePersona(id: string | null, workspaceDir?: string)
   await setActivePersonaId(id, workspaceDir);
 }
 
+/** Synchronous getter for in-memory persona state (returns null if not loaded yet) */
+export function getActivePersonaSync(): string | null {
+  return activePersonaId;
+}
+
 export async function getActivePersona(workspaceDir?: string, agentId?: string): Promise<string | null> {
   if (!loaded) await loadFromDisk(workspaceDir);
   if (activePersonaId) return activePersonaId;

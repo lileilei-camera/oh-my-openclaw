@@ -28,10 +28,13 @@ export const WORKFLOW_PERSONA_MAP: Partial<Record<KeywordType, string>> = {
   start_work: 'omoc_delegate',
 };
 
-const KEYWORD_DETECTORS: KeywordDetector[] = [
+const SLASH_COMMAND_DETECTORS: KeywordDetector[] = [
   { type: 'ultrawork', pattern: ULTRAWORK_PATTERN, message: ULTRAWORK_MESSAGE },
   { type: 'plan', pattern: PLAN_PATTERN, message: PLAN_MESSAGE },
   { type: 'start_work', pattern: START_WORK_PATTERN, message: START_WORK_MESSAGE },
+];
+
+const NATURAL_LANG_DETECTORS: KeywordDetector[] = [
   { type: 'search', pattern: SEARCH_PATTERN, message: SEARCH_MESSAGE },
   { type: 'analyze', pattern: ANALYZE_PATTERN, message: ANALYZE_MESSAGE },
   { type: 'coding', pattern: CODING_PATTERN, message: CODING_MESSAGE },
@@ -41,9 +44,28 @@ function removeCodeBlocks(text: string): string {
   return text.replace(CODE_BLOCK_PATTERN, '').replace(INLINE_CODE_PATTERN, '');
 }
 
-export function detectKeywords(text: string): DetectedKeyword[] {
+export function detectKeywords(text: string, personaId?: string | null): DetectedKeyword[] {
   const cleaned = removeCodeBlocks(text);
-  return KEYWORD_DETECTORS
+
+  // 1. 优先探测斜杠命令
+  const slashResults = SLASH_COMMAND_DETECTORS
     .filter(({ pattern }) => pattern.test(cleaned))
     .map(({ type, message }) => ({ type, message }));
+
+  // 2. 如果命中斜杠命令，立即返回（不再探测自然语言关键词）
+  if (slashResults.length > 0) {
+    return slashResults;
+  }
+
+  // 3. 没有斜杠命令，才探测自然语言关键词
+  const results = NATURAL_LANG_DETECTORS
+    .filter(({ pattern }) => pattern.test(cleaned))
+    .map(({ type, message }) => ({ type, message }));
+
+  // 4. Planner persona 下过滤掉 coding
+  if (personaId === 'omoc_planner') {
+    return results.filter(r => r.type !== 'coding');
+  }
+
+  return results;
 }

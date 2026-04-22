@@ -5,14 +5,14 @@ import { createMockApi } from './helpers/mock-factory.js';
 
 describe('keyword-detector', () => {
   describe('detectKeywords', () => {
-    it('detects ultrawork keywords', () => {
-      const result = detectKeywords('ultrawork this feature');
+    it('detects /ultrawork command', () => {
+      const result = detectKeywords('/ultrawork this feature');
       expect(result).toHaveLength(1);
       expect(result[0].type).toBe('ultrawork');
     });
 
-    it('detects ulw shorthand', () => {
-      const result = detectKeywords('ulw implement auth');
+    it('detects /ulw shorthand command', () => {
+      const result = detectKeywords('/ulw implement auth');
       expect(result.some((k) => k.type === 'ultrawork')).toBe(true);
     });
 
@@ -94,9 +94,48 @@ describe('keyword-detector', () => {
       expect(result.some((k) => k.type === 'start_work')).toBe(true);
     });
 
-    it('detects start_work without slash', () => {
+    it('/plan does NOT match in middle of message', () => {
+      const result = detectKeywords('hello /plan create a plan');
+      expect(result.some((k) => k.type === 'plan')).toBe(false);
+    });
+
+    it('/ultrawork does NOT match in middle of message', () => {
+      const result = detectKeywords('let me /ultrawork on this');
+      expect(result.some((k) => k.type === 'ultrawork')).toBe(false);
+    });
+
+    it('slash command blocks natural language coding detection', () => {
+      const result = detectKeywords('/plan implement this feature');
+      expect(result.some((k) => k.type === 'plan')).toBe(true);
+      expect(result.some((k) => k.type === 'coding')).toBe(false);
+    });
+
+    it('/PLAN (uppercase) is detected (case-insensitive)', () => {
+      const result = detectKeywords('/PLAN design the system');
+      expect(result.some((k) => k.type === 'plan')).toBe(true);
+    });
+
+    it('/Plan (mixed case) is detected (case-insensitive)', () => {
+      const result = detectKeywords('/Plan this feature');
+      expect(result.some((k) => k.type === 'plan')).toBe(true);
+    });
+
+    it('omoc_planner persona filters out coding keywords', () => {
+      const result = detectKeywords('search and implement a fix', 'omoc_planner');
+      expect(result.some((k) => k.type === 'coding')).toBe(false);
+      expect(result.some((k) => k.type === 'search')).toBe(true);
+    });
+
+    it('omoc_planner persona does NOT filter non-coding keywords', () => {
+      const result = detectKeywords('search and analyze this', 'omoc_planner');
+      expect(result).toHaveLength(2);
+      expect(result.some((k) => k.type === 'search')).toBe(true);
+      expect(result.some((k) => k.type === 'analyze')).toBe(true);
+    });
+
+    it('does NOT detect start_work without slash (requires / prefix)', () => {
       const result = detectKeywords('start_work on the approved plan');
-      expect(result.some((k) => k.type === 'start_work')).toBe(true);
+      expect(result.some((k) => k.type === 'start_work')).toBe(false);
     });
   });
 
@@ -116,7 +155,10 @@ describe('keyword-detector', () => {
 
   describe('registerKeywordDetector hook', () => {
     let mockApi: ReturnType<typeof createMockApi>;
-    let hookHandler: (event: { prompt?: string }, ctx: Record<string, unknown>) => unknown;
+    let hookHandler: (event: { messages?: unknown[] }, ctx: Record<string, unknown>) => unknown;
+
+    /** Helper to build event with a user message */
+    const userMsg = (text: string) => ({ messages: [{ role: 'user', content: text }] });
 
     beforeEach(() => {
       mockApi = createMockApi();
@@ -131,57 +173,45 @@ describe('keyword-detector', () => {
     });
 
     it('returns prependContext when keywords detected', () => {
-      // when - prompt contains search keyword
-      const result = hookHandler({ prompt: 'search for auth patterns' }, {});
-
-      // then - prependContext includes search-mode message
+      const result = hookHandler(userMsg('search for auth patterns'), {});
       expect(result).toBeDefined();
       expect((result as any).prependContext).toContain('[search-mode]');
     });
 
     it('returns void when no keywords detected', () => {
-      // when - prompt has no keywords
-      const result = hookHandler({ prompt: 'hello world' }, {});
-
-      // then - no context prepended
+      const result = hookHandler(userMsg('hello world'), {});
       expect(result).toBeUndefined();
     });
 
-    it('returns void when prompt is empty', () => {
-      const result = hookHandler({ prompt: '' }, {});
+    it('returns void when messages is empty', () => {
+      const result = hookHandler({ messages: [] }, {});
       expect(result).toBeUndefined();
     });
 
-    it('returns void when prompt is missing', () => {
+    it('returns void when messages is missing', () => {
       const result = hookHandler({}, {});
       expect(result).toBeUndefined();
     });
 
     it('merges multiple detected keyword messages', () => {
-      // when - prompt triggers both search and analyze
-      const result = hookHandler(
-        { prompt: 'search and analyze this module' },
-        {},
-      );
-
-      // then - both mode messages included
+      const result = hookHandler(userMsg('search and analyze this module'), {});
       const context = (result as any).prependContext;
       expect(context).toContain('[search-mode]');
       expect(context).toContain('[analyze-mode]');
     });
 
     it('includes coding-mode when coding keywords present', () => {
-      const result = hookHandler({ prompt: '이 기능 구현해줘' }, {});
+      const result = hookHandler(userMsg('이 기능 구현해줘'), {});
       expect((result as any).prependContext).toContain('[coding-mode]');
     });
 
     it('returns plan-mode context when /plan detected', () => {
-      const result = hookHandler({ prompt: '/plan design the auth system' }, {});
+      const result = hookHandler(userMsg('/plan design the auth system'), {});
       expect((result as any).prependContext).toContain('[plan-mode]');
     });
 
     it('returns start-work-mode context when /start_work detected', () => {
-      const result = hookHandler({ prompt: '/start_work plan-v2.md' }, {});
+      const result = hookHandler(userMsg('/start_work plan-v2.md'), {});
       expect((result as any).prependContext).toContain('[start-work-mode]');
     });
 

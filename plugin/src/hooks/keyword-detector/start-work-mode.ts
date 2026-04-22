@@ -1,4 +1,4 @@
-export const START_WORK_PATTERN = /\b(\/start_work|start_work)\b/i;
+export const START_WORK_PATTERN = /^\/start_work\b/i;
 
 export const START_WORK_MESSAGE = `[start-work-mode]
 EXECUTION MODE ACTIVATED. Load plan and execute via delegation.
