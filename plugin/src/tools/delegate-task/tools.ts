@@ -1,6 +1,7 @@
 import { Type, Static } from '@sinclair/typebox';
 import type { OpenClawPluginApi } from '../../types.js';
 import { TOOL_PREFIX, LOG_PREFIX, CATEGORIES } from '../../constants.js';
+import { DEFAULT_CATEGORY_AGENTS } from './constants.js';
 import { toolResponse, toolError } from '../../utils/helpers.js';
 
 const LOG_PREFIX_DELEGATE = `${LOG_PREFIX}[delegate]`;
@@ -61,7 +62,7 @@ export function registerDelegateTaskTool(api: OpenClawPluginApi) {
           alternatives = routingConfig[normalizedCategory].alternatives;
         }
 
-        const agentId = normalizedCategory;
+        const agentId = DEFAULT_CATEGORY_AGENTS[normalizedCategory];
 
         api.logger.info(`${LOG_PREFIX_DELEGATE} Category: ${normalizedCategory}, model: ${model}`);
 
