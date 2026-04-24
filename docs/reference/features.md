@@ -656,6 +656,83 @@ Active: Atlas
 ...
 ```
 
+### Mode Commands
+
+#### /omoc_mode
+
+| Property | Value |
+|----------|-------|
+| **Name** | `omoc_mode` |
+| **Description** | Activate, switch, or list working modes |
+| **Arguments** | Mode name, `off`, `list`, or none |
+
+**What is a Mode?**
+
+A mode is a lightweight behavior configuration that injects specific instructions into the system prompt on every message. Unlike personas (which change the agent's entire identity), modes fine-tune **how the agent approaches tasks** without changing who it is.
+
+**Key Differences: Persona vs Mode**
+
+| Aspect | Persona (`/omoc`) | Mode (`/omoc_mode`) |
+|--------|-------------------|--------------------|
+| **Purpose** | Changes agent identity + tool access | Changes task approach instructions |
+| **Scope** | Entire system prompt replacement | System prompt injection only |
+| **Granularity** | Per-agent, per-workspace | Per-session |
+| **Use Case** | "Be Atlas, the orchestrator" | "Focus on searching deeply" |
+
+**Behavior:**
+
+| Input | Action |
+|-------|--------|
+| *(no args)* | Show current active mode |
+| `off` | Deactivate mode, stop injecting mode context |
+| `list` | Show all available modes with active indicator |
+| `<name>` | Switch to the specified mode |
+
+**Available Modes:**
+
+| Command | Label | Description |
+|---------|-------|-------------|
+| `/omoc_mode search` | 搜索 | 最大化多渠道搜索 |
+| `/omoc_mode analyze` | 分析 | 深度分析，多渠道收集上下文 |
+| `/omoc_mode coding` | 编码 | 编码任务，委派给 OpenCode |
+| `/omoc_mode plan` | 规划 | 战略规划，创建计划文件 |
+| `/omoc_mode ultrawork` | 超工作 | 超工作模式，全流程委派+验证 |
+| `/omoc_mode start-work` | 执行 | 执行模式，加载计划并委派执行 |
+
+**Mode State:**
+
+- Mode state is stored in `.omoc-state/active_mode` within the current workspace directory
+- Workspace is resolved from session key (extracts agent ID → `~/.openclaw/workspace-{agentId}`)
+- Mode context is injected into system prompt via `before_prompt_build` hook (priority 75)
+
+**Example Output (`/omoc_mode list`):**
+```
+# OmOC Modes
+
+**Active**: coding
+
+| Command | Label | Description |
+|---------|-------|-------------|
+| `search` | 搜索 | 最大化多渠道搜索 | ← **active**
+| `analyze` | 分析 | 深度分析，多渠道收集上下文 |
+| `coding` | 编码 | 编码任务，委派给 OpenCode |
+...
+
+Usage: `/omoc_mode <name>` — e.g., `/omoc_mode coding`
+```
+
+**Automatic Mode Detection:**
+
+In addition to manual switching via `/omoc_mode`, modes can also be **auto-activated** based on keywords detected in user messages. For example:
+
+- User says "search for..." → automatically activates `search` mode
+- User says "analyze this..." → automatically activates `analyze` mode
+- User says "let's build..." → automatically activates `coding` mode
+
+The mode detection hook runs at priority 75, after guardrail injection.
+
+---
+
 ### Workflow Commands
 
 #### /ultrawork

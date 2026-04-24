@@ -4,6 +4,7 @@ import path from 'node:path';
 import * as readline from 'node:readline';
 import JSON5 from 'json5';
 import { OMOC_AGENT_CONFIGS, type OmocAgentConfig } from '../agents/agent-configs.js';
+import { AGENT_MD_MAP } from '../agents/agent-ids.js';
 import {
   PROVIDER_PRESETS,
   PROVIDER_LABELS,
@@ -416,6 +417,86 @@ export interface SetupOptions {
 }
 
 /**
+ * Resolve the plugin agents directory (contains persona *.md files).
+ * Compiled: dist/cli/setup.js → ../../agents/
+ * Source: src/cli/setup.ts → ../../agents/ (same when run from plugin root)
+ */
+function resolvePluginAgentsPath(): string {
+  const metaDir = (import.meta as any).dirname;
+  if (typeof metaDir === 'string') {
+    return path.resolve(metaDir, '..', '..', 'agents');
+  }
+  return path.join(process.cwd(), 'agents');
+}
+
+/**
+ * Resolve workspace directory for an agent.
+ * Matches OpenClaw's resolveAgentWorkspaceDir: ~/.openclaw/workspace-{agentId}
+ */
+function resolveAgentWorkspaceDir(agentId: string): string {
+  const homeDir = process.env['HOME'] ?? process.env['USERPROFILE'] ?? '';
+  return path.join(homeDir, '.openclaw', `workspace-${agentId}`);
+}
+
+/**
+ * Sync persona content to agent workspace directories.
+ * For each agent:
+ *   1. Create workspace directory if it doesn't exist
+ *   2. Read persona MD from plugin/agents/{mdName}.md
+ *   3. Write to {workspaceDir}/AGENTS.md
+ *   4. Create .omoc-state/active-persona with agent ID
+ * Idempotent: safe to run multiple times.
+ */
+export function syncWorkspacePersonas(
+  agentIds: string[],
+  logger: Logger,
+): { synced: string[]; skipped: string[]; errors: string[] } {
+  const synced: string[] = [];
+  const skipped: string[] = [];
+  const errors: string[] = [];
+  const agentsDir = resolvePluginAgentsPath();
+
+  for (const agentId of agentIds) {
+    const mdName = AGENT_MD_MAP[agentId];
+    if (!mdName) {
+      skipped.push(agentId);
+      logger.warn(`  No persona mapping for ${agentId} — skipped`);
+      continue;
+    }
+
+    const personaPath = path.join(agentsDir, `${mdName}.md`);
+    if (!fs.existsSync(personaPath)) {
+      errors.push(agentId);
+      logger.error(`  Persona file not found: ${personaPath}`);
+      continue;
+    }
+
+    const workspaceDir = resolveAgentWorkspaceDir(agentId);
+
+    try {
+      // Create workspace directory if needed
+      if (!fs.existsSync(workspaceDir)) {
+        fs.mkdirSync(workspaceDir, { recursive: true });
+        logger.info(`  Created workspace: ${workspaceDir}`);
+      }
+
+      // Read persona content and write to AGENTS.md
+      const personaContent = fs.readFileSync(personaPath, 'utf-8');
+      const agentsMdPath = path.join(workspaceDir, 'AGENTS.md');
+      fs.writeFileSync(agentsMdPath, personaContent, 'utf-8');
+      logger.info(`  Synced ${mdName}.md → ${agentsMdPath} (${personaContent.length} bytes)`);
+
+      synced.push(agentId);
+    } catch (err) {
+      errors.push(agentId);
+      logger.error(`  Failed to sync ${agentId}: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+
+  return { synced, skipped, errors };
+}
+
+/**
  * Path to the plugin hooks directory.
  * Source: plugin/src/cli/setup.ts, Compiled: plugin/dist/cli/setup.js
  * Hooks dir: plugin/hooks/
@@ -573,6 +654,17 @@ export function runSetup(options: SetupOptions): MergeResult {
   }
   if (result.added.length === 0 && result.updated.length === 0) {
     logger.info('No changes needed — all OmOC agents already present.');
+  }
+
+  // Sync persona content to workspace directories for added/updated agents
+  const changedAgents = [...result.added, ...result.updated];
+  if (changedAgents.length > 0) {
+    logger.info('');
+    logger.info('Syncing workspace personas...');
+    const wsResult = syncWorkspacePersonas(changedAgents, logger);
+    if (wsResult.synced.length > 0) {
+      logger.info(`  Persona synced: ${wsResult.synced.join(', ')}`);
+    }
   }
 
   if (options.enablePlannerGuard) {

@@ -29,7 +29,8 @@ import { registerGuardrailInjector } from './hooks/guardrail-injector.js';
 // superpowers injector removed - not useful
 // session-sync removed — AGENTS.md is no longer modified in new approach
 import { registerSpawnGuard } from './hooks/spawn-guard.js';
-import { registerKeywordDetector } from './hooks/keyword-detector/hook.js';
+import { registerModeSwitch } from './hooks/mode-switch/hook.js';
+import { registerModeCommands } from './commands/mode-commands.js';
 import { registerTodoReminder, registerAgentEndReminder, registerSessionCleanup } from './hooks/todo-reminder.js';
 import { registerTodoTools } from './tools/todo/index.js';
 import { registerGrepTool } from './tools/grep/index.js';
@@ -90,7 +91,7 @@ export default function register(api: OpenClawPluginApi) {
   // registerSuperpowersInjector(api); // removed
   // registerSessionSync removed — AGENTS.md no longer modified
   registerSpawnGuard(api); hookCount++;
-  registerKeywordDetector(api); hookCount++;
+  registerModeSwitch(api); hookCount++;
   registerTodoReminder(api); hookCount += 3; // 3 hooks
   registerAgentEndReminder(api); hookCount++;
 
@@ -147,6 +148,7 @@ export default function register(api: OpenClawPluginApi) {
   registerStatusCommands(api); commandCount += 3; // /omoc_status, /omoc_health, /omoc_config
   registerPersonaCommands(api); commandCount += 2; // /omoc, /omoc_personas
   registerTodoCommands(api); commandCount += 4; // /todos + 3 todo commands
+  registerModeCommands(api); commandCount += 1; // /omoc_mode
 
   // Register services
   registerRalphLoop(api); serviceCount++;
