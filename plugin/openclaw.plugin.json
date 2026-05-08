@@ -1,6 +1,38 @@
 {
   "id": "oh-my-openclaw",
   "enabledByDefault": true,
+  "contracts": {
+    "tools": [
+      "omoc_delegate",
+      "omo_delegate",
+      "omoc_background_task",
+      "omoc_background_output",
+      "omoc_background_cancel",
+      "omoc_slashcommand",
+      "omoc_look_at",
+      "omoc_checkpoint",
+      "omoc_web_search",
+      "omoc_todo_create",
+      "omoc_todo_list",
+      "omoc_todo_update",
+      "omoc_glob",
+      "omoc_grep",
+      "omoc_interactive-bash",
+      "omoc_list",
+      "omoc_read",
+      "omoc_goto_definition",
+      "omoc_find_references",
+      "omoc_symbols",
+      "omoc_diagnostics",
+      "omoc_prepare_rename",
+      "omoc_rename",
+      "omoc_ast_grep_search",
+      "omoc_ast_grep_replace",
+      "omoc_call_omo_agent",
+      "omoc_skill_mcp",
+      "omoc_skill"
+    ]
+  },
   "configSchema": {
     "type": "object",
     "additionalProperties": false,
