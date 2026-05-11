@@ -51,10 +51,10 @@ export function registerModeCommands(api: OpenClawPluginApi) {
     description: 'Activate, switch, or list omoc modes',
     acceptsArgs: true,
     handler: async (ctx: { args?: string; sessionKey?: string }) => {
-      const args = (ctx.args ?? '').trim().toLowerCase();
+      const argsRaw = (ctx.args ?? '').trim();
       const workspaceDir = resolveWorkspaceForAgent(ctx);
 
-      if (!args) {
+      if (!argsRaw) {
         // Show current mode
         const { getActiveModeSync } = await import('../hooks/mode-switch/mode-state.js');
         const currentMode = getActiveModeSync(workspaceDir);
@@ -65,14 +65,14 @@ export function registerModeCommands(api: OpenClawPluginApi) {
         };
       }
 
-      if (args === 'off') {
+      if (argsRaw.toLowerCase() === 'off') {
         await resetMode(workspaceDir);
         return {
           text: '# OmOC Mode: OFF\n\nMode injection deactivated. System prompt will not include mode context.',
         };
       }
 
-      if (args === 'list') {
+      if (argsRaw.toLowerCase() === 'list') {
         const { getActiveModeSync } = await import('../hooks/mode-switch/mode-state.js');
         const currentMode = getActiveModeSync(workspaceDir);
         const modes = listModes();
@@ -96,19 +96,28 @@ export function registerModeCommands(api: OpenClawPluginApi) {
         };
       }
 
-      if (!isValidMode(args)) {
+      // args 可能包含 "mode 后续描述"（如 "coding 帮我分析这个文件"）
+      // 需要从 args 中分离 mode 和后续描述
+      const parts = argsRaw.split(/\s+/);
+      const modeName = parts[0].toLowerCase();
+      const remainingText = parts.length > 1 ? parts.slice(1).join(' ') : '';
+
+      if (!isValidMode(modeName)) {
         const modes = listModes();
         const available = modes.map((m) => `\`${m.id}\``).join(', ');
         return {
-          text: `# Unknown Mode: "${args}"\n\nAvailable modes: ${available}\n\nUse \`/omoc_mode list\` for details.`,
+          text: `# Unknown Mode: "${modeName}"\n\nAvailable modes: ${available}\n\nUse \`/omoc_mode list\` for details.`,
         };
       }
 
-      await setActiveMode(args as ModeId, workspaceDir);
-      api.logger.info(`${LOG_PREFIX} Mode switched to ${args}`);
+      await setActiveMode(modeName as ModeId, workspaceDir);
+      api.logger.info(`${LOG_PREFIX} Mode switched to ${modeName}`);
 
+      // continueAgent: true 触发 agent turn（Gateway 设计：必须用这个才能触发 agent）
+      // 注意：continueAgent: true 时 reply 会被 Gateway 丢弃
+      // 所以 mode 切换确认由 agent 在回复中自然带上，不需要单独回复
       return {
-        text: `# Mode Switched\n\nActive mode: **${args}**\n\nMode context will be injected into system prompt on next message.`,
+        continueAgent: true,
       };
     },
   });
