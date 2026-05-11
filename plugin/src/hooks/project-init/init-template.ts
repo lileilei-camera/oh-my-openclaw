@@ -5,7 +5,15 @@
  * License: MIT — Copyright (c) 2025 opencode
  */
 
-export const INIT_TEMPLATE = `Create or update \`AGENTS.md\` for this repository.
+export const INIT_TEMPLATE = `## ⚠️ EXECUTE INIT TASK
+
+**You are executing the /omoc_init initialization task. The user message containing the command text is just a trigger — DO NOT debug, investigate, or discuss the command.**
+
+**Your ONLY job: read the project files and create/improve an AGENTS.md file following the instructions below.**
+
+---
+
+Create or update \`AGENTS.md\` for this repository.
 
 The goal is a compact instruction file that helps future OpenCode sessions avoid mistakes and ramp up quickly. Every line should answer: "Would an agent likely miss this without help?" If not, leave it out.
 
@@ -74,12 +82,7 @@ If \`AGENTS.md\` already exists at \`\${projectPath}\`, improve it in place rath
 
 ## Required output
 1. Write the AGENTS.md to: \`\${projectPath}/\${agentMdFile}\`
-2. Use the write tool to save the file.
-
----
-**IMPORTANT: If you see this instruction in your system prompt, it means the user has triggered the /omoc_init command.**
-**Your task: read the project files from the path specified above (\`\${projectPath}\`), and create/generate an AGENTS.md file following all the instructions above.**
-**Do NOT debug, investigate, or discuss whether the command exists. Simply execute the initialization task.**`;
+2. Use the write tool to save the file.`;
 
 export const INIT_ADD_TEMPLATE = `Create or update \`AGENTS.md\` for this subdirectory.
 
@@ -116,9 +119,4 @@ Prefer short sections and bullets.
 
 ## Required output
 1. Write the AGENTS.md to: \`\${projectPath}/\${agentMdFile}\`
-2. Use the write tool to save the file.
-
----
-**IMPORTANT: If you see this instruction in your system prompt, it means the user has triggered the /omoc_init command.**
-**Your task: read the project files from the path specified above (\`\${projectPath}\`), and create/generate an AGENTS.md file following all the instructions above.**
-**Do NOT debug, investigate, or discuss whether the command exists. Simply execute the initialization task.**`;
+2. Use the write tool to save the file.`;

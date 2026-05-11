@@ -4,19 +4,31 @@
  * Runs on before_prompt_build.
  */
 import type { OpenClawPluginApi, PluginHookBeforePromptBuildEvent, PluginHookBeforePromptBuildResult } from '../../types.js';
-import { getPendingInit, clearPendingInit, getActiveProject } from './project-state.js';
+import { getPendingInit, clearPendingInit, getActiveProject, getStateDir } from './project-state.js';
 import { INIT_TEMPLATE, INIT_ADD_TEMPLATE } from './init-template.js';
 import { existsSync, readFileSync } from 'fs';
 import { resolve } from 'path';
 
+interface HookCtx {
+  sessionKey?: string;
+  workspaceDir?: string;
+  agentId?: string;
+}
+
 export function registerProjectBootstrap(api: OpenClawPluginApi) {
   api.on(
     'before_prompt_build',
-    (event: PluginHookBeforePromptBuildEvent, ctx: { sessionKey?: string }): PluginHookBeforePromptBuildResult | void => {
+    (event: PluginHookBeforePromptBuildEvent, ctx: HookCtx): PluginHookBeforePromptBuildResult | void => {
+      const workspaceDir = ctx.workspaceDir;
+      if (!workspaceDir) {
+        api.logger.warn('[omoc:project-init] No workspaceDir in ctx, skipping');
+        return;
+      }
+
       // 1. Check for pending init
-      const pending = getPendingInit();
+      const pending = getPendingInit(workspaceDir);
       if (pending) {
-        clearPendingInit();
+        clearPendingInit(workspaceDir);
 
         let template: string;
         if (pending.type === 'add') {
@@ -35,12 +47,13 @@ export function registerProjectBootstrap(api: OpenClawPluginApi) {
       }
 
       // 2. No pending — check active project
-      const project = getActiveProject();
+      const project = getActiveProject(workspaceDir);
       if (!project) return;
 
       const parts: string[] = [];
 
       // Read each agent.md in order
+      const injectedPaths: string[] = [];
       for (const agentMd of project.agentMds) {
         const fullPath = resolve(project.path, agentMd);
         if (!existsSync(fullPath)) {
@@ -51,13 +64,16 @@ export function registerProjectBootstrap(api: OpenClawPluginApi) {
         try {
           const content = readFileSync(fullPath, 'utf-8');
           parts.push(`\n--- Project: ${project.name} | File: ${agentMd} ---\n${content}`);
+          injectedPaths.push(fullPath);
         } catch (err) {
           api.logger.error(`[omoc:project-init] Failed to read ${fullPath}:`, err);
         }
       }
 
       if (parts.length > 0) {
-        api.logger.info(`[omoc:project-init] Injected ${parts.length} agent.md file(s) for project: ${project.name}`);
+        api.logger.info(
+          `[omoc:project-init] Injected ${parts.length} agent.md file(s) for project: ${project.name}: ${injectedPaths.join(', ')}`
+        );
         return { prependContext: parts.join('\n') };
       }
     },

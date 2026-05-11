@@ -11,9 +11,63 @@ import {
   getActiveProject,
   readState,
 } from '../hooks/project-init/project-state.js';
-import { existsSync, statSync } from 'fs';
+import { existsSync, statSync, readFileSync } from 'fs';
 import { resolve, join, isAbsolute } from 'path';
 import * as os from 'os';
+
+interface CommandCtx {
+  args?: string;
+  sessionKey?: string;
+  config?: Record<string, unknown>;
+}
+
+/**
+ * Resolve workspaceDir from command context.
+ * Command ctx doesn't have workspaceDir, so we extract agentId from sessionKey
+ * and look up the workspace from config.
+ */
+function resolveWorkspaceDir(ctx: CommandCtx): string | null {
+  const config = ctx.config as Record<string, unknown> | undefined;
+
+  // Extract agentId from sessionKey (format: agent:<agentId>:...)
+  let agentId: string | undefined;
+  if (ctx.sessionKey) {
+    const parts = ctx.sessionKey.split(':');
+    if (parts.length >= 2 && parts[0] === 'agent') {
+      agentId = parts[1];
+    }
+  }
+
+  if (agentId && config) {
+    const agents = config.agents as { list?: Array<Record<string, unknown>> } | undefined;
+    if (agents?.list) {
+      const agent = agents.list.find((a) => a.id === agentId);
+      if (agent?.workspace) {
+        return agent.workspace as string;
+      }
+    }
+    // Fallback to default workspace
+    const defaultWorkspace = config.workspace as string | undefined;
+    if (defaultWorkspace) return defaultWorkspace;
+  }
+
+  // Last resort: derive from agentId
+  if (agentId) {
+    const home = os.homedir();
+    if (agentId === 'main') {
+      return join(home, '.openclaw', 'workspace');
+    }
+    return join(home, '.openclaw', `workspace-${agentId}`);
+  }
+
+  return null;
+}
+
+function isSubPath(parent: string, child: string): boolean {
+  const rel = resolve(child);
+  const absParent = resolve(parent);
+  return rel.startsWith(absParent + '/') || rel === absParent;
+}
 
 /**
  * Resolve a path, expanding ~ to home directory.
@@ -21,7 +75,6 @@ import * as os from 'os';
  */
 function expandPath(p: string): string {
   if (p.startsWith('~/')) {
-    // ~/xxx → home + xxx (需要切掉 ~/ 两个字符)
     const home = os.homedir() || process.env.HOME || '/home/lileilei';
     return resolve(home, p.slice(2));
   }
@@ -31,32 +84,45 @@ function expandPath(p: string): string {
   if (isAbsolute(p)) {
     return resolve(p);
   }
-  // Relative path: resolve against current working directory
   return resolve(process.cwd(), p);
 }
 
-function isSubPath(parent: string, child: string): boolean {
-  const rel = resolve(child);
-  const absParent = resolve(parent);
-  return rel.startsWith(absParent + '/') || rel === absParent;
-}
-
-function formatProjectList(): string {
-  const state = readState();
+function formatProjectList(workspaceDir: string): string {
+  const state = readState(workspaceDir);
   if (!state.projects.length) return 'No projects registered yet.';
 
-  const lines = ['# Registered Projects', ''];
-  for (const p of state.projects) {
-    const isActive = p.name === state.active ? ' ← **active**' : '';
-    lines.push(`### \`${p.name}\`${isActive}`);
-    lines.push(`- Path: \`${p.path}\``);
-    lines.push('- Description files:');
-    for (const md of p.agentMds) {
-      lines.push(`  - \`${md}\``);
-    }
+  const lines: string[] = ['# Registered Projects', ''];
+
+  // Table overview
+  lines.push('| # | Name | Path | Active |');
+  lines.push('|---|------|------|--------|');
+  state.projects.forEach((p, i) => {
+    const isActive = p.name === state.active ? '✅' : '';
+    lines.push(`| ${i + 1} | **${p.name}** | \`${p.path}\` | ${isActive} |`);
+  });
+  lines.push('');
+
+  // Details
+  if (state.projects.some((p) => p.agentMds.length > 0)) {
+    lines.push('### Details');
     lines.push('');
+    for (const p of state.projects) {
+      const isActive = p.name === state.active ? ' ✅' : '';
+      lines.push(`**${p.name}**${isActive}`);
+      lines.push(`- Path: \`${p.path}\``);
+      if (p.agentMds.length) {
+        lines.push(`- Description files: ${p.agentMds.map((md) => `\`${md}\``).join(', ')}`);
+      }
+      lines.push('');
+    }
   }
+
   return lines.join('\n');
+}
+
+interface CommandCtx {
+  args?: string;
+  workspaceDir?: string;
 }
 
 export function registerInitCommands(api: OpenClawPluginApi) {
@@ -64,7 +130,14 @@ export function registerInitCommands(api: OpenClawPluginApi) {
     name: 'omoc_init',
     description: 'Initialize or manage project agent.md files',
     acceptsArgs: true,
-    handler: async (ctx: { args?: string }) => {
+    handler: async (ctx: CommandCtx) => {
+      const workspaceDir = resolveWorkspaceDir(ctx);
+      if (!workspaceDir) {
+        api.logger.warn('[omoc:init] Cannot resolve workspaceDir from context');
+        return { text: '⚠️ **Error**: Cannot determine workspace directory.' };
+      }
+      api.logger.info(`[omoc:init] resolved workspaceDir=[${workspaceDir}]`);
+
       const argsRaw = (ctx.args ?? '').trim();
 
       if (!argsRaw) {
@@ -99,10 +172,10 @@ export function registerInitCommands(api: OpenClawPluginApi) {
 
         // 项目已注册：不报错，继续使用已有项目名称（或用户指定的新名称）
         let effectiveName = projectName;
-        const existingByPath = findProjectByPath(dir);
+        const existingByPath = findProjectByPath(workspaceDir, dir);
         if (existingByPath) {
           // 已注册 → 复用已有名称（除非用户指定了不同的有效名称）
-          const existingByName = findProjectByName(projectName);
+          const existingByName = findProjectByName(workspaceDir, projectName);
           if (!existingByName && projectName !== existingByPath.name) {
             // 用户给了新名称且不存在冲突，用新名称
             effectiveName = projectName;
@@ -111,13 +184,16 @@ export function registerInitCommands(api: OpenClawPluginApi) {
           }
         }
 
-        if (!findProjectByName(effectiveName)) {
+        if (!findProjectByName(workspaceDir, effectiveName)) {
           // 新项目，添加条目
-          addProject({ name: effectiveName, path: dir, agentMds: ['AGENTS.md'] });
+          addProject(workspaceDir, { name: effectiveName, path: dir, agentMds: ['AGENTS.md'] });
         }
 
+        // 默认激活该项目
+        setActiveProject(workspaceDir, effectiveName);
+
         // Set pending init — 即使已注册也继续，让 agent 重新梳理/更新 AGENTS.md
-        setPendingInit({
+        setPendingInit(workspaceDir, {
           type: 'init',
           projectName: effectiveName,
           projectPath: dir,
@@ -140,7 +216,7 @@ export function registerInitCommands(api: OpenClawPluginApi) {
           };
         }
 
-        const project = findProjectByName(projectName);
+        const project = findProjectByName(workspaceDir, projectName);
         if (!project) {
           return {
             text: `⚠️ **Error**: Project not found: \`${projectName}\`\n\nUse \`/omoc_init list\` to see existing projects.`,
@@ -154,14 +230,14 @@ export function registerInitCommands(api: OpenClawPluginApi) {
           };
         }
 
-        const added = addAgentMdToProject(projectName, subPathAgentMd);
+        const added = addAgentMdToProject(workspaceDir, projectName, subPathAgentMd);
         if (!added) {
           return {
             text: `⚠️ **Error**: This agent.md is already registered for project \`${projectName}\`.`,
           };
         }
 
-        setPendingInit({
+        setPendingInit(workspaceDir, {
           type: 'add',
           projectName,
           projectPath: project.path,
@@ -185,7 +261,7 @@ export function registerInitCommands(api: OpenClawPluginApi) {
           };
         }
 
-        const project = findProjectByName(projectName);
+        const project = findProjectByName(workspaceDir, projectName);
         if (!project) {
           return {
             text: `⚠️ **Error**: Project not found: \`${projectName}\``,
@@ -193,7 +269,7 @@ export function registerInitCommands(api: OpenClawPluginApi) {
         }
 
         if (agentMd) {
-          const removed = removeAgentMdFromProject(projectName, agentMd);
+          const removed = removeAgentMdFromProject(workspaceDir, projectName, agentMd);
           if (!removed) {
             return { text: `⚠️ agent.md not found in project: \`${agentMd}\`` };
           }
@@ -202,7 +278,7 @@ export function registerInitCommands(api: OpenClawPluginApi) {
             + (project.agentMds.length <= 1 ? '\n\n⚠️ This project now has no description files.' : ''),
           };
         } else {
-          removeProject(projectName);
+          removeProject(workspaceDir, projectName);
           return {
             text: `✅ Removed project \`${projectName}\`.`,
           };
@@ -211,7 +287,7 @@ export function registerInitCommands(api: OpenClawPluginApi) {
 
       // /omoc_init list
       if (subCommand === 'list') {
-        return { text: formatProjectList() };
+        return { text: formatProjectList(workspaceDir) };
       }
 
       // /omoc_init set-active <project-name>
@@ -221,12 +297,12 @@ export function registerInitCommands(api: OpenClawPluginApi) {
           return { text: '⚠️ **Error**: Project name is required.\n\nUsage: `/omoc_init set-active <project-name>`' };
         }
 
-        const project = findProjectByName(projectName);
+        const project = findProjectByName(workspaceDir, projectName);
         if (!project) {
           return { text: `⚠️ **Error**: Project not found: \`${projectName}\`` };
         }
 
-        setActiveProject(projectName);
+        setActiveProject(workspaceDir, projectName);
         return {
           text: `✅ Activated project: **${projectName}**\n\nFuture messages will inject this project's agent.md context.`,
         };
@@ -234,7 +310,7 @@ export function registerInitCommands(api: OpenClawPluginApi) {
 
       // /omoc_init off
       if (subCommand === 'off') {
-        setActiveProject(null);
+        setActiveProject(workspaceDir, null);
         return {
           text: `✅ Project context injection deactivated.\n\nFuture messages will not inject any project agent.md.`,
         };

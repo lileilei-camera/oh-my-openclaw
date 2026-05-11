@@ -1,8 +1,7 @@
 /**
  * Project state management for omoc_init.
- * Reads/writes ~/.openclaw/workspace/.omoc-state/active-project
+ * Reads/writes <workspace>/.omoc-state/active-project (per-agent workspace).
  */
-import { homedir } from 'os';
 import { join } from 'path';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 
@@ -26,19 +25,25 @@ export interface ActiveProjectState {
   pendingInit: PendingInit | null;
 }
 
-const STATE_DIR = join(homedir(), '.openclaw', 'workspace', '.omoc-state');
-const STATE_FILE = join(STATE_DIR, 'active-project');
+export function getStateDir(workspaceDir: string): string {
+  return join(workspaceDir, '.omoc-state');
+}
+
+export function getStateFile(workspaceDir: string): string {
+  return join(getStateDir(workspaceDir), 'active-project');
+}
 
 function defaultState(): ActiveProjectState {
   return { projects: [], active: null, pendingInit: null };
 }
 
-export function readState(): ActiveProjectState {
-  if (!existsSync(STATE_FILE)) {
+export function readState(workspaceDir: string): ActiveProjectState {
+  const stateFile = getStateFile(workspaceDir);
+  if (!existsSync(stateFile)) {
     return defaultState();
   }
   try {
-    const raw = readFileSync(STATE_FILE, 'utf-8');
+    const raw = readFileSync(stateFile, 'utf-8');
     const parsed = JSON.parse(raw) as Partial<ActiveProjectState>;
     return {
       projects: parsed.projects ?? [],
@@ -50,29 +55,30 @@ export function readState(): ActiveProjectState {
   }
 }
 
-export function writeState(state: ActiveProjectState): void {
-  if (!existsSync(STATE_DIR)) {
-    mkdirSync(STATE_DIR, { recursive: true });
+export function writeState(workspaceDir: string, state: ActiveProjectState): void {
+  const stateDir = getStateDir(workspaceDir);
+  if (!existsSync(stateDir)) {
+    mkdirSync(stateDir, { recursive: true });
   }
-  writeFileSync(STATE_FILE, JSON.stringify(state, null, 2), 'utf-8');
+  writeFileSync(getStateFile(workspaceDir), JSON.stringify(state, null, 2), 'utf-8');
 }
 
-export function findProjectByName(name: string): ProjectEntry | undefined {
-  return readState().projects.find((p) => p.name === name);
+export function findProjectByName(workspaceDir: string, name: string): ProjectEntry | undefined {
+  return readState(workspaceDir).projects.find((p) => p.name === name);
 }
 
-export function findProjectByPath(path: string): ProjectEntry | undefined {
-  return readState().projects.find((p) => p.path === path);
+export function findProjectByPath(workspaceDir: string, path: string): ProjectEntry | undefined {
+  return readState(workspaceDir).projects.find((p) => p.path === path);
 }
 
-export function setActiveProject(name: string | null): void {
-  const state = readState();
+export function setActiveProject(workspaceDir: string, name: string | null): void {
+  const state = readState(workspaceDir);
   state.active = name;
-  writeState(state);
+  writeState(workspaceDir, state);
 }
 
-export function addProject(entry: ProjectEntry): void {
-  const state = readState();
+export function addProject(workspaceDir: string, entry: ProjectEntry): void {
+  const state = readState(workspaceDir);
   // Avoid duplicate by name
   const existing = state.projects.findIndex((p) => p.name === entry.name);
   if (existing >= 0) {
@@ -80,55 +86,55 @@ export function addProject(entry: ProjectEntry): void {
   } else {
     state.projects.push(entry);
   }
-  writeState(state);
+  writeState(workspaceDir, state);
 }
 
-export function removeProject(name: string): void {
-  const state = readState();
+export function removeProject(workspaceDir: string, name: string): void {
+  const state = readState(workspaceDir);
   state.projects = state.projects.filter((p) => p.name !== name);
   if (state.active === name) {
     state.active = null;
   }
-  writeState(state);
+  writeState(workspaceDir, state);
 }
 
-export function addAgentMdToProject(projectName: string, agentMd: string): boolean {
-  const state = readState();
+export function addAgentMdToProject(workspaceDir: string, projectName: string, agentMd: string): boolean {
+  const state = readState(workspaceDir);
   const project = state.projects.find((p) => p.name === projectName);
   if (!project) return false;
   if (project.agentMds.includes(agentMd)) return false;
   project.agentMds.push(agentMd);
-  writeState(state);
+  writeState(workspaceDir, state);
   return true;
 }
 
-export function removeAgentMdFromProject(projectName: string, agentMd: string): boolean {
-  const state = readState();
+export function removeAgentMdFromProject(workspaceDir: string, projectName: string, agentMd: string): boolean {
+  const state = readState(workspaceDir);
   const project = state.projects.find((p) => p.name === projectName);
   if (!project) return false;
   project.agentMds = project.agentMds.filter((a) => a !== agentMd);
-  writeState(state);
+  writeState(workspaceDir, state);
   return true;
 }
 
-export function setPendingInit(pending: PendingInit | null): void {
-  const state = readState();
+export function setPendingInit(workspaceDir: string, pending: PendingInit | null): void {
+  const state = readState(workspaceDir);
   state.pendingInit = pending;
-  writeState(state);
+  writeState(workspaceDir, state);
 }
 
-export function clearPendingInit(): void {
-  const state = readState();
+export function clearPendingInit(workspaceDir: string): void {
+  const state = readState(workspaceDir);
   state.pendingInit = null;
-  writeState(state);
+  writeState(workspaceDir, state);
 }
 
-export function getPendingInit(): PendingInit | null {
-  return readState().pendingInit;
+export function getPendingInit(workspaceDir: string): PendingInit | null {
+  return readState(workspaceDir).pendingInit;
 }
 
-export function getActiveProject(): ProjectEntry | undefined {
-  const state = readState();
+export function getActiveProject(workspaceDir: string): ProjectEntry | undefined {
+  const state = readState(workspaceDir);
   if (!state.active) return undefined;
   return state.projects.find((p) => p.name === state.active);
 }
