@@ -31,6 +31,8 @@ import { registerGuardrailInjector } from './hooks/guardrail-injector.js';
 import { registerSpawnGuard } from './hooks/spawn-guard.js';
 import { registerModeSwitch } from './hooks/mode-switch/hook.js';
 import { registerModeCommands } from './commands/mode-commands.js';
+import { registerProjectBootstrap } from './hooks/project-init/project-bootstrap.js';
+import { registerInitCommands } from './commands/init-commands.js';
 import { registerTodoReminder, registerAgentEndReminder, registerSessionCleanup } from './hooks/todo-reminder.js';
 import { registerTodoTools } from './tools/todo/index.js';
 import { registerGrepTool } from './tools/grep/index.js';
@@ -92,6 +94,7 @@ export default function register(api: OpenClawPluginApi) {
   // registerSessionSync removed — AGENTS.md no longer modified
   registerSpawnGuard(api); hookCount++;
   registerModeSwitch(api); hookCount++;
+  registerProjectBootstrap(api); hookCount++;
   registerTodoReminder(api); hookCount += 3; // 3 hooks
   registerAgentEndReminder(api); hookCount++;
 
@@ -149,6 +152,7 @@ export default function register(api: OpenClawPluginApi) {
   registerPersonaCommands(api); commandCount += 2; // /omoc, /omoc_personas
   registerTodoCommands(api); commandCount += 4; // /todos + 3 todo commands
   registerModeCommands(api); commandCount += 1; // /omoc_mode
+  registerInitCommands(api); commandCount += 1; // /omoc_init
 
   // Register services
   registerRalphLoop(api); serviceCount++;
