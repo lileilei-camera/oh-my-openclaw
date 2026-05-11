@@ -29,13 +29,9 @@ export function registerProjectBootstrap(api: OpenClawPluginApi) {
             .replace(/\$\{agentMdFile\}/g, pending.agentMdFile);
         }
 
-        // 关键问题：agent 看到用户消息里的 /omoc_init 会本能地去 debug 它。
-        // appendContext 在系统提示词之后、对话历史之前出现。
-        // 必须用非常明确的指令阻止 agent 去 debug 命令。
-        const userRequest = `\n\n## YOUR TASK: Project Initialization\n\nThe user has requested project initialization for the project described above.\n\n**STOP. Do NOT try to run, execute, or debug the /omoc_init command you see in the user's message.**\n**The command has already been processed. Your job is to DO THE WORK described below.**\n\nPlease read the project files and create an AGENTS.md following the instructions above.`;
-
+        // 只通过 prependContext 注入模板（指令已在模板末尾）
         api.logger.info(`[omoc:project-init] Injected ${pending.type} template for project: ${pending.projectName}`);
-        return { prependContext: template, appendContext: userRequest };
+        return { prependContext: template };
       }
 
       // 2. No pending — check active project

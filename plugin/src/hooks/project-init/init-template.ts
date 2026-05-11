@@ -74,7 +74,12 @@ If \`AGENTS.md\` already exists at \`\${projectPath}\`, improve it in place rath
 
 ## Required output
 1. Write the AGENTS.md to: \`\${projectPath}/\${agentMdFile}\`
-2. Use the write tool to save the file.`;
+2. Use the write tool to save the file.
+
+---
+**IMPORTANT: If you see this instruction in your system prompt, it means the user has triggered the /omoc_init command.**
+**Your task: read the project files from the path specified above (\`\${projectPath}\`), and create/generate an AGENTS.md file following all the instructions above.**
+**Do NOT debug, investigate, or discuss whether the command exists. Simply execute the initialization task.**`;
 
 export const INIT_ADD_TEMPLATE = `Create or update \`AGENTS.md\` for this subdirectory.
 
@@ -111,4 +116,9 @@ Prefer short sections and bullets.
 
 ## Required output
 1. Write the AGENTS.md to: \`\${projectPath}/\${agentMdFile}\`
-2. Use the write tool to save the file.`;
+2. Use the write tool to save the file.
+
+---
+**IMPORTANT: If you see this instruction in your system prompt, it means the user has triggered the /omoc_init command.**
+**Your task: read the project files from the path specified above (\`\${projectPath}\`), and create/generate an AGENTS.md file following all the instructions above.**
+**Do NOT debug, investigate, or discuss whether the command exists. Simply execute the initialization task.**`;
