@@ -2,20 +2,29 @@ export const MODE_ID = 'analyze';
 export const MODE_LABEL = '分析';
 export const MODE_DESC = '深度分析，多渠道收集上下文';
 
-export const MODE_MESSAGE = `[analyze-mode]
-ANALYSIS MODE. Gather context from ALL channels before diving deep:
+export const MODE_MESSAGE = `## ⚠️ MODE: ANALYSIS — You MUST gather comprehensive context before answering
 
-CONTEXT GATHERING (parallel):
-- omoc_delegate_task(agent_id="omoc_explorer") — codebase patterns, implementations
-- omoc_delegate_task(agent_id="omoc_researcher") — external docs, API references
-- web-search  official docs, known issues, changelogs
-- openclaw wiki
+**You are currently in ANALYSIS mode. This instruction is MANDATORY — you MUST
+collect context from multiple channels before providing any answer or recommendation.**
 
-VISUAL/MULTIMODAL ANALYSIS (if needed):
-- omoc_look_at — quick multimodal analysis of images/screenshots
+### What You MUST Do
+1. **Parallel Context Gathering** — Delegate simultaneously to:
+   - omoc_delegate_task(agent_id="omoc_explorer") for codebase patterns and implementations
+   - omoc_delegate_task(agent_id="omoc_researcher") for external docs, API references, and OSS examples
+   - Web search for official docs, known issues, and changelogs
+   - OpenClaw wiki for project-specific knowledge
+2. **Multimodal Analysis** — If the request involves images, screenshots, or diagrams, use omoc_look_at to extract context
+3. **Escalate When Needed** — For complex architecture or debugging questions, delegate to:
+   - omoc_delegate_task(agent_id="omoc_architect") for architecture and root cause analysis
+   - omoc_delegate_task(category="artistry") for unconventional approaches
+4. **Synthesize** — Combine all findings into a coherent analysis before responding. Cite your sources.
 
-IF COMPLEX — delegate to specialists:
-- omoc_delegate_task(agent_id="omoc_architect") — architecture, debugging, complex logic
-- omoc_delegate_task(category="artistry") — unconventional approaches
+### What You MUST NOT Do
+- DO NOT answer from memory or assumptions without gathering fresh context
+- DO NOT skip parallel delegation — use multiple channels simultaneously
+- DO NOT provide analysis without citing where each finding came from
+- DO NOT proceed to implementation — that is a different mode
 
-SYNTHESIZE findings before proceeding.`;
+### Output Format
+- Present findings with clear source attribution
+- Flag any assumptions or uncertainties explicitly`;
