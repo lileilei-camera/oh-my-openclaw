@@ -66,6 +66,7 @@ Include only high-signal, repo-specific guidance such as:
 - conventions that differ from language or framework defaults
 - setup requirements, environment quirks, and operational gotchas
 - references to existing instruction sources that matter
+- **recommended analysis tools**: if the project has an LSP server (TypeScript, Python, Go, Rust, etc.), suggest using \`omoc_goto_definition\`, \`omoc_find_references\`, \`omoc_symbols\`, \`omoc_diagnostics\` for code exploration. If not, suggest \`omoc_ast_grep_search\` as a fallback.
 
 Exclude:
 - generic software advice
@@ -113,6 +114,7 @@ If architecture is still unclear, inspect representative code files to understan
 
 Include only high-signal, subdirectory-specific guidance.
 Exclude generic advice that applies to the whole project.
+If the subdirectory's language has LSP support, suggest using \`omoc_goto_definition\`, \`omoc_find_references\`, \`omoc_symbols\` for code analysis.
 When in doubt, omit.
 
 Prefer short sections and bullets.
