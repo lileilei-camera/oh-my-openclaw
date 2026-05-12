@@ -1,268 +1,124 @@
----
-name: oh-my-openclaw
-description: Oh-My-OpenClaw (OmOC) — multi-agent orchestration plugin for OpenClaw. Category-based model routing, todo enforcer, ralph loop, 29 custom tools, and 11 agent personas.
----
+# AGENTS.md — Oh-My-OpenClaw (OmOC)
 
-# Oh-My-OpenClaw (OmOC) — Agent Guide
+> Agent orchestration framework for OpenClaw — 3-layer planning → orchestration → execution with category-based model routing.
 
-OpenClaw plugin for multi-agent orchestration. Version **0.21.3**. Package: `@happycastle/oh-my-openclaw`. **29 tools**, **13 commands**, **13 hooks**, **2 services**.
+## Project overview
 
----
+Oh-My-OpenClaw ports oh-my-opencode patterns into an OpenClaw-native TypeScript plugin + Markdown skill system. It provides 11 specialized agent personas, category-based model routing, and self-correcting execution loops — all through messaging channels (Discord, Telegram, etc.).
 
-## Quick Commands
+**Language**: TypeScript (ES2022, NodeNext modules)
+**Build**: `tsc` → `plugin/dist/`
+**Test**: vitest (167 tests)
+**Release**: semantic-release with conventional commits, `@semantic-release/npm` with `pkgRoot: plugin`
+
+## Essential developer commands
+
+All commands run from the `plugin/` subdirectory:
 
 ```bash
-# Install + setup
-openclaw plugins install @lileilei-camera/oh-my-openclaw
-openclaw omoc-setup            # inject 11 agent configs into openclaw.json5
+cd plugin
 
-# All npm commands run from plugin/ directory
-cd ~/.openclaw/workspace/oh-my-openclaw/plugin
-npm run build                  # tsc → dist/
-npm run test                   # vitest run (v8 coverage)
-npm run typecheck              # tsc --noEmit (also used as lint)
-npm run dev                    # tsc --watch
+# Install deps
+npm install
+
+# Build (TypeScript → dist/)
+npm run build        # tsc
+
+# Type-check (no emit) — also used as lint
+npm run typecheck    # tsc --noEmit
+npm run lint         # alias for typecheck
+
+# Test
+npm run test                     # vitest run
+npm run test:coverage            # vitest run --coverage (v8)
+npm run test:watch               # vitest (watch mode)
+
+# Pre-publish check
+npm run prepublishOnly           # typecheck → test → build
 ```
 
-**Build order**: `typecheck` → `test` → `build`. `prepublishOnly` enforces all three.
+**CI order** (from `.github/workflows/ci.yml`): `npm ci → typecheck → test → build`
 
----
+### Release
 
-## Architecture
-
-Plugin entry: `plugin/src/index.ts`. Uses OpenClaw Plugin SDK (`openclaw/plugin-sdk`).
-
-### Directory Map (source-level)
-
-```
-plugin/src/
-  index.ts                    — Plugin entry, all registrations
-  cli.ts                      — CLI entry
-  version.ts                  — VERSION constant
-  types.ts                    — PLUGIN_ID, getPluginConfig
-  constants.ts
-
-  commands/                   — Slash command handlers
-    ralph-commands.ts         — /ralph_loop, /ralph_stop
-    status-commands.ts        — /omoc_status, /omoc_health, /omoc_config
-    persona-commands.ts       — /omoc, /omoc_personas
-    todo-commands.ts          — /todos + 3 todo commands
-    mode-commands.ts          — /omoc_mode
-    init-commands.ts          — /omoc_init (+ subcommands: add, delete, list, set-active, off)
-
-  hooks/                      — before_prompt_build / message / agent hooks
-    startup.ts                — gateway:startup logging
-    todo-enforcer.ts          — Injects TODO continuation
-    comment-checker.ts        — 11 regex patterns kill AI slop
-    message-monitor.ts        — Outbound message audit
-    subagent-tracker.ts       — Sub-agent tracking
-    context-injector.ts       — Project context injection
-    guardrail-injector.ts     — Safety guardrails
-    spawn-guard.ts            — Validates sub-agent spawns
-    mode-switch/              — /omoc_mode: mode-based context switching
-      hook.ts                 — before_prompt_build, reads .omoc-state/active_mode
-      mode-registry.ts        — Mode definitions + messages
-      mode-state.ts           — Active mode persistence
-    project-init/             — omoc_init: project registration + agent.md injection
-      project-state.ts        — State file: <workspace>/.omoc-state/active-project (projects, active, pendingInit)
-      init-template.ts        — INIT_TEMPLATE / INIT_ADD_TEMPLATE for pending init injection
-      project-bootstrap.ts    — before_prompt_build hook: injects init template or active project agent.md
-    todo-reminder.ts          — 3 hooks: reminder, agent-end, session cleanup
-
-  tools/                      — 29 tool contracts (see openclaw.plugin.json)
-    delegate-task/            — omoc_delegate: category-based model routing
-    background-task/          — omoc_background_task/output/cancel
-    slashcommand/             — omoc_slashcommand
-    omo-delegation.ts         — omo_delegate: OpenCode ACP
-    look-at/                  — omoc_look_at: multimodal analysis
-    checkpoint.ts             — omoc_checkpoint
-    web-search.ts             — omoc_web_search
-    todo/                     — omoc_todo_create/list/update
-    grep/                     — omoc_grep
-    glob/                     — omoc_glob
-    interactive-bash/         — omoc_interactive-bash (tmux PTY)
-    session-manager/          — omoc_list / omoc_read
-    lsp/                      — goto_definition, find_references, symbols, diagnostics, rename
-    ast-grep/                 — ast_grep_search / ast_grep_replace
-    call-omo-agent/           — omoc_call_omo_agent (explore/librarian)
-    skill-mcp/                — omoc_skill_mcp
-    skill/                    — omoc_skill
-
-  features/
-    claude-code-mcp-loader/   — Claude Code MCP loader
-    context-collector.ts      — Context collection
-    skill-loader/             — Skill discovery (builtin, user, project)
-    skill-mcp-manager/        — MCP server lifecycle
-
-  services/
-    ralph-loop.ts             — Self-correcting execution loop (hard cap: 100)
-    webhook-bridge.ts         — External notifications
-
-  shared/                     — Utilities (case, config dir, frontmatter, file utils, logger)
-  utils/                      — persona-state, helpers, paths, state, validation
-  agents/                     — agent-ids.ts, agent-configs.ts, persona-prompts.ts
-  __tests__/                  — Vitest test suite
+```bash
+git tag v0.1.0
+git push origin v0.1.0   # triggers .github/workflows/publish.yml
 ```
 
-Other key paths:
-- `plugin/agents/` — Agent persona profiles (markdown prompts)
-- `plugin/skills/` — Skill definitions (markdown)
-- `plugin/workflows/` — Workflow templates
-- `plugin/openclaw.plugin.json` — Plugin manifest + configSchema
-- `plugin/config/agent-models.json` — Model presets
+Requires `NPM_TOKEN` in GitHub repo secrets. Version sync script: `node scripts/sync-version.mjs <version>`.
 
-### Config Schema
+## Architecture at a glance
 
-All config fields **must** be declared in `configSchema` within `openclaw.plugin.json`. OpenClaw uses strict validation — unknown fields cause plugin rejection.
-
-Key config fields: `max_ralph_iterations` (0-100), `todo_enforcer_enabled`, `comment_checker_enabled`, `hooks_token` (sensitive), `gateway_url`, `webhook_bridge_enabled`, `checkpoint_dir`.
-
-After editing `openclaw.plugin.json`, always run `openclaw doctor`.
-
----
-
-## Build & Test
-
-- **Work directory**: `plugin/` — all npm commands run here
-- **TypeScript**: strict mode (`strict: true`). `rootDir: src`, `outDir: dist`, `module: NodeNext`
-- **Tests**: Vitest, v8 coverage. Pattern: `src/__tests__/**/*.test.ts`
-- **tsconfig excludes**: `**/*.test.ts` from compilation
-- **typeRoots**: includes `~/.npm-global/lib/node_modules/@types` for local OpenClaw types
-
----
-
-## Release
-
-**Automated via semantic-release. Never manually bump versions.**
-
-- `master` → stable releases (minor/patch/major)
-- `dev` → prereleases (`-dev.x` suffix)
-- Conventional commits: `feat`, `fix`, `perf`, `refactor`, `docs`, `test`, `chore`, `ci`
-- `semantic-release` uses `pkgRoot: plugin`
-- Git assets committed: `plugin/package.json`, `plugin/openclaw.plugin.json`
-
----
-
-## Plugin Development Conventions
-
-### Adding a New Tool
-
-1. Create under `plugin/src/tools/<name>/` (or single file if small)
-2. Export `register<Name>Tool(api)` function
-3. Register in `plugin/src/index.ts`
-4. Add contract name to `openclaw.plugin.json` → `contracts.tools[]`
-5. If config needed, add to `configSchema` in `openclaw.plugin.json`
-6. Run `openclaw doctor`
-
-### Adding a New Hook
-
-1. Create file under `plugin/src/hooks/`
-2. Export `register<Name>(api)` or `register<Name>Hook(registry)` function
-3. Register in `plugin/src/index.ts`
-
-### Adding a New Command
-
-1. Add to `plugin/src/commands/<name>-commands.ts`
-2. Export `register<Name>Commands(api)`
-3. Register in `plugin/src/index.ts`
-4. Increment `commandCount` by actual number of commands registered
-
----
-
-## Key Patterns
-
-### Project Init State Machine
-
-`/omoc_init <dir> <name>` → writes `pendingInit` to `.omoc-state/active-project` → next `before_prompt_build` sees pending → injects template → agent writes AGENTS.md → plugin marks pending as cleared.
-
-Active project agent.md files are injected into every prompt via `project-bootstrap.ts` (priority 75). Use `/omoc_init off` to deactivate.
-
-### Registration Counters
-
-`index.ts` tracks `hookCount`, `toolCount`, `commandCount`, `serviceCount`. Increment by actual number of items registered (e.g., `toolCount += 4` for 4 todo tools).
-
-### Tool Registration
-
-```typescript
-export function registerXxxTool(api: OpenClawPluginApi) {
-  api.registerTool({
-    name: 'omoc_xxx',
-    description: '...',
-    parameters: TypeBoxSchema,
-    handler: async (params, ctx) => { ... }
-  });
-}
+```
+oh-my-openclaw/
+  SKILL.md                    # Main skill doc (agent instructions)
+  config/
+    categories.json           # Category→model mapping, agents, skills, tmux config
+  plugin/
+    src/
+      index.ts                # Plugin entry point (registers hooks, tools, commands, services)
+      cli.ts                  # CLI entry (omoc-setup wizard)
+      types.ts                # Core TypeScript types
+      constants.ts            # Constants
+      version.ts              # Version
+      commands/               # Slash commands (init, mode, persona, ralph, status, todo)
+      hooks/                  # Plugin hooks (todo-enforcer, comment-checker, spawn-guard, etc.)
+      tools/                  # Native tools (delegate, checkpoint, todo, lsp, glob, grep, etc.)
+      services/               # Background services
+      agents/                 # Agent-related logic
+      features/               # Feature modules
+      shared/                 # Shared utilities
+      utils/                  # Utility functions
+      __tests__/              # Vitest test files (*.test.ts)
+    agents/                   # Markdown agent persona definitions
+    skills/                   # Markdown skill definitions
+    workflows/                # Workflow definitions
+    openclaw.plugin.json      # Plugin manifest (tools, configSchema)
+    package.json              # npm package (publish root)
+    vitest.config.ts          # Test config
+    tsconfig.json             # TypeScript config
 ```
 
-### Hook Registration
+### Plugin manifest (`plugin/openclaw.plugin.json`)
 
-Two APIs exist:
+Declares tool contracts, config schema, and is the source of truth for available OmOC tools. Key tools: `omoc_delegate`, `omo_delegate`, `omoc_checkpoint`, `omoc_todo_*`, `omoc_glob`, `omoc_grep`, `omoc_interactive-bash`, LSP tools, AST tools.
 
-```typescript
-// Legacy: api.registerHook(event, handler)
-export function registerXxx(api: OpenClawPluginApi) {
-  api.registerHook('before_prompt_build', async (ctx) => { ... });
-}
+### Category routing (`config/categories.json`)
 
-// Modern: api.on(event, handler, options) — supports priority option
-export function registerXxx(api: OpenClawPluginApi) {
-  api.on('before_prompt_build', (event, ctx) => { ... }, { priority: 75 });
-}
-```
+Single config file for all model routing. Categories: `quick`, `deep`, `ultrabrain`, `visual-engineering`, `multimodal`, `artistry`, `unspecified-low`, `unspecified-high`, `writing`. Each maps to a model with agents and alternatives.
 
-### Skill Discovery (async, deferred)
+## Key conventions
 
-Skills are discovered asynchronously after sync registration. Tool registrations that depend on discovered skills (skill-mcp, skill) are wrapped in an IIFE inside `register()`.
+- **Plugin code lives in `plugin/src/`**; root-level files are skill docs, config, and release setup.
+- **Test files**: `plugin/src/__tests__/*.test.ts` — vitest with `globals: true`.
+- **Agent personas**: Markdown files in `plugin/agents/` (planner.md, coder.md, etc.) — loaded dynamically by hooks.
+- **Skills**: Markdown files in `plugin/skills/` — loaded on trigger keywords.
+- **Never push to `dist/`** — it's compiled output. Only commit `src/` changes.
+- **Conventional commits**: `feat:`, `fix:`, `perf:`, `refactor:` trigger releases. `docs:`, `style:`, `test:`, `chore:`, `ci:` are hidden.
 
----
+## Code analysis tools
 
-## Gotchas
+Prefer LSP tools over raw reading/grep when analyzing TypeScript code:
 
-- **`plugin/` is the npm package root** — repo root is NOT an npm project
-- **`dist/` is gitignored** — always build before testing plugin loading
-- **`workspace/` and `.sisyphus/` are gitignored** — runtime data, not tracked
-- **SDK types** in `plugin/src/` — may need updates when OpenClaw SDK changes
-- **`openclaw.plugin.json` `files` field** controls npm publish contents — keep in sync
-- **persona-bootstrap hook removed** — replaced by `agent:bootstrap` internal hook
-- **session-sync removed** — AGENTS.md is no longer auto-modified by the plugin
-- **`config/categories.json`** referenced in docs/README is generated by `omoc-setup`, not checked into the repo
-- **No `.github/` in workspace** — CI workflows exist in the git repo but not the workspace copy
+- `omoc_goto_definition` — jump to symbol definition
+- `omoc_find_references` — find all usages across the project
+- `omoc_symbols` — file outline (scope=document) or workspace search (scope=workspace + query)
+- `omoc_diagnostics` — check for errors/warnings before building
+- `omoc_rename` — safe cross-file symbol rename
 
-## Agent Personas (Bundled)
+Fallback when LSP is unavailable:
 
-Profiles in `plugin/agents/`:
+- `omoc_ast_grep_search` — AST pattern search (supports `$VAR` meta-variables)
+- `omoc_ast_grep_replace` — AST-aware cross-file refactoring
 
-| File | Role |
-|------|------|
-| planner.md | Strategic planning (Prometheus) |
-| coder.md | Primary worker (Sisyphus-Junior) |
-| expert.md | Deep technical work (Hephaestus/Oracle) |
-| explorer.md | Codebase exploration (Explore) |
-| researcher.md | Documentation & research (Librarian) |
-| reviewer.md | Plan/code review (Momus/Metis) |
-| advisor.md | Pre-planning consulting (Metis) |
-| architect.md | Architecture decisions (Oracle) |
-| delegate.md | Delegation orchestration (Atlas) |
-| frontend.md | UI/UX implementation (Frontend) |
-| multimodal-looker.md | Visual analysis (Multimodal Looker) |
+## Project wiki
 
----
+Use the OpenClaw wiki knowledge base (if available) to supplement code-level understanding with design rationale, team conventions, and historical context.
 
-## Skills (Bundled)
+- **Check availability**: `openclaw wiki status`
+- **Search**: `wiki_search("query")` or `openclaw wiki search "query"` — find relevant wiki pages by topic.
+- **Read a page**: `wiki_get("lookup")` or `openclaw wiki get <page-id>` — read detailed context from a specific page.
+- **Search modes**: `--mode find-person` / `--mode route-question` / `--mode source-evidence`
 
-Definitions in `plugin/skills/`:
-
-| Skill | Purpose |
-|-------|---------|
-| git-master.md | Git workflows, commit surgery, history archaeology |
-| frontend-ui-ux.md | Design-first UI development |
-| comment-checker.md | Anti-AI-slop code quality guard |
-| openclaw-look-at.md | OpenClaw native multimodal (image/pdf) |
-| web-search.md | Web search integration |
-| delegation-prompt.md | Delegation patterns |
-| multimodal-analysis.md | Multimodal analysis workflows |
-| opencode-controller.md | OpenCode/OmO delegation via tmux |
-| tmux.md | tmux session orchestration |
-| tmux-agents.md | Agent spawning/monitoring in tmux |
-| workflow-*.md | Workflow templates (ultrawork, plan, start-work, tool-patterns, auto-rescue) |
-| steering-words.md | Task steering vocabulary |
+If wiki knowledge is unavailable, rely solely on project source code and documentation.

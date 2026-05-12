@@ -11,16 +11,51 @@ export const INIT_TEMPLATE = `## ⚠️ EXECUTE INIT TASK
 
 **Your ONLY job: read the project files and create/improve an AGENTS.md file following the instructions below.**
 
+This task includes THREE phases that MUST be executed in order:
+1. **Build knowledge graph** (if graphify is available) — read the SKILL.md skill file, then follow it to generate \`graphify-out/GRAPH_REPORT.md\`
+2. **Read the project** — use the graph report to guide which files to read
+3. **Write AGENTS.md** — create or update the instruction file
+
 ---
 
 Create or update \`AGENTS.md\` for this repository.
 
-The goal is a compact instruction file that helps future OpenCode sessions avoid mistakes and ramp up quickly. Every line should answer: "Would an agent likely miss this without help?" If not, leave it out.
+## ⚠️ Before you start: verify file existence (MANDATORY)
+
+You MUST use the file system tool to check whether \`AGENTS.md\` already exists at \`\${projectPath}/\${agentMdFile}\`. Do NOT rely on assumptions or memory.
+
+- If the file EXISTS: read it first, then improve it in place. Preserve verified useful guidance, delete fluff or stale claims.
+- If the file DOES NOT EXIST: create it from scratch at that path.
+
+Do NOT skip this step. The file may have been deleted, moved, or never created.
 
 User-provided focus or constraints (honor these):
 $ARGUMENTS
 
 ## How to investigate
+
+### Step 1: Build knowledge graph (MANDATORY — do this FIRST)
+
+**Execute these steps in order before proceeding to Step 2:**
+
+1. Check if graphify is installed: \`which graphify\`
+2. If graphify IS installed: **READ the skill file** at \`~/.openclaw/skills/graphify/SKILL.md\` FIRST, then follow its instructions to build the knowledge graph. The SKILL.md describes the correct extraction pipeline, command format, and best practices — follow it, not hardcoded commands.
+3. If graphify is NOT installed (command not found), skip to Step 2.
+
+**⚠️ Graphify build precautions (from real experience):**
+
+- **Correct command**: The SKILL.md says \`graphify .\` but the actual CLI may use \`graphify extract <path>\`. Always verify with \`graphify --help\` first.
+- **AST-only is sufficient for code-heavy projects**: Graphify's AST extraction works without any API key. The graph.json will be generated with all code nodes.
+- **Skip semantic extraction**: Semantic extraction requires specific API keys that may not be available. If it fails, the AST-only graph is still fully functional for code exploration.
+- **Generate report**: Run \`graphify cluster-only <path>\` to create \`GRAPH_REPORT.md\` from the existing graph.json (no LLM needed).
+
+**Why this matters:** Reading \`graphify-out/GRAPH_REPORT.md\` is ~71.5× cheaper than reading raw source files. The graph identifies entry points, god nodes, and community clusters — it tells you exactly which files to read in Step 3.
+
+### Step 2: Read the knowledge graph report (if available)
+
+If \`graphify-out/GRAPH_REPORT.md\` was generated in Step 1, read it first. Use the graph to understand the project structure before examining individual files.
+
+### Step 3: Read project config and docs
 
 Read the highest-value sources first:
 - \`README*\`, root manifests, workspace config, lockfiles
@@ -66,7 +101,6 @@ Include only high-signal, repo-specific guidance such as:
 - conventions that differ from language or framework defaults
 - setup requirements, environment quirks, and operational gotchas
 - references to existing instruction sources that matter
-- **recommended analysis tools**: if the project has an LSP server (TypeScript, Python, Go, Rust, etc.), suggest using \`omoc_goto_definition\`, \`omoc_find_references\`, \`omoc_symbols\`, \`omoc_diagnostics\` for code exploration. If not, suggest \`omoc_ast_grep_search\` as a fallback.
 
 Exclude:
 - generic software advice
@@ -79,13 +113,79 @@ When in doubt, omit.
 
 Prefer short sections and bullets. If the repo is simple, keep the file simple. If the repo is large, summarize the few structural facts that actually change how an agent should work.
 
-If \`AGENTS.md\` already exists at \`\${projectPath}\`, improve it in place rather than rewriting blindly. Preserve verified useful guidance, delete fluff or stale claims, and reconcile it with the current codebase.
+## Code analysis tools (MANDATORY)
+
+If this project uses a language with LSP support (TypeScript, Python, Go, Rust, Java, C/C++, etc.), you MUST add a "## Code analysis tools" section to the AGENTS.md with the following content:
+
+\`\`\`markdown
+## Code analysis tools
+
+Prefer LSP tools over raw reading/grep when analyzing code:
+
+- \`omoc_goto_definition\` — jump to symbol definition
+- \`omoc_find_references\` — find all usages across the project
+- \`omoc_symbols\` — file outline (scope=document) or workspace search (scope=workspace + query)
+- \`omoc_diagnostics\` — check for errors/warnings before building
+- \`omoc_rename\` — safe cross-file symbol rename
+
+Fallback when LSP is unavailable:
+- \`omoc_ast_grep_search\` — AST pattern search (supports \`$VAR\` meta-variables)
+- \`omoc_ast_grep_replace\` — AST-aware cross-file refactoring
+\`\`\`
+
+If the project language does NOT have LSP support, include only the "Fallback" bullet points above.
+
+## Project knowledge graph (CONDITIONAL)
+
+If \`graphify-out/GRAPH_REPORT.md\` exists in the project (built during this init or previously), you MUST add a "## Project knowledge graph" section to the AGENTS.md.
+
+\`\`\`markdown
+## Project knowledge graph
+
+A knowledge graph exists at \`graphify-out/\`. Before grepping or reading raw source files, check the graph for context:
+
+- **Read the report**: \`graphify-out/GRAPH_REPORT.md\` — identifies entry points, god nodes, and community clusters. ~71.5× cheaper than reading raw files.
+- **Semantic query**: \`graphify query "..."\` — natural-language search across the graph.
+- **Trace a path**: \`graphify path "FromNode" "ToNode"\` — find coupling chains for impact analysis.
+- **Explain a node**: \`graphify explain "NodeName"\` — plain-language explanation of a specific component.
+- **Update after changes**: \`graphify . --update\` — incremental rebuild after edits.
+
+If graphify is not available, fall back to reading source files directly.
+\`\`\`
+
+If the graph does NOT exist, omit this section entirely.
+
+## Project wiki (CONDITIONAL)
+
+You MUST also add a "## Project wiki" section to the AGENTS.md. If the wiki does NOT exist yet, include the section below anyway — it tells future agents to check for and use the wiki if available.
+
+\`\`\`markdown
+## Project wiki
+
+Use the OpenClaw wiki knowledge base (if available) to supplement code-level understanding with design rationale, team conventions, and historical context.
+
+- **Check availability**: \`openclaw wiki status\`
+- **Search**: \`wiki_search("query")\` or \`openclaw wiki search "query"\` — find relevant wiki pages by topic.
+- **Read a page**: \`wiki_get("lookup")\` or \`openclaw wiki get <page-id>\` — read detailed context from a specific page.
+- **Search modes**: \`--mode find-person\` / \`--mode route-question\` / \`--mode source-evidence\`
+
+If wiki knowledge is unavailable, rely solely on project source code and documentation.
+\`\`\`
 
 ## Required output
 1. Write the AGENTS.md to: \`\${projectPath}/\${agentMdFile}\`
 2. Use the write tool to save the file.`;
 
 export const INIT_ADD_TEMPLATE = `Create or update \`AGENTS.md\` for this subdirectory.
+
+## ⚠️ Before you start: verify file existence (MANDATORY)
+
+You MUST use the file system tool to check whether \`AGENTS.md\` already exists at \`\${projectPath}/\${agentMdFile}\`. Do NOT rely on assumptions or memory.
+
+- If the file EXISTS: read it first, then improve it in place. Preserve verified useful guidance, delete fluff or stale claims.
+- If the file DOES NOT EXIST: create it from scratch at that path.
+
+Do NOT skip this step.
 
 The goal is a compact instruction file that helps future agent sessions understand this subdirectory's purpose, structure, and conventions.
 
@@ -114,10 +214,15 @@ If architecture is still unclear, inspect representative code files to understan
 
 Include only high-signal, subdirectory-specific guidance.
 Exclude generic advice that applies to the whole project.
-If the subdirectory's language has LSP support, suggest using \`omoc_goto_definition\`, \`omoc_find_references\`, \`omoc_symbols\` for code analysis.
 When in doubt, omit.
 
 Prefer short sections and bullets.
+
+## Code analysis tools (MANDATORY)
+
+If the subdirectory's language has LSP support, you MUST add a "## Code analysis tools" section mentioning \`omoc_goto_definition\`, \`omoc_find_references\`, \`omoc_symbols\` for code exploration, and \`omoc_ast_grep_search\` as fallback.
+
+If a project wiki exists, also add a "## Project wiki" section. If no wiki exists, still include it — tell future agents to check with \`openclaw wiki status\` and use \`wiki_search\` / \`openclaw wiki search\` if available.
 
 ## Required output
 1. Write the AGENTS.md to: \`\${projectPath}/\${agentMdFile}\`
