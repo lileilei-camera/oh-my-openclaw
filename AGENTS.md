@@ -1,11 +1,11 @@
 ---
 name: oh-my-openclaw
-description: Oh-My-OpenClaw (OmOC) — multi-agent orchestration plugin for OpenClaw. Category-based model routing, todo enforcer, ralph loop, 28+ custom tools, and 11 agent personas.
+description: Oh-My-OpenClaw (OmOC) — multi-agent orchestration plugin for OpenClaw. Category-based model routing, todo enforcer, ralph loop, 29 custom tools, and 11 agent personas.
 ---
 
 # Oh-My-OpenClaw (OmOC) — Agent Guide
 
-OpenClaw plugin for multi-agent orchestration. Version **0.21.3**. Package: `@happycastle/oh-my-openclaw`.
+OpenClaw plugin for multi-agent orchestration. Version **0.21.3**. Package: `@happycastle/oh-my-openclaw`. **29 tools**, **13 commands**, **13 hooks**, **2 services**.
 
 ---
 
@@ -59,14 +59,17 @@ plugin/src/
     context-injector.ts       — Project context injection
     guardrail-injector.ts     — Safety guardrails
     spawn-guard.ts            — Validates sub-agent spawns
-    mode-switch/hook.ts       — Mode switching
-    project-init/             — omoc_init: project registration + AGENTS.md bootstrap
-      project-state.ts        — active-project file读写 (~/.omoc-state/active-project)
-      init-template.ts        — init/add templates
-      project-bootstrap.ts    — before_prompt_build hook
+    mode-switch/              — /omoc_mode: mode-based context switching
+      hook.ts                 — before_prompt_build, reads .omoc-state/active_mode
+      mode-registry.ts        — Mode definitions + messages
+      mode-state.ts           — Active mode persistence
+    project-init/             — omoc_init: project registration + agent.md injection
+      project-state.ts        — State file: <workspace>/.omoc-state/active-project (projects, active, pendingInit)
+      init-template.ts        — INIT_TEMPLATE / INIT_ADD_TEMPLATE for pending init injection
+      project-bootstrap.ts    — before_prompt_build hook: injects init template or active project agent.md
     todo-reminder.ts          — 3 hooks: reminder, agent-end, session cleanup
 
-  tools/                      — 28+ tool contracts (see openclaw.plugin.json)
+  tools/                      — 29 tool contracts (see openclaw.plugin.json)
     delegate-task/            — omoc_delegate: category-based model routing
     background-task/          — omoc_background_task/output/cancel
     slashcommand/             — omoc_slashcommand
@@ -168,6 +171,12 @@ After editing `openclaw.plugin.json`, always run `openclaw doctor`.
 
 ## Key Patterns
 
+### Project Init State Machine
+
+`/omoc_init <dir> <name>` → writes `pendingInit` to `.omoc-state/active-project` → next `before_prompt_build` sees pending → injects template → agent writes AGENTS.md → plugin marks pending as cleared.
+
+Active project agent.md files are injected into every prompt via `project-bootstrap.ts` (priority 75). Use `/omoc_init off` to deactivate.
+
 ### Registration Counters
 
 `index.ts` tracks `hookCount`, `toolCount`, `commandCount`, `serviceCount`. Increment by actual number of items registered (e.g., `toolCount += 4` for 4 todo tools).
@@ -187,9 +196,17 @@ export function registerXxxTool(api: OpenClawPluginApi) {
 
 ### Hook Registration
 
+Two APIs exist:
+
 ```typescript
+// Legacy: api.registerHook(event, handler)
 export function registerXxx(api: OpenClawPluginApi) {
   api.registerHook('before_prompt_build', async (ctx) => { ... });
+}
+
+// Modern: api.on(event, handler, options) — supports priority option
+export function registerXxx(api: OpenClawPluginApi) {
+  api.on('before_prompt_build', (event, ctx) => { ... }, { priority: 75 });
 }
 ```
 

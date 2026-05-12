@@ -2,8 +2,8 @@
  * Project state management for omoc_init.
  * Reads/writes <workspace>/.omoc-state/active-project (per-agent workspace).
  */
-import { join } from 'path';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { join, normalize, sep } from 'path';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, renameSync } from 'fs';
 
 export interface ProjectEntry {
   name: string;
@@ -60,7 +60,10 @@ export function writeState(workspaceDir: string, state: ActiveProjectState): voi
   if (!existsSync(stateDir)) {
     mkdirSync(stateDir, { recursive: true });
   }
-  writeFileSync(getStateFile(workspaceDir), JSON.stringify(state, null, 2), 'utf-8');
+  const targetFile = getStateFile(workspaceDir);
+  const tmpFile = targetFile + '.tmp';
+  writeFileSync(tmpFile, JSON.stringify(state, null, 2), 'utf-8');
+  renameSync(tmpFile, targetFile); // atomic replace
 }
 
 export function findProjectByName(workspaceDir: string, name: string): ProjectEntry | undefined {
@@ -95,6 +98,9 @@ export function removeProject(workspaceDir: string, name: string): void {
   if (state.active === name) {
     state.active = null;
   }
+  if (state.pendingInit?.projectName === name) {
+    state.pendingInit = null;
+  }
   writeState(workspaceDir, state);
 }
 
@@ -102,8 +108,13 @@ export function addAgentMdToProject(workspaceDir: string, projectName: string, a
   const state = readState(workspaceDir);
   const project = state.projects.find((p) => p.name === projectName);
   if (!project) return false;
-  if (project.agentMds.includes(agentMd)) return false;
-  project.agentMds.push(agentMd);
+  // Normalize: remove leading ./ or .\, normalize separators
+  let normalized = normalize(agentMd);
+  while (normalized.startsWith('.' + sep) || normalized === '.') {
+    normalized = normalized.slice(2);
+  }
+  if (project.agentMds.includes(normalized)) return false;
+  project.agentMds.push(normalized);
   writeState(workspaceDir, state);
   return true;
 }
@@ -112,7 +123,12 @@ export function removeAgentMdFromProject(workspaceDir: string, projectName: stri
   const state = readState(workspaceDir);
   const project = state.projects.find((p) => p.name === projectName);
   if (!project) return false;
-  project.agentMds = project.agentMds.filter((a) => a !== agentMd);
+  // Normalize to match how paths are stored
+  let normalized = normalize(agentMd);
+  while (normalized.startsWith('.' + sep) || normalized === '.') {
+    normalized = normalized.slice(2);
+  }
+  project.agentMds = project.agentMds.filter((a) => a !== normalized);
   writeState(workspaceDir, state);
   return true;
 }

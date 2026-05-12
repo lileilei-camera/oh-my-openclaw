@@ -30,15 +30,19 @@ export function registerProjectBootstrap(api: OpenClawPluginApi) {
       if (pending) {
         clearPendingInit(workspaceDir);
 
+        // Sanitize values to prevent template injection ($, `, \)
+        function safeReplace(template: string, key: string, value: string): string {
+          const escaped = value.replace(/[$`\\]/g, '\\$&');
+          return template.replace(new RegExp(`\\$\\{${key}\\}`, 'g'), escaped);
+        }
+
         let template: string;
         if (pending.type === 'add') {
-          template = INIT_ADD_TEMPLATE
-            .replace(/\$\{projectPath\}/g, pending.projectPath)
-            .replace(/\$\{agentMdFile\}/g, pending.agentMdFile);
+          template = safeReplace(INIT_ADD_TEMPLATE, 'projectPath', pending.projectPath);
+          template = safeReplace(template, 'agentMdFile', pending.agentMdFile);
         } else {
-          template = INIT_TEMPLATE
-            .replace(/\$\{projectPath\}/g, pending.projectPath)
-            .replace(/\$\{agentMdFile\}/g, pending.agentMdFile);
+          template = safeReplace(INIT_TEMPLATE, 'projectPath', pending.projectPath);
+          template = safeReplace(template, 'agentMdFile', pending.agentMdFile);
         }
 
         // 只通过 prependContext 注入模板（指令已在模板末尾）

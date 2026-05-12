@@ -11,8 +11,8 @@ import {
   getActiveProject,
   readState,
 } from '../hooks/project-init/project-state.js';
-import { existsSync, statSync, readFileSync } from 'fs';
-import { resolve, join, isAbsolute } from 'path';
+import { existsSync, statSync, realpathSync } from 'fs';
+import { resolve, join, isAbsolute, normalize, sep } from 'path';
 import * as os from 'os';
 
 interface CommandCtx {
@@ -64,9 +64,15 @@ function resolveWorkspaceDir(ctx: CommandCtx): string | null {
 }
 
 function isSubPath(parent: string, child: string): boolean {
-  const rel = resolve(child);
-  const absParent = resolve(parent);
-  return rel.startsWith(absParent + '/') || rel === absParent;
+  let resolvedParent: string;
+  try {
+    resolvedParent = realpathSync(parent);
+  } catch {
+    resolvedParent = resolve(parent);
+  }
+  // child may not exist yet (user adding a new file), use resolve
+  const resolvedChild = resolve(child);
+  return resolvedChild.startsWith(resolvedParent + '/') || resolvedChild === resolvedParent;
 }
 
 /**
@@ -75,11 +81,14 @@ function isSubPath(parent: string, child: string): boolean {
  */
 function expandPath(p: string): string {
   if (p.startsWith('~/')) {
-    const home = os.homedir() || process.env.HOME || '/home/lileilei';
+    const home = os.homedir() || process.env.HOME;
+    if (!home) throw new Error('Cannot determine home directory');
     return resolve(home, p.slice(2));
   }
   if (p === '~') {
-    return os.homedir() || process.env.HOME || '/home/lileilei';
+    const home = os.homedir() || process.env.HOME;
+    if (!home) throw new Error('Cannot determine home directory');
+    return home;
   }
   if (isAbsolute(p)) {
     return resolve(p);
@@ -118,11 +127,6 @@ function formatProjectList(workspaceDir: string): string {
   }
 
   return lines.join('\n');
-}
-
-interface CommandCtx {
-  args?: string;
-  workspaceDir?: string;
 }
 
 export function registerInitCommands(api: OpenClawPluginApi) {
@@ -226,14 +230,28 @@ export function registerInitCommands(api: OpenClawPluginApi) {
         const fullPath = resolve(project.path, subPathAgentMd);
         if (!isSubPath(project.path, fullPath)) {
           return {
-            text: `⚠️ **Error**: Target path must be within the project directory.\n\nProject: \`${project.path}\`\nTarget: \`${fullPath}\``,
+            text: `⚠️ **Error**: Target path must be within the project directory.\n\nProject: \`${projectName}\`\nTarget: \`${subPathAgentMd}\``,
           };
         }
 
-        const added = addAgentMdToProject(workspaceDir, projectName, subPathAgentMd);
-        if (!added) {
+        if (!existsSync(fullPath)) {
           return {
-            text: `⚠️ **Error**: This agent.md is already registered for project \`${projectName}\`.`,
+            text: `⚠️ **Error**: File does not exist: \`${subPathAgentMd}\``,
+          };
+        }
+
+        // Normalize path before storing (remove leading ./, normalize separators)
+        let normalizedAgentMd = normalize(subPathAgentMd);
+        while (normalizedAgentMd.startsWith('.' + sep) || normalizedAgentMd === '.') {
+          normalizedAgentMd = normalizedAgentMd.slice(2);
+        }
+
+        const added = addAgentMdToProject(workspaceDir, projectName, normalizedAgentMd);
+        if (!added) {
+          const project2 = findProjectByName(workspaceDir, projectName);
+          const registered = project2?.agentMds.map((p) => `\`${p}\``).join(', ') || 'none';
+          return {
+            text: `⚠️ **Error**: This agent.md is already registered for project \`${projectName}\`.\n\nCurrently registered: ${registered}`,
           };
         }
 
