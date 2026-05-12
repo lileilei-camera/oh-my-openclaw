@@ -1,0 +1,862 @@
+{
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/scripts/sync-version.mjs": {
+    "mtime": 1775117354.2225177,
+    "hash": "10f0a939a5d3a37328b4aaa57840f766"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/vitest.config.ts": {
+    "mtime": 1775316854.499238,
+    "hash": "1dc0b2f0702534647379427043b18a79"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/cli.ts": {
+    "mtime": 1776451490.9083061,
+    "hash": "760539c4407c501ab7e11e13a8fa4b24"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/version.ts": {
+    "mtime": 1776451490.9083061,
+    "hash": "7552d7fb4684979c6582485640011d58"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/constants.ts": {
+    "mtime": 1776451490.909306,
+    "hash": "397dfd420505663d60ddbf812881c9df"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/types.ts": {
+    "mtime": 1776955664.4711232,
+    "hash": "882f0316554e3cfa884edb9ce5d8be98"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/sdk-types.d.ts": {
+    "mtime": 1776451490.914306,
+    "hash": "e7e76d241f493d6730664accf2ac66b8"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/index.ts": {
+    "mtime": 1778499356.7232902,
+    "hash": "83913ae4fc14d5f2b4ec3b3b9969c5a7"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/utils/state.ts": {
+    "mtime": 1776451490.907306,
+    "hash": "4bbb2f04e508dd0c448e0dcbbe8660bd"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/utils/persona-state.ts": {
+    "mtime": 1776852598.253847,
+    "hash": "a7b9c893e626aea9f40d82203a171177"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/utils/webhook-client.ts": {
+    "mtime": 1776451490.907306,
+    "hash": "a5a003a5f697f324c67e04d129b94628"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/utils/validation.ts": {
+    "mtime": 1776451490.9083061,
+    "hash": "6e0a41378cc767a11f3307586549ea0f"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/utils/paths.ts": {
+    "mtime": 1776451490.9083061,
+    "hash": "4c78fa96f5b1612698a85511239969be"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/utils/helpers.ts": {
+    "mtime": 1776451490.9083061,
+    "hash": "cc8c09fde62de1c5147d93b2131f87ef"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/agents/agent-configs.ts": {
+    "mtime": 1776451490.909306,
+    "hash": "60f6f55c41de429fdf5f180bb529c3ba"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/agents/persona-prompts.ts": {
+    "mtime": 1776451490.909306,
+    "hash": "4230d01a4e9e70e1db68d6a3317ef35b"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/agents/agent-ids.ts": {
+    "mtime": 1776451520.9943674,
+    "hash": "d97ef7d2d426d49538a4bc390530659f"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/shared/frontmatter.ts": {
+    "mtime": 1776451490.910306,
+    "hash": "582e76327dc56de7c293a817228d65c4"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/shared/file-utils.ts": {
+    "mtime": 1776451490.910306,
+    "hash": "74769235ba875f213a82c43f042e4cb9"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/shared/case-insensitive.ts": {
+    "mtime": 1776451490.910306,
+    "hash": "8483eb529844f80003fc63480a59e432"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/shared/claude-config-dir.ts": {
+    "mtime": 1776451490.910306,
+    "hash": "7029f092f5241e63707d8b77f72eb5ca"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/shared/opencode-config-dir.ts": {
+    "mtime": 1776451490.910306,
+    "hash": "9fd369b7095752817ff73680bb407102"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/shared/logger.ts": {
+    "mtime": 1776451490.910306,
+    "hash": "baf2a9efe7c0c6626e1d2dd05c94206b"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/hooks/todo-enforcer.ts": {
+    "mtime": 1776451490.910306,
+    "hash": "7eea7a6185b0eeb71e90e128545ce735"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/hooks/guardrail-injector.ts": {
+    "mtime": 1776451490.910306,
+    "hash": "a80cd3f9b2396df05aec88444994a746"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/hooks/todo-reminder.ts": {
+    "mtime": 1776451490.9113061,
+    "hash": "b2628ef34f63f0f928fd99848e23c190"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/hooks/spawn-guard.ts": {
+    "mtime": 1776451490.9113061,
+    "hash": "91e61bd8b4e0a13b14c26e51a9813c1b"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/hooks/subagent-tracker.ts": {
+    "mtime": 1776451490.9113061,
+    "hash": "69c7961e059ac208c864a4806afdba54"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/hooks/message-monitor.ts": {
+    "mtime": 1776451490.9113061,
+    "hash": "f5ad2116112b188aa6a22c3220653289"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/hooks/comment-checker.ts": {
+    "mtime": 1776451490.912306,
+    "hash": "d2122ab0f8cc94cbc5f88971b756ed6f"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/hooks/context-injector.ts": {
+    "mtime": 1776451490.912306,
+    "hash": "702daf4db49a527d21b9c8b5fbabb0ed"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/hooks/startup.ts": {
+    "mtime": 1776451490.912306,
+    "hash": "cd78b903f5c2c732a2126195e7995c2f"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/hooks/project-init/project-state.ts": {
+    "mtime": 1778551916.0939803,
+    "hash": "001b083ff05ee2d1f0a9972d16cb3944"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/hooks/project-init/init-template.ts": {
+    "mtime": 1778580076.496343,
+    "hash": "216ccab3112b9ad9e26cefd9bd6115a3"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/hooks/project-init/project-bootstrap.ts": {
+    "mtime": 1778551925.709931,
+    "hash": "a88f8c71421cc8a7f8d4052e78bec9dc"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/hooks/mode-switch/analyze-mode.ts": {
+    "mtime": 1778563326.243509,
+    "hash": "0cf744c5abad19765c435b0c41dff00b"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/hooks/mode-switch/start-work-mode.ts": {
+    "mtime": 1778563326.243509,
+    "hash": "be874fb217dd81943b85df20ab8c7eb3"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/hooks/mode-switch/mode-registry.ts": {
+    "mtime": 1777031662.0173724,
+    "hash": "8684cd85f80847ce5107d38a79f10ee6"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/hooks/mode-switch/mode-state.ts": {
+    "mtime": 1777031725.3850014,
+    "hash": "091a95e6807cc1152657e1958aa3c68e"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/hooks/mode-switch/hook.ts": {
+    "mtime": 1777031755.047296,
+    "hash": "9cccd21a53a2a478b1c3cb077ac93edb"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/hooks/mode-switch/plan-mode.ts": {
+    "mtime": 1778563259.7788782,
+    "hash": "1fc64591a0b81f83b5235e4175430dc7"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/hooks/mode-switch/ultrawork-mode.ts": {
+    "mtime": 1778563326.243509,
+    "hash": "6cfa11433356c2b2448ef77168a57e2b"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/hooks/mode-switch/coding-mode.ts": {
+    "mtime": 1778563326.243509,
+    "hash": "7687d216b6cf5f9ef590c7ad15906692"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/hooks/mode-switch/search-mode.ts": {
+    "mtime": 1778563326.243509,
+    "hash": "927b0feacf9811ca7f7d68221f5749d7"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/cli/model-presets.ts": {
+    "mtime": 1776451490.913306,
+    "hash": "2e30b49537e99e731a8b3a3b92ad7a1b"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/cli/mcporter-setup.ts": {
+    "mtime": 1776451490.913306,
+    "hash": "798337cb4cbdd5fec82549d1ea6869c4"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/cli/setup.ts": {
+    "mtime": 1777034519.4770057,
+    "hash": "1cbd69e53bad3b32d6de1aaebaabea72"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/commands/todo-commands.ts": {
+    "mtime": 1776451490.914306,
+    "hash": "cfc7d5907578f67d51942dbbe55a02e5"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/commands/ralph-commands.ts": {
+    "mtime": 1776451490.914306,
+    "hash": "5671847f3a3e13ff879620d9cbef2942"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/commands/mode-commands.ts": {
+    "mtime": 1778490103.061453,
+    "hash": "460149f559b9c57604a6edd42ed83c50"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/commands/init-commands.ts": {
+    "mtime": 1778551883.2101681,
+    "hash": "525e5166fd505139bdfe1be97fd52d8f"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/commands/persona-commands.ts": {
+    "mtime": 1776451490.915306,
+    "hash": "455eb2a82ba3ea81c5bfb9611579e4a5"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/commands/status-commands.ts": {
+    "mtime": 1776451490.915306,
+    "hash": "f3bb8eee2b44cafb589d49ebacb6fc5a"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/checkpoint.ts": {
+    "mtime": 1776451490.915306,
+    "hash": "87c3ef194ae433e2f335b25956d4628a"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/omo-delegation.ts": {
+    "mtime": 1776451490.917306,
+    "hash": "fdcef8c022b43d859ac30adbc03a6171"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/web-search.ts": {
+    "mtime": 1776451490.917306,
+    "hash": "58b25050af2b01254e7603db24d053fb"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/interactive-bash/tools.ts": {
+    "mtime": 1776451490.915306,
+    "hash": "19a025c3933995f4cb464b432c1cd68e"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/interactive-bash/constants.ts": {
+    "mtime": 1776451490.915306,
+    "hash": "45ab9f2d1f37891fe07acbb638d168a6"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/interactive-bash/utils.ts": {
+    "mtime": 1776451490.915306,
+    "hash": "01c1230683b52ed5263d99945c892f33"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/interactive-bash/index.ts": {
+    "mtime": 1776451490.915306,
+    "hash": "6b7af3cb7c0662f50aa57806f97e7a0f"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/background-task/tools.ts": {
+    "mtime": 1776451490.915306,
+    "hash": "7b749792acce6cdb401ed6a5e7d1ab41"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/background-task/constants.ts": {
+    "mtime": 1776451490.915306,
+    "hash": "c9825b07e2e3f6fdbd32bcc0ec140973"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/background-task/types.ts": {
+    "mtime": 1776451490.915306,
+    "hash": "cfa3430117d64a52bcfd9b40434e879d"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/background-task/index.ts": {
+    "mtime": 1776451490.915306,
+    "hash": "32e77fde2ecaa0cdbc603e9b7ef3cf9f"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/ast-grep/cli.ts": {
+    "mtime": 1776451490.916306,
+    "hash": "179bd1ab270a4dc34013fef0c4d1c523"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/ast-grep/tools.ts": {
+    "mtime": 1776451490.916306,
+    "hash": "ccbce2aafdbaa1bf5ee9d1f516e24b32"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/ast-grep/constants.ts": {
+    "mtime": 1776451490.916306,
+    "hash": "b17c279cad26bb6f8b95e2632547f085"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/ast-grep/utils.ts": {
+    "mtime": 1776451490.916306,
+    "hash": "54b65157b4d84fb31260f9af78873cd0"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/ast-grep/downloader.ts": {
+    "mtime": 1776451490.916306,
+    "hash": "2a17937110baf8b236d0cf76f7c61c0b"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/ast-grep/types.ts": {
+    "mtime": 1776451490.916306,
+    "hash": "fe8c65b25a7cbb8eea8954b7bde3a6cf"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/ast-grep/index.ts": {
+    "mtime": 1776451490.916306,
+    "hash": "b6e0ee426971347c3968f5efa2851db8"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/grep/cli.ts": {
+    "mtime": 1776451490.916306,
+    "hash": "519fd5a199282dc42dbf830df59cddc1"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/grep/tools.ts": {
+    "mtime": 1776451490.916306,
+    "hash": "a41055e2cd03ccd39bdb5a5351cd306b"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/grep/downloader.test.ts": {
+    "mtime": 1776451490.917306,
+    "hash": "e1f3ccc42242c051bcd5b4b5dac630f3"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/grep/constants.ts": {
+    "mtime": 1776451490.917306,
+    "hash": "c8b2ef6866251b8d30d421a568bb13e0"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/grep/utils.ts": {
+    "mtime": 1776451490.917306,
+    "hash": "63c9c365a78e3e291900a19aad1ae3e5"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/grep/types.ts": {
+    "mtime": 1776451490.917306,
+    "hash": "4dc741f2f5d29d20cf01173abf051ed7"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/grep/index.ts": {
+    "mtime": 1776451490.917306,
+    "hash": "869dad6bbed198d73eb984d4d4697086"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/call-omo-agent/tools.ts": {
+    "mtime": 1776451490.917306,
+    "hash": "eb0d27677aa7d49fc7598dc1259b1131"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/call-omo-agent/constants.ts": {
+    "mtime": 1776451490.917306,
+    "hash": "713edaa4784a42a6ab680f8328a80559"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/call-omo-agent/types.ts": {
+    "mtime": 1776451490.917306,
+    "hash": "f2eda971e2e9a6112ebcd0030ba1ed3f"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/call-omo-agent/index.ts": {
+    "mtime": 1776451490.917306,
+    "hash": "1dd019b810884eb0de3831a0868a9a18"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/skill/tools.ts": {
+    "mtime": 1776451490.917306,
+    "hash": "6ab66ba0b76ed0d286dbc84e1d902613"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/skill/constants.ts": {
+    "mtime": 1776451490.917306,
+    "hash": "e960e5aedb9508159c32dd021e7d76e7"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/skill/types.ts": {
+    "mtime": 1776451490.917306,
+    "hash": "b3430041f39673e919a4a8cf6e085255"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/skill/index.ts": {
+    "mtime": 1776451490.917306,
+    "hash": "3c22698d2949d465deed749db5e43f2a"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/delegate-task/tools.ts": {
+    "mtime": 1777540662.6544774,
+    "hash": "6dac4ec2eb4ded8978d50bf1b4a6cbc8"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/delegate-task/constants.ts": {
+    "mtime": 1776451490.917306,
+    "hash": "c4486c96953408218df489de5f3f6733"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/delegate-task/types.ts": {
+    "mtime": 1776451490.917306,
+    "hash": "971ea34ecc35300fe4831c2e4843a771"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/delegate-task/index.ts": {
+    "mtime": 1776451490.917306,
+    "hash": "f5325e726bce953c060da9e85b87f3e6"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/session-manager/tools.ts": {
+    "mtime": 1776451490.918306,
+    "hash": "823b67c85db3b0af561023e73c9dbbd0"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/session-manager/constants.ts": {
+    "mtime": 1776451490.918306,
+    "hash": "7bb6c16d411112e0209c181f5e2d73c0"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/session-manager/index.ts": {
+    "mtime": 1776451490.918306,
+    "hash": "8ed85490240d0a86a583c484b8b96da5"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/todo/todo-update.ts": {
+    "mtime": 1776451490.918306,
+    "hash": "e3a0bfb4efcc7292d2e08f974801eb1f"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/todo/todo-create.ts": {
+    "mtime": 1776451490.918306,
+    "hash": "47c9e3edbce0ddce385041656746b24f"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/todo/store.ts": {
+    "mtime": 1776451490.918306,
+    "hash": "51740174e43af862a5c18f3b8c3fc811"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/todo/todo-list.ts": {
+    "mtime": 1776451490.918306,
+    "hash": "b447770be6d6d3d7a5da3a846247277d"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/todo/index.ts": {
+    "mtime": 1776451490.918306,
+    "hash": "613cf89ee024e6b25029e4f4892f154c"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/todo/session-key.ts": {
+    "mtime": 1776451490.918306,
+    "hash": "b5cfb716c4ee589ab6e5524af963e118"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/look-at/tools.ts": {
+    "mtime": 1776451490.918306,
+    "hash": "f895f805e02c6ef8d9f4788bd7551862"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/look-at/constants.ts": {
+    "mtime": 1776451490.918306,
+    "hash": "acd26041adc67a0cea0ca887141c2e31"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/look-at/types.ts": {
+    "mtime": 1776451490.918306,
+    "hash": "dfcc7f1bd7c73914a5dab519d0f015a7"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/look-at/index.ts": {
+    "mtime": 1776451490.918306,
+    "hash": "5b157792b6a2f8a11d9f49fe31d9bf6c"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/glob/cli.ts": {
+    "mtime": 1776451490.918306,
+    "hash": "6323b0bd6f3b626062a46ab73c8fae68"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/glob/tools.ts": {
+    "mtime": 1776451490.918306,
+    "hash": "af02b2642281885849bcae6f48906f87"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/glob/constants.ts": {
+    "mtime": 1776451490.918306,
+    "hash": "2f92a9885ec8592166fdd5888e766434"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/glob/utils.ts": {
+    "mtime": 1776451490.918306,
+    "hash": "b643cd606085753c56ba27bdda9f4495"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/glob/cli.test.ts": {
+    "mtime": 1776451490.919306,
+    "hash": "2e85be328c53ff2ebd757f90abf5ee4b"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/glob/types.ts": {
+    "mtime": 1776451490.919306,
+    "hash": "be8f2dea15960090ce84dfdf864278e8"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/glob/index.ts": {
+    "mtime": 1776451490.919306,
+    "hash": "42321ab4015e691be6561bc30c327d3f"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/skill-mcp/tools.ts": {
+    "mtime": 1776451490.919306,
+    "hash": "d7c05d809cec1c8d23b2efff50306f62"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/skill-mcp/constants.ts": {
+    "mtime": 1776451490.919306,
+    "hash": "61ae7eeb433919c6c8eb9f509c8d6134"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/skill-mcp/index.ts": {
+    "mtime": 1776451490.919306,
+    "hash": "70e58b8a7d5b7b254aadc04ca88224e3"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/lsp/tools.ts": {
+    "mtime": 1776451490.919306,
+    "hash": "6f22edfa2a0fdb8d9f247cfa380e7a3a"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/lsp/constants.ts": {
+    "mtime": 1776451490.919306,
+    "hash": "7e7a4552df9c405bdf626bf13a154ad5"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/lsp/utils.ts": {
+    "mtime": 1776451490.919306,
+    "hash": "4803969ebf6a90e7c4ef896fd75a2c7f"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/lsp/types.ts": {
+    "mtime": 1776451490.920306,
+    "hash": "34e3a82803ba5e1ef3342f937170847f"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/lsp/client.ts": {
+    "mtime": 1776451490.920306,
+    "hash": "ce0e485960bbc0c50c115d0aaf2974fa"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/lsp/config.ts": {
+    "mtime": 1776451490.920306,
+    "hash": "00a4698a456874536f177464260d8c4b"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/lsp/index.ts": {
+    "mtime": 1776451490.920306,
+    "hash": "56005da80ae864406891412ebe1612f3"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/slashcommand/tools.ts": {
+    "mtime": 1776451490.920306,
+    "hash": "622c6d047fcbe03ac53694200fb0756c"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/slashcommand/constants.ts": {
+    "mtime": 1776451490.920306,
+    "hash": "f4d08314218d491ed74572c3e05ab261"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/slashcommand/types.ts": {
+    "mtime": 1776451490.920306,
+    "hash": "41c7ce685339d2cbd35baaf3f5978550"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/tools/slashcommand/index.ts": {
+    "mtime": 1776451490.920306,
+    "hash": "d344835f22e77083f5e6c3b58934a923"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/services/ralph-loop.ts": {
+    "mtime": 1776451490.920306,
+    "hash": "2e565e0121d2cfc3c4319590c8fdb68a"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/services/webhook-bridge.ts": {
+    "mtime": 1776451490.920306,
+    "hash": "1e9f20eeec394b1b34ef55365be8d526"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/__tests__/webhook-bridge.test.ts": {
+    "mtime": 1776451490.9213061,
+    "hash": "3a30e973342ccd1c186e61a84fb3b3dc"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/__tests__/spawn-guard.test.ts": {
+    "mtime": 1776451753.2772152,
+    "hash": "cbb60eb83d2909b8a52ef7d3ed40ba23"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/__tests__/persona.test.ts": {
+    "mtime": 1776451921.636144,
+    "hash": "ae751789723868930e6389775c7ee7a4"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/__tests__/task-tools.test.ts": {
+    "mtime": 1776451490.922306,
+    "hash": "8491109c864335dc2ce80c1cf4950adf"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/__tests__/utils.test.ts": {
+    "mtime": 1776451490.922306,
+    "hash": "acbb52d85d7171c649f9ff938718c1f8"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/__tests__/agents-cli.test.ts": {
+    "mtime": 1776451781.0523531,
+    "hash": "edc2f8ac8b8db66f71b301f36e9cabac"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/__tests__/services.test.ts": {
+    "mtime": 1776451490.923306,
+    "hash": "17d0e53f8c3f3451ca98bc9e46629003"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/__tests__/hooks.test.ts": {
+    "mtime": 1776451490.923306,
+    "hash": "6d7d3247c41628569613ec6bbc1434d3"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/__tests__/tools.test.ts": {
+    "mtime": 1776451490.9243062,
+    "hash": "e753cefc9d56e1a8842af0dae26dfabe"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/__tests__/mode-switch.test.ts": {
+    "mtime": 1777031780.1405454,
+    "hash": "dfa486aafa7553c2f153bd837e1871b0"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/__tests__/commands.test.ts": {
+    "mtime": 1776451490.9243062,
+    "hash": "9a7174f1685220c1c6ee2f6a6deb4329"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/__tests__/helpers/mock-factory.ts": {
+    "mtime": 1776451490.9243062,
+    "hash": "d45cfa70c39c4753fab97af0a2c4d8b2"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/features/context-collector.ts": {
+    "mtime": 1776451490.925306,
+    "hash": "57e21eb9019a6a2e13b118f1b83e2db2"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/features/skill-loader/skill-content.ts": {
+    "mtime": 1776451490.9243062,
+    "hash": "7eec39d00a79358a300ae07288b00eb0"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/features/skill-loader/types.ts": {
+    "mtime": 1776451490.9243062,
+    "hash": "1dc6a48f31777734179f8558c36bd9a6"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/features/skill-loader/loader.ts": {
+    "mtime": 1776451490.9243062,
+    "hash": "47dd19359d3154b43f7d37fedaf9224e"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/features/skill-loader/index.ts": {
+    "mtime": 1776451490.9243062,
+    "hash": "0067144e55eae6c2c138d372bb5d4809"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/features/skill-mcp-manager/manager.ts": {
+    "mtime": 1776451490.925306,
+    "hash": "90adce0b0d14a1e6e4d914f20908a119"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/features/skill-mcp-manager/types.ts": {
+    "mtime": 1776451490.925306,
+    "hash": "fa580b527e013e2dc2fd55424ac0b241"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/features/skill-mcp-manager/env-cleaner.ts": {
+    "mtime": 1776451490.925306,
+    "hash": "bd8149b1548d47fd7bed438bc8188d8d"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/features/claude-code-mcp-loader/env-expander.ts": {
+    "mtime": 1776451490.925306,
+    "hash": "d4264746cd905b088165154801598643"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/features/claude-code-mcp-loader/types.ts": {
+    "mtime": 1776451490.925306,
+    "hash": "57dc0f8126a59b896e9a2ce0e4977978"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/hooks/persona-bootstrap/handler.ts": {
+    "mtime": 1776775602.6977417,
+    "hash": "3b4aed4ba2d9994735b02cbe27a3504d"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/hooks/persona-bootstrap/handler.test.ts": {
+    "mtime": 1776451490.925306,
+    "hash": "d6ea25d9439f2d158ef43e7e24cf477f"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/bin/oh-my-openclaw.mjs": {
+    "mtime": 1775316854.491238,
+    "hash": "f6430e8ea030ad28147a7f9e66c3a03f"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/README_CN.md": {
+    "mtime": 1775141077.1514497,
+    "hash": "69e8ea63699bbabf37b85ef9eecf2baa"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/SKILL.md": {
+    "mtime": 1776432119.7934935,
+    "hash": "911447573d6e5d412afe3072787fcf03"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/TEST_9_CATEGORY.md": {
+    "mtime": 1775310300.8547647,
+    "hash": "e2436bfb603301993cb4d3154554870d"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/README.md": {
+    "mtime": 1775141059.8402562,
+    "hash": "9f6ea39b63563080d35766c796d51ddc"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/AGENTS.md": {
+    "mtime": 1778579628.7756684,
+    "hash": "94da3d50db6c6b1dfe66f18cf2853531"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/CHANGELOG.md": {
+    "mtime": 1775117336.3655086,
+    "hash": "b6f627bfbd8f0d4fa44a0a169b35c5de"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/migration/phase-1-3-complete.md": {
+    "mtime": 1775117354.2235177,
+    "hash": "e60ee9a8bca651907fd96ec6894dec42"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/migration/detailed-plan.md": {
+    "mtime": 1775117354.2235177,
+    "hash": "dd9b346e3e759d6bef4d36ffc5bfe6fa"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/migration/phase-3-plan.md": {
+    "mtime": 1775117354.2235177,
+    "hash": "49244ad18746d549600fa2c07124a400"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/migration/phase-1-report.md": {
+    "mtime": 1775117354.2235177,
+    "hash": "04aeb35c7adfac51cb605bd08522e114"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/migration/phase-7-test-plan.md": {
+    "mtime": 1775143639.6827893,
+    "hash": "83acce8f75d64908fb616240b03bdeec"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/migration/phase-2-report.md": {
+    "mtime": 1775117354.2235177,
+    "hash": "a78ed792b6a7604a7018ea8bad4f7b12"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/migration/phase-7c-test-results.md": {
+    "mtime": 1775118988.5342631,
+    "hash": "75809c068903cfb2fecbc3c839b2cecd"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/migration/phase-0-report.md": {
+    "mtime": 1775117354.2235177,
+    "hash": "1054cc601608774b61e8c4aab602a73e"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/migration/phase-1-3-final.md": {
+    "mtime": 1775117354.2235177,
+    "hash": "a68f37b7df24458841a64b1200148c92"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/migration/revised-plan.md": {
+    "mtime": 1775143644.2358367,
+    "hash": "8026fb3d5964c8782a4fc3a9109b7017"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/migration/phase-1-3-final-report.md": {
+    "mtime": 1775117354.2235177,
+    "hash": "7a66aa4ccb2d9fc20e3d10db3a165604"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/migration/phase-6-complete.md": {
+    "mtime": 1775143642.0938144,
+    "hash": "e03e7eb31c3bbf6a26386f3b1980b67b"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/migration/phase-3-report.md": {
+    "mtime": 1775117354.2235177,
+    "hash": "535ad03e20b2916db13d093eeb1f1d70"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/REVIEW_init_templates.md": {
+    "mtime": 1778560481.617501,
+    "hash": "09912386ebc1f3297016722e09514650"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/REVIEW_mode_prompts.md": {
+    "mtime": 1778562739.144676,
+    "hash": "46eaca0fbb415655d300dd4c446ae1cb"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/REVIEW_omoc_init_add.md": {
+    "mtime": 1778551710.2855878,
+    "hash": "ba9a29918e89e3a7c4a3d467aebd42b6"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/TEST_PLAN.md": {
+    "mtime": 1776451622.8226645,
+    "hash": "c765357e9ccdd8924e24f919591e973b"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/src/hooks/AGENTS.md": {
+    "mtime": 1778510823.7275515,
+    "hash": "79030fb494aa84ee83ffe47519a718ef"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/agents/frontend.md": {
+    "mtime": 1776451622.8206644,
+    "hash": "40db7a835389d716f4ead964c0ea9568"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/agents/planner.md": {
+    "mtime": 1776778240.6595168,
+    "hash": "aa501a0f842843e71fd13cb8e9084215"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/agents/explorer.md": {
+    "mtime": 1776778170.7268324,
+    "hash": "34ec9280c032b04fd85fb19041daeda2"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/agents/coder.md": {
+    "mtime": 1776778151.4026432,
+    "hash": "e4c778066e967a438364cf9ae66767b6"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/agents/architect.md": {
+    "mtime": 1776778147.815608,
+    "hash": "de85298b3c17c39350203c7766f20a3f"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/agents/advisor.md": {
+    "mtime": 1776778240.6575167,
+    "hash": "f4584b057dc9847cbc7e9ff72cd82211"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/agents/reviewer.md": {
+    "mtime": 1776778209.2512095,
+    "hash": "1c5e346cea8de71fb6c351a730f2b0b9"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/agents/expert.md": {
+    "mtime": 1776778222.4093382,
+    "hash": "9d2d3c07f214c20ce5988345bccf03a1"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/agents/multimodal-looker.md": {
+    "mtime": 1776451622.8226645,
+    "hash": "537603b2abf366b97bb803bdff5813ee"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/agents/researcher.md": {
+    "mtime": 1776778206.0651782,
+    "hash": "64f254513b8ef634728a3047f14e7b0e"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/agents/delegate.md": {
+    "mtime": 1776778160.9297364,
+    "hash": "9787f1a84374dfefa9c57852c09b1da5"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/workflows/start-work.md": {
+    "mtime": 1776451622.8226645,
+    "hash": "4eab0e71d55e0012b2fe7e6866387560"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/workflows/plan.md": {
+    "mtime": 1776451622.8226645,
+    "hash": "8c94d5deec44287d8d94474bc12f8cff"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/workflows/ultrawork.md": {
+    "mtime": 1776451622.8226645,
+    "hash": "40893da46200b39b61cf344e2841357e"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/hooks/persona-bootstrap/HOOK.md": {
+    "mtime": 1776948686.46626,
+    "hash": "7e99340c37d216b6659019f313cc82b2"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/config/README.md": {
+    "mtime": 1776451622.8236644,
+    "hash": "c7f5e136a0c310e8b147a08717a7443c"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/skills/comment-checker.md": {
+    "mtime": 1776451622.8236644,
+    "hash": "9c3c37a1f1f69cb72dd6f17a308430d7"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/skills/tmux-agents.md": {
+    "mtime": 1776451622.8236644,
+    "hash": "2f52cae837eeef43f197deffc5e9d093"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/skills/workflow-start-work.md": {
+    "mtime": 1776451622.8236644,
+    "hash": "b3b72c21a03092b2927ce5c20ca55fd3"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/skills/steering-words.md": {
+    "mtime": 1776451622.8236644,
+    "hash": "15cadf60b3413fb070d74105ac569ba6"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/skills/workflow-plan.md": {
+    "mtime": 1776451622.8236644,
+    "hash": "d7b5ee803d4a68150fe2a0e558abc1b0"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/skills/delegation-prompt.md": {
+    "mtime": 1776451622.8236644,
+    "hash": "4428c368712605196aecc69110180fff"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/skills/frontend-ui-ux.md": {
+    "mtime": 1776451622.8236644,
+    "hash": "4a408564b3d4e422cff98fc737369469"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/skills/opencode-controller.md": {
+    "mtime": 1776451622.8236644,
+    "hash": "39f3f11183c0f174e63f56423ba770f7"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/skills/multimodal-analysis.md": {
+    "mtime": 1776451622.8236644,
+    "hash": "b24ab26e4b18a102ce7ad71d0edbd34e"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/skills/git-master.md": {
+    "mtime": 1776451622.8246646,
+    "hash": "a395acf457087a5f77de82fe0f142bd7"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/skills/tmux.md": {
+    "mtime": 1776451622.8246646,
+    "hash": "84e94c1d892b467a663f7a1039e8eada"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/skills/workflow-auto-rescue.md": {
+    "mtime": 1776451622.8246646,
+    "hash": "e3688ab718a461943ce52a4c19f3ea27"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/skills/workflow-ultrawork.md": {
+    "mtime": 1776451622.8246646,
+    "hash": "2a2555e4d01cd2cc42a6a58741f1fb7a"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/skills/workflow-tool-patterns.md": {
+    "mtime": 1776451622.8246646,
+    "hash": "97dcd90426a9081ca8e261bcabd5dccd"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/skills/openclaw-look-at.md": {
+    "mtime": 1776451622.8246646,
+    "hash": "17be21f32222fc8a6d0fa725013726f0"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/plugin/skills/web-search.md": {
+    "mtime": 1776451622.8246646,
+    "hash": "4919ac3afe0db64285b759a5b3277562"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/docs/SIMILARITY.md": {
+    "mtime": 1776451637.1027162,
+    "hash": "360f65abb105189b92bfba7723fcd509"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/docs/omoc-init-requirements.md": {
+    "mtime": 1778498704.8887615,
+    "hash": "2bd49ebb088a2e23bc129af98a3bdc84"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/docs/plans/persona-renaming-plan.md": {
+    "mtime": 1776451637.1037161,
+    "hash": "2f2159e1b74cee0315204d8d9fef7e27"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/docs/guide/installation.md": {
+    "mtime": 1776451637.1037161,
+    "hash": "054fd9ad193dc37348934bf4f0fdaa85"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/docs/guide/orchestration.md": {
+    "mtime": 1776451637.1037161,
+    "hash": "aee7bd8c650993c3f7abafe9632adf85"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/docs/guide/overview.md": {
+    "mtime": 1776451637.104716,
+    "hash": "14d9ebc5aab08a684b195048bab8547a"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/docs/reference/configuration.md": {
+    "mtime": 1776451637.104716,
+    "hash": "5ce0d0ccb58d9b53132e77048b7b7d4d"
+  },
+  "/home/lileilei/.openclaw/workspace/oh-my-openclaw/docs/reference/features.md": {
+    "mtime": 1777034740.9224517,
+    "hash": "c2b7dbec0564547e6acb00bf452834af"
+  }
+}

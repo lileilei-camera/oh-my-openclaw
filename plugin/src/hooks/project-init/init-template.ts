@@ -113,6 +113,21 @@ When in doubt, omit.
 
 Prefer short sections and bullets. If the repo is simple, keep the file simple. If the repo is large, summarize the few structural facts that actually change how an agent should work.
 
+## Analysis workflow (MANDATORY)
+
+You MUST add an "## Analysis workflow" section to every AGENTS.md. This tells future agents the standard order for analyzing code.
+
+\`\`\`markdown
+## Analysis workflow
+
+When you need to understand code, fix bugs, or add features, follow this order:
+
+1. **Knowledge graph — big picture first**: If \`graphify-out/GRAPH_REPORT.md\` exists, read it to identify entry points, key modules, and community clusters. Use \`graphify query\` or \`graphify path\` for targeted context. This is ~71.5× cheaper than reading raw source files.
+2. **LSP tools — precision analysis**: Use \`omoc_goto_definition\`, \`omoc_find_references\`, \`omoc_symbols\` to trace exact call chains and symbol relationships. Prefer these over raw grep.
+3. **Wiki — verified knowledge**: If the wiki exists (\`openclaw wiki status\`), search it for relevant context. The wiki contains verified-correct facts accumulated over time — it may or may not have what you need, but if it does, the information is reliable.
+4. **Raw reading/grep — last resort**: Only fall back to reading files and grep when the above tools don't cover it.
+\`\`\`
+
 ## Code analysis tools (MANDATORY)
 
 If this project uses a language with LSP support (TypeScript, Python, Go, Rust, Java, C/C++, etc.), you MUST add a "## Code analysis tools" section to the AGENTS.md with the following content:
@@ -162,14 +177,16 @@ You MUST also add a "## Project wiki" section to the AGENTS.md. If the wiki does
 \`\`\`markdown
 ## Project wiki
 
-Use the OpenClaw wiki knowledge base (if available) to supplement code-level understanding with design rationale, team conventions, and historical context.
+The OpenClaw wiki is a continuously growing knowledge base of **verified-correct facts** about this project. Entries are added over time — it may or may not have what you need, but if it does, the information is reliable.
+
+**When to use**: Whenever you encounter something unfamiliar or need context beyond the code — commands, conventions, setup steps, gotchas, infrastructure details.
 
 - **Check availability**: \`openclaw wiki status\`
 - **Search**: \`wiki_search("query")\` or \`openclaw wiki search "query"\` — find relevant wiki pages by topic.
 - **Read a page**: \`wiki_get("lookup")\` or \`openclaw wiki get <page-id>\` — read detailed context from a specific page.
 - **Search modes**: \`--mode find-person\` / \`--mode route-question\` / \`--mode source-evidence\`
 
-If wiki knowledge is unavailable, rely solely on project source code and documentation.
+If wiki has no relevant entries, rely solely on project source code and documentation.
 \`\`\`
 
 ## Required output
@@ -222,7 +239,11 @@ Prefer short sections and bullets.
 
 If the subdirectory's language has LSP support, you MUST add a "## Code analysis tools" section mentioning \`omoc_goto_definition\`, \`omoc_find_references\`, \`omoc_symbols\` for code exploration, and \`omoc_ast_grep_search\` as fallback.
 
-If a project wiki exists, also add a "## Project wiki" section. If no wiki exists, still include it — tell future agents to check with \`openclaw wiki status\` and use \`wiki_search\` / \`openclaw wiki search\` if available.
+## Analysis workflow (CONDITIONAL)
+
+If the project has a knowledge graph or wiki, add an "## Analysis workflow" section with the same format as the main project AGENTS.md — tell future agents to check graphify-out/GRAPH_REPORT.md first, then use LSP tools, then wiki search.
+
+If a project wiki exists, also add a "## Project wiki" section. The wiki is a continuously growing knowledge base of verified-correct facts — agents should search it when they encounter something unfamiliar. If no wiki exists, still include the section telling agents to check with \`openclaw wiki status\`.
 
 ## Required output
 1. Write the AGENTS.md to: \`\${projectPath}/\${agentMdFile}\`

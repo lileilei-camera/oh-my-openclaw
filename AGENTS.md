@@ -1,105 +1,138 @@
-# AGENTS.md — Oh-My-OpenClaw (OmOC)
+# Oh-My-OpenClaw — Agent Instructions
 
-> Agent orchestration framework for OpenClaw — 3-layer planning → orchestration → execution with category-based model routing.
+Oh-My-OpenClaw (OmOC) is an **OpenClaw plugin** providing multi-agent orchestration: 11 specialized personas, category-based model routing, todo enforcement, Ralph self-correcting loops, and 20+ custom tools.
 
-## Project overview
+## Project at a Glance
 
-Oh-My-OpenClaw ports oh-my-opencode patterns into an OpenClaw-native TypeScript plugin + Markdown skill system. It provides 11 specialized agent personas, category-based model routing, and self-correcting execution loops — all through messaging channels (Discord, Telegram, etc.).
+| Item | Value |
+|------|-------|
+| **Type** | OpenClaw plugin (TypeScript, ESM) |
+| **Package** | `@happycastle/oh-my-openclaw` |
+| **Version** | 0.21.3 |
+| **Build** | `tsc` → `dist/` |
+| **Test** | `vitest` (13 test files in `plugin/src/__tests__/`) |
+| **Entry** | `plugin/src/index.ts` → `register()` |
 
-**Language**: TypeScript (ES2022, NodeNext modules)
-**Build**: `tsc` → `plugin/dist/`
-**Test**: vitest (167 tests)
-**Release**: semantic-release with conventional commits, `@semantic-release/npm` with `pkgRoot: plugin`
-
-## Essential developer commands
-
-All commands run from the `plugin/` subdirectory:
+## Developer Commands
 
 ```bash
 cd plugin
 
-# Install deps
-npm install
-
-# Build (TypeScript → dist/)
-npm run build        # tsc
-
-# Type-check (no emit) — also used as lint
-npm run typecheck    # tsc --noEmit
-npm run lint         # alias for typecheck
-
-# Test
-npm run test                     # vitest run
-npm run test:coverage            # vitest run --coverage (v8)
-npm run test:watch               # vitest (watch mode)
-
-# Pre-publish check
-npm run prepublishOnly           # typecheck → test → build
+npm run build        # tsc → dist/
+npm run dev          # tsc --watch
+npm run test         # vitest run
+npm run test:watch   # vitest (interactive)
+npm run test:coverage # vitest run --coverage
+npm run typecheck    # tsc --noEmit (same as lint)
+npm run lint         # tsc --noEmit
 ```
 
-**CI order** (from `.github/workflows/ci.yml`): `npm ci → typecheck → test → build`
+**Install + test flow**: after changes in `plugin/src/`, run `npm run build` to update `dist/`, then restart OpenClaw or reload the plugin to see changes.
 
-### Release
+## Architecture
 
-```bash
-git tag v0.1.0
-git push origin v0.1.0   # triggers .github/workflows/publish.yml
+### 3-Layer Agent System
+
+| Layer | Agents | Purpose |
+|-------|--------|---------|
+| **Planning** | Prometheus, Metis, Momus | Interview user, create/validate plans |
+| **Orchestration** | Atlas | Distribute tasks, verify completion |
+| **Workers** | Sisyphus-Junior, Hephaestus, Oracle, Explore, Librarian, Multimodal Looker, Frontend | Execute tasks |
+
+### Category Routing (model selection)
+
+Categories in `config/categories.json` map intent to models. Key defaults:
+- `quick` → `bailian/qwen3-coder-next`
+- `deep` → `bailian/qwen3-coder-plus`
+- `ultrabrain` → `bailian/qwen3-max-2026-01-23`
+- `visual-engineering` → `bailian/qwen3.5-plus`
+
+### Plugin Structure
+
+```
+plugin/src/
+  index.ts              # Entry — register() wires everything
+  types.ts              # Plugin types + config schema
+  version.ts            # VERSION constant
+  hooks/                # OpenClaw lifecycle hooks
+    todo-enforcer.ts    # Forces task completion via system prompt
+    comment-checker.ts  # Detects/removes AI slop comments
+    subagent-tracker.ts  # Tracks spawned sub-agents
+    context-injector.ts  # Injects context into sessions
+    guardrail-injector.ts
+    spawn-guard.ts      # Validates session_spawn calls
+    mode-switch/        # Agent mode switching
+    project-init/       # Auto-init for new projects
+    todo-reminder.ts    # Todo reminders + session cleanup
+  tools/                # Custom tool registrations
+    delegate-task/       # omoc_delegate
+    background-task/     # background output/cancel
+    lsp/                 # LSP: goto/refs/symbols/diagnostics/rename
+    ast-grep/            # AST search + replace
+    session-manager/     # session list + read
+    todo/                # 4 todo tools
+    grep/                # grep tool
+    glob/                # glob tool
+    interactive-bash/    # PTY bash in tmux
+    look-at/             # Multimodal analysis
+    checkpoint.ts        # Save/load execution state
+    web-search.ts        # Web search tool
+    omo-delegation.ts    # Delegate to OpenCode via ACP
+    slashcommand/        # Slash command executor
+    call-omo-agent/      # Call OmO sub-agents
+    skill/               # Skill management
+    skill-mcp/           # Skill MCP server
+  commands/             # CLI commands
+    ralph-commands.ts    # /ralph_loop, /ralph_stop
+    status-commands.ts   # /omoc_health, /omoc_config
+    persona-commands.ts  # /omoc, /omoc_personas
+    todo-commands.ts     # /todos + 3 todo commands
+    mode-commands.ts     # /omoc_mode
+    init-commands.ts     # /omoc_init
+  features/
+    skill-loader/        # Discover & merge builtin/user/project skills
+    skill-mcp-manager/   # SkillMcpManager (cross-community bridge)
+  services/
+    ralph-loop.ts        # Self-correcting execution loop
+    webhook-bridge.ts    # Webhook bridge service
+  __tests__/            # Vitest test files (13 suites)
 ```
 
-Requires `NPM_TOKEN` in GitHub repo secrets. Version sync script: `node scripts/sync-version.mjs <version>`.
+### Key God Nodes (from knowledge graph)
 
-## Architecture at a glance
+1. `register()` — plugin entry point, wires 10+ hooks, 20+ tools, 13+ commands
+2. `SkillMcpManager` — cross-community bridge (Communities 0, 1, 7, 11)
+3. `toolResponse()` / `toolError()` — tool result/error handling
+4. `LSPClient` — bridges LSP to Communities 6 and 9
+5. `getPluginConfig()` — config access across 18 edges
 
-```
-oh-my-openclaw/
-  SKILL.md                    # Main skill doc (agent instructions)
-  config/
-    categories.json           # Category→model mapping, agents, skills, tmux config
-  plugin/
-    src/
-      index.ts                # Plugin entry point (registers hooks, tools, commands, services)
-      cli.ts                  # CLI entry (omoc-setup wizard)
-      types.ts                # Core TypeScript types
-      constants.ts            # Constants
-      version.ts              # Version
-      commands/               # Slash commands (init, mode, persona, ralph, status, todo)
-      hooks/                  # Plugin hooks (todo-enforcer, comment-checker, spawn-guard, etc.)
-      tools/                  # Native tools (delegate, checkpoint, todo, lsp, glob, grep, etc.)
-      services/               # Background services
-      agents/                 # Agent-related logic
-      features/               # Feature modules
-      shared/                 # Shared utilities
-      utils/                  # Utility functions
-      __tests__/              # Vitest test files (*.test.ts)
-    agents/                   # Markdown agent persona definitions
-    skills/                   # Markdown skill definitions
-    workflows/                # Workflow definitions
-    openclaw.plugin.json      # Plugin manifest (tools, configSchema)
-    package.json              # npm package (publish root)
-    vitest.config.ts          # Test config
-    tsconfig.json             # TypeScript config
-```
+## Tool Restrictions
 
-### Plugin manifest (`plugin/openclaw.plugin.json`)
+Read-only agents (deny write/edit/spawn): `oracle`, `librarian`, `explore`, `metis`, `momus`
+Limited agents (allow only): `multimodal-looker` → `read, image, group:ui, exec`
 
-Declares tool contracts, config schema, and is the source of truth for available OmOC tools. Key tools: `omoc_delegate`, `omo_delegate`, `omoc_checkpoint`, `omoc_todo_*`, `omoc_glob`, `omoc_grep`, `omoc_interactive-bash`, LSP tools, AST tools.
+Config in `config/categories.json` → `tool_restrictions`.
 
-### Category routing (`config/categories.json`)
+## Conventions
 
-Single config file for all model routing. Categories: `quick`, `deep`, `ultrabrain`, `visual-engineering`, `multimodal`, `artistry`, `unspecified-low`, `unspecified-high`, `writing`. Each maps to a model with agents and alternatives.
+- **All tools register via `register*Tool(api)` functions** — each increments `toolCount`
+- **All hooks register via `register*Hook(api)` functions** — each increments `hookCount`
+- **Async skill discovery** runs after sync registrations — `SkillMcpTool` and `SkillTool` depend on it
+- **Config** lives in `config/categories.json` — not hardcoded
+- **Tests** in `plugin/src/__tests__/` — 13 suites covering hooks, tools, commands, services
 
-## Key conventions
+## Analysis workflow
 
-- **Plugin code lives in `plugin/src/`**; root-level files are skill docs, config, and release setup.
-- **Test files**: `plugin/src/__tests__/*.test.ts` — vitest with `globals: true`.
-- **Agent personas**: Markdown files in `plugin/agents/` (planner.md, coder.md, etc.) — loaded dynamically by hooks.
-- **Skills**: Markdown files in `plugin/skills/` — loaded on trigger keywords.
-- **Never push to `dist/`** — it's compiled output. Only commit `src/` changes.
-- **Conventional commits**: `feat:`, `fix:`, `perf:`, `refactor:` trigger releases. `docs:`, `style:`, `test:`, `chore:`, `ci:` are hidden.
+When you need to understand code, fix bugs, or add features, follow this order:
+
+1. **Knowledge graph — big picture first**: Read `graphify-out/GRAPH_REPORT.md` to identify entry points, key modules, and community clusters. Use `graphify query` or `graphify path` for targeted context. This is ~71.5× cheaper than reading raw source files.
+2. **LSP tools — precision analysis**: Use `omoc_goto_definition`, `omoc_find_references`, `omoc_symbols` to trace exact call chains and symbol relationships. Prefer these over raw grep.
+3. **Wiki — verified knowledge**: If the wiki exists (`openclaw wiki status`), search it for relevant context. The wiki contains verified-correct facts accumulated over time.
+4. **Raw reading/grep — last resort**: Only fall back to reading files and grep when the above tools don't cover it.
 
 ## Code analysis tools
 
-Prefer LSP tools over raw reading/grep when analyzing TypeScript code:
+Prefer LSP tools over raw reading/grep when analyzing code:
 
 - `omoc_goto_definition` — jump to symbol definition
 - `omoc_find_references` — find all usages across the project
@@ -108,17 +141,30 @@ Prefer LSP tools over raw reading/grep when analyzing TypeScript code:
 - `omoc_rename` — safe cross-file symbol rename
 
 Fallback when LSP is unavailable:
-
 - `omoc_ast_grep_search` — AST pattern search (supports `$VAR` meta-variables)
 - `omoc_ast_grep_replace` — AST-aware cross-file refactoring
 
+## Project knowledge graph
+
+A knowledge graph exists at `graphify-out/`. Before grepping or reading raw source files, check the graph for context:
+
+- **Read the report**: `graphify-out/GRAPH_REPORT.md` — identifies entry points, god nodes, and community clusters. ~71.5× cheaper than reading raw files.
+- **Semantic query**: `graphify query "..."` — natural-language search across the graph.
+- **Trace a path**: `graphify path "FromNode" "ToNode"` — find coupling chains for impact analysis.
+- **Explain a node**: `graphify explain "NodeName"` — plain-language explanation of a specific component.
+- **Update after changes**: `graphify . --update` — incremental rebuild after edits.
+
+If graphify is not available, fall back to reading source files directly.
+
 ## Project wiki
 
-Use the OpenClaw wiki knowledge base (if available) to supplement code-level understanding with design rationale, team conventions, and historical context.
+The OpenClaw wiki is a continuously growing knowledge base of **verified-correct facts** about this project. Entries are added over time — it may or may not have what you need, but if it does, the information is reliable.
+
+**When to use**: Whenever you encounter something unfamiliar or need context beyond the code — commands, conventions, setup steps, gotchas, infrastructure details.
 
 - **Check availability**: `openclaw wiki status`
 - **Search**: `wiki_search("query")` or `openclaw wiki search "query"` — find relevant wiki pages by topic.
 - **Read a page**: `wiki_get("lookup")` or `openclaw wiki get <page-id>` — read detailed context from a specific page.
 - **Search modes**: `--mode find-person` / `--mode route-question` / `--mode source-evidence`
 
-If wiki knowledge is unavailable, rely solely on project source code and documentation.
+If wiki has no relevant entries, rely solely on project source code and documentation.
