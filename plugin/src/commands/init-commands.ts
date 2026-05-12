@@ -151,14 +151,15 @@ export function registerInitCommands(api: OpenClawPluginApi) {
       }
 
       const parts = argsRaw.split(/\s+/);
-      const subCommand = parts[0].toLowerCase();
+      const firstArg = parts[0];
+      const firstArgLower = firstArg.toLowerCase();
 
       // /omoc_init <dir> <project-name>
-      if (subCommand !== 'add' && subCommand !== 'delete' && subCommand !== 'list' && subCommand !== 'set-active' && subCommand !== 'off') {
-        api.logger.info(`[omoc:init] raw subCommand=[${subCommand}] argsRaw=[${argsRaw}]`);
+      if (firstArgLower !== 'add' && firstArgLower !== 'delete' && firstArgLower !== 'list' && firstArgLower !== 'set-active' && firstArgLower !== 'off') {
+        api.logger.info(`[omoc:init] raw firstArg=[${firstArg}] argsRaw=[${argsRaw}]`);
         const home = os.homedir();
         api.logger.info(`[omoc:init] os.homedir()=[${home}] env.HOME=[${process.env.HOME}]`);
-        const dir = expandPath(subCommand);
+        const dir = expandPath(firstArg);
         api.logger.info(`[omoc:init] expanded dir=[${dir}]`);
         const projectName = parts[1]?.trim();
 
@@ -210,7 +211,7 @@ export function registerInitCommands(api: OpenClawPluginApi) {
       }
 
       // /omoc_init add <project-name> <sub-path-agent-md>
-      if (subCommand === 'add') {
+      if (firstArgLower === 'add') {
         const projectName = parts[1]?.trim();
         const subPathAgentMd = parts.slice(2).join(' ').trim();
 
@@ -269,7 +270,7 @@ export function registerInitCommands(api: OpenClawPluginApi) {
       }
 
       // /omoc_init delete <project-name> [agent-md]
-      if (subCommand === 'delete') {
+      if (firstArgLower === 'delete') {
         const projectName = parts[1]?.trim();
         const agentMd = parts.slice(2).join(' ').trim();
 
@@ -304,12 +305,12 @@ export function registerInitCommands(api: OpenClawPluginApi) {
       }
 
       // /omoc_init list
-      if (subCommand === 'list') {
+      if (firstArgLower === 'list') {
         return { text: formatProjectList(workspaceDir) };
       }
 
       // /omoc_init set-active <project-name>
-      if (subCommand === 'set-active') {
+      if (firstArgLower === 'set-active') {
         const projectName = parts[1]?.trim();
         if (!projectName) {
           return { text: '⚠️ **Error**: Project name is required.\n\nUsage: `/omoc_init set-active <project-name>`' };
@@ -327,7 +328,7 @@ export function registerInitCommands(api: OpenClawPluginApi) {
       }
 
       // /omoc_init off
-      if (subCommand === 'off') {
+      if (firstArgLower === 'off') {
         setActiveProject(workspaceDir, null);
         return {
           text: `✅ Project context injection deactivated.\n\nFuture messages will not inject any project agent.md.`,
