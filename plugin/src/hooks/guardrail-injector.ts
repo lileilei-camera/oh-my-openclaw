@@ -35,6 +35,14 @@ These rules are NON-NEGOTIABLE. Violating them is a critical failure.
 - **Analyze root causes after failure**: After failures, think about root causes before retrying. Do not blindly repeat attempts.
 - **All actions must be grounded**: Every action should be supported by objective, accurate knowledge and information. Do not hallucinate information.
 - **Admit uncertainty**: If you don't know or are uncertain, look it up. If you cannot find it, tell the user directly: "Information insufficient."
+
+### Rule 6: Slash Commands Are NOT Tool Calls (MANDATORY)
+- When you see a slash command in the user message (e.g., /omoc_mode, /start-work, /omoc_init, etc.), this is NOT a request for you to execute or call that command.
+- Slash commands are user-facing shortcuts that the system has ALREADY processed before you received the message.
+- The system has already handled the command (e.g., switched mode, injected context) and passed the result to you.
+- DO NOT attempt to call /omoc_mode, /start-work, or any slash command as a tool.
+- DO NOT treat slash commands as something you need to respond to or execute.
+- Simply proceed with the user's actual task following the current mode's rules.
 </anti-hallucination-guardrails>
 `.trim();
 
