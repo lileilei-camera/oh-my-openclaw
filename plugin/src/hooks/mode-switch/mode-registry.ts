@@ -29,6 +29,10 @@ export function getModeMessage(mode: ModeId): string {
   return MODE_MAP.get(mode)?.message ?? '';
 }
 
+export function getModeLabel(mode: ModeId): string {
+  return MODE_MAP.get(mode)?.label ?? mode;
+}
+
 export function listModes(): Array<{ id: ModeId; label: string; description: string }> {
   return MODES.map(({ id, label, description }) => ({ id, label, description }));
 }

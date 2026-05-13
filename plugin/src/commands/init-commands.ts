@@ -11,8 +11,8 @@ import {
   getActiveProject,
   readState,
 } from '../hooks/project-init/project-state.js';
-import { existsSync, statSync, realpathSync } from 'fs';
-import { resolve, join, isAbsolute, normalize, sep } from 'path';
+import { existsSync, statSync } from 'fs';
+import { resolve, join, isAbsolute } from 'path';
 import * as os from 'os';
 
 interface CommandCtx {
@@ -63,18 +63,6 @@ function resolveWorkspaceDir(ctx: CommandCtx): string | null {
   return null;
 }
 
-function isSubPath(parent: string, child: string): boolean {
-  let resolvedParent: string;
-  try {
-    resolvedParent = realpathSync(parent);
-  } catch {
-    resolvedParent = resolve(parent);
-  }
-  // child may not exist yet (user adding a new file), use resolve
-  const resolvedChild = resolve(child);
-  return resolvedChild.startsWith(resolvedParent + '/') || resolvedChild === resolvedParent;
-}
-
 /**
  * Resolve a path, expanding ~ to home directory.
  * Handles: absolute paths, ~/..., and relative paths.
@@ -102,12 +90,31 @@ function formatProjectList(workspaceDir: string): string {
 
   const lines: string[] = ['# Registered Projects', ''];
 
+  // Active project summary at the top
+  if (state.active) {
+    const activeProject = state.projects.find((p) => p.name === state.active);
+    if (activeProject) {
+      lines.push(`🟢 **Active**: **${activeProject.name}** (\`${activeProject.path}\`)`);
+      lines.push('');
+    }
+  } else {
+    lines.push('⚪ No active project set.');
+    lines.push('');
+  }
+
+  // Sort: active project first, then inactive
+  const sorted = [...state.projects].sort((a, b) => {
+    if (a.name === state.active && b.name !== state.active) return -1;
+    if (a.name !== state.active && b.name === state.active) return 1;
+    return 0;
+  });
+
   // Table overview
   lines.push('| # | Name | Path | Active |');
   lines.push('|---|------|------|--------|');
-  state.projects.forEach((p, i) => {
-    const isActive = p.name === state.active ? '✅' : '';
-    lines.push(`| ${i + 1} | **${p.name}** | \`${p.path}\` | ${isActive} |`);
+  sorted.forEach((p, i) => {
+    const isActive = p.name === state.active ? '✅ **Yes**' : 'No';
+    lines.push(`| ${i + 1} | **${p.name}**${p.name === state.active ? ' 🟢' : ''} | \`${p.path}\` | ${isActive} |`);
   });
   lines.push('');
 
@@ -115,8 +122,8 @@ function formatProjectList(workspaceDir: string): string {
   if (state.projects.some((p) => p.agentMds.length > 0)) {
     lines.push('### Details');
     lines.push('');
-    for (const p of state.projects) {
-      const isActive = p.name === state.active ? ' ✅' : '';
+    for (const p of sorted) {
+      const isActive = p.name === state.active ? ' 🟢 **(Active)**' : '';
       lines.push(`**${p.name}**${isActive}`);
       lines.push(`- Path: \`${p.path}\``);
       if (p.agentMds.length) {
@@ -151,14 +158,15 @@ export function registerInitCommands(api: OpenClawPluginApi) {
       }
 
       const parts = argsRaw.split(/\s+/);
-      const subCommand = parts[0].toLowerCase();
+      const firstArg = parts[0];
+      const firstArgLower = firstArg.toLowerCase();
 
       // /omoc_init <dir> <project-name>
-      if (subCommand !== 'add' && subCommand !== 'delete' && subCommand !== 'list' && subCommand !== 'set-active' && subCommand !== 'off') {
-        api.logger.info(`[omoc:init] raw subCommand=[${subCommand}] argsRaw=[${argsRaw}]`);
+      if (firstArgLower !== 'add' && firstArgLower !== 'delete' && firstArgLower !== 'list' && firstArgLower !== 'set-active' && firstArgLower !== 'off') {
+        api.logger.info(`[omoc:init] raw firstArg=[${firstArg}] argsRaw=[${argsRaw}]`);
         const home = os.homedir();
         api.logger.info(`[omoc:init] os.homedir()=[${home}] env.HOME=[${process.env.HOME}]`);
-        const dir = expandPath(subCommand);
+        const dir = expandPath(firstArg);
         api.logger.info(`[omoc:init] expanded dir=[${dir}]`);
         const projectName = parts[1]?.trim();
 
@@ -210,7 +218,7 @@ export function registerInitCommands(api: OpenClawPluginApi) {
       }
 
       // /omoc_init add <project-name> <sub-path-agent-md>
-      if (subCommand === 'add') {
+      if (firstArgLower === 'add') {
         const projectName = parts[1]?.trim();
         const subPathAgentMd = parts.slice(2).join(' ').trim();
 
@@ -227,40 +235,28 @@ export function registerInitCommands(api: OpenClawPluginApi) {
           };
         }
 
-        const fullPath = resolve(project.path, subPathAgentMd);
-        if (!isSubPath(project.path, fullPath)) {
+        // Expand ~ and store as absolute path
+        let absolutePath = expandPath(subPathAgentMd);
+
+        if (!existsSync(absolutePath)) {
           return {
-            text: `⚠️ **Error**: Target path must be within the project directory.\n\nProject: \`${projectName}\`\nTarget: \`${subPathAgentMd}\``,
+            text: `⚠️ **Error**: Path does not exist: \`${absolutePath}\``,
           };
         }
 
-        if (!existsSync(fullPath)) {
-          return {
-            text: `⚠️ **Error**: File does not exist: \`${subPathAgentMd}\``,
-          };
+        // If path is a directory, auto-append AGENTS.md
+        if (statSync(absolutePath).isDirectory()) {
+          absolutePath = join(absolutePath, 'AGENTS.md');
         }
 
-        // Normalize path before storing (remove leading ./, normalize separators)
-        let normalizedAgentMd = normalize(subPathAgentMd);
-        while (normalizedAgentMd.startsWith('.' + sep) || normalizedAgentMd === '.') {
-          normalizedAgentMd = normalizedAgentMd.slice(2);
-        }
-
-        const added = addAgentMdToProject(workspaceDir, projectName, normalizedAgentMd);
-        if (!added) {
-          const project2 = findProjectByName(workspaceDir, projectName);
-          const registered = project2?.agentMds.map((p) => `\`${p}\``).join(', ') || 'none';
-          return {
-            text: `⚠️ **Error**: This agent.md is already registered for project \`${projectName}\`.\n\nCurrently registered: ${registered}`,
-          };
-        }
+        const added = addAgentMdToProject(workspaceDir, projectName, absolutePath);
 
         setPendingInit(workspaceDir, {
           type: 'add',
           projectName,
           projectPath: project.path,
-          agentMdFile: subPathAgentMd,
-          subPath: subPathAgentMd,
+          agentMdFile: absolutePath,
+          subPath: absolutePath,
         });
 
         return {
@@ -269,7 +265,7 @@ export function registerInitCommands(api: OpenClawPluginApi) {
       }
 
       // /omoc_init delete <project-name> [agent-md]
-      if (subCommand === 'delete') {
+      if (firstArgLower === 'delete') {
         const projectName = parts[1]?.trim();
         const agentMd = parts.slice(2).join(' ').trim();
 
@@ -304,12 +300,12 @@ export function registerInitCommands(api: OpenClawPluginApi) {
       }
 
       // /omoc_init list
-      if (subCommand === 'list') {
+      if (firstArgLower === 'list') {
         return { text: formatProjectList(workspaceDir) };
       }
 
       // /omoc_init set-active <project-name>
-      if (subCommand === 'set-active') {
+      if (firstArgLower === 'set-active') {
         const projectName = parts[1]?.trim();
         if (!projectName) {
           return { text: '⚠️ **Error**: Project name is required.\n\nUsage: `/omoc_init set-active <project-name>`' };
@@ -327,7 +323,7 @@ export function registerInitCommands(api: OpenClawPluginApi) {
       }
 
       // /omoc_init off
-      if (subCommand === 'off') {
+      if (firstArgLower === 'off') {
         setActiveProject(workspaceDir, null);
         return {
           text: `✅ Project context injection deactivated.\n\nFuture messages will not inject any project agent.md.`,

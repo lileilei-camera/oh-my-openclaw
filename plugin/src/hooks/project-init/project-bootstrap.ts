@@ -38,16 +38,21 @@ export function registerProjectBootstrap(api: OpenClawPluginApi) {
 
         let template: string;
         if (pending.type === 'add') {
-          template = safeReplace(INIT_ADD_TEMPLATE, 'projectPath', pending.projectPath);
+          template = safeReplace(INIT_ADD_TEMPLATE, 'projectName', pending.projectName);
           template = safeReplace(template, 'agentMdFile', pending.agentMdFile);
         } else {
           template = safeReplace(INIT_TEMPLATE, 'projectPath', pending.projectPath);
           template = safeReplace(template, 'agentMdFile', pending.agentMdFile);
         }
 
-        // 只通过 prependContext 注入模板（指令已在模板末尾）
+        // 通过 prependContext 注入模板，appendContext 引导 LLM 执行
+        const templateName = pending.type === 'add' ? 'project-add' : 'project-init';
+        const appendMsg = pending.type === 'add'
+          ? `请使用上面的 ${templateName} 模板，为子模块 **${pending.projectName}** 完成 AGENTS.md 的建立。模板已注入到上方，按模板中的指令逐步执行。`
+          : `请使用上面的 ${templateName} 模板，为项目 **${pending.projectName}** 完成 AGENTS.md 的建立。模板已注入到上方，按模板中的指令逐步执行。`;
+
         api.logger.info(`[omoc:project-init] Injected ${pending.type} template for project: ${pending.projectName}`);
-        return { prependContext: template };
+        return { prependContext: template, appendContext: appendMsg };
       }
 
       // 2. No pending — check active project
@@ -67,7 +72,24 @@ export function registerProjectBootstrap(api: OpenClawPluginApi) {
 
         try {
           const content = readFileSync(fullPath, 'utf-8');
-          parts.push(`\n--- Project: ${project.name} | File: ${agentMd} ---\n${content}`);
+
+          // Try to extract YAML frontmatter for metadata display
+          let header = `--- Project: ${project.name} | File: ${agentMd} ---`;
+          const fmMatch = content.match(/^---\n([\s\S]*?)\n---\n/);
+          if (fmMatch) {
+            const fmLines = fmMatch[1].split('\n');
+            const meta: Record<string, string> = {};
+            for (const line of fmLines) {
+              const kv = line.match(/^(\w+):\s*(.+)$/);
+              if (kv) meta[kv[1].trim()] = kv[2].trim();
+            }
+            const name = meta.name || agentMd;
+            const desc = meta.description || '';
+            header = `--- Skill: ${name} | ${desc} | File: ${agentMd} ---`;
+            api.logger.info(`[omoc:project-init] Parsed frontmatter: name="${name}", desc="${desc}"`);
+          }
+
+          parts.push(`\n${header}\n${content}`);
           injectedPaths.push(fullPath);
         } catch (err) {
           api.logger.error(`[omoc:project-init] Failed to read ${fullPath}:`, err);

@@ -1,5 +1,4 @@
-import { readFileSync, existsSync } from 'fs';
-import { mkdir, writeFile } from 'fs/promises';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { resolveOpenClawWorkspaceDir } from '../../utils/paths.js';
 
@@ -26,11 +25,20 @@ export async function setActiveMode(mode: string, workspaceDir?: string): Promis
   const filePath = getStateFilePath(workspaceDir);
   const stateDir = join(filePath, '..');
   if (!existsSync(stateDir)) {
-    await mkdir(stateDir, { recursive: true });
+    mkdirSync(stateDir, { recursive: true });
   }
-  await writeFile(filePath, mode.trim(), 'utf-8');
+  writeFileSync(filePath, mode.trim(), 'utf-8');
+}
+
+export function resetModeSync(workspaceDir?: string): void {
+  const filePath = getStateFilePath(workspaceDir);
+  const stateDir = join(filePath, '..');
+  if (!existsSync(stateDir)) {
+    mkdirSync(stateDir, { recursive: true });
+  }
+  writeFileSync(filePath, 'off', 'utf-8');
 }
 
 export async function resetMode(workspaceDir?: string): Promise<void> {
-  await setActiveMode('off', workspaceDir);
+  resetModeSync(workspaceDir);
 }

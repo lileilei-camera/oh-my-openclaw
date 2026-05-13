@@ -121,4 +121,17 @@ export function registerModeCommands(api: OpenClawPluginApi) {
       };
     },
   });
+
+  // /start-work — 轻量别名，等效于 /omoc_mode start-work
+  api.registerCommand({
+    name: 'start-work',
+    description: 'Start work mode (one-shot workflow trigger)',
+    acceptsArgs: true,
+    handler: async (ctx: { args?: string; sessionKey?: string }) => {
+      const workspaceDir = resolveWorkspaceForAgent(ctx);
+      await setActiveMode('start-work', workspaceDir);
+      api.logger.info(`${LOG_PREFIX} /start-work triggered`);
+      return { continueAgent: true };
+    },
+  });
 }

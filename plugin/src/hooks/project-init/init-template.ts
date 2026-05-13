@@ -5,24 +5,25 @@
  * License: MIT — Copyright (c) 2025 opencode
  */
 
-export const INIT_TEMPLATE = `## ⚠️ EXECUTE INIT TASK
-
-**You are executing the /omoc_init initialization task. The user message containing the command text is just a trigger — DO NOT debug, investigate, or discuss the command.**
+// Shared body function — returns the same instructions with a configurable file path placeholder.
+// We avoid template-literal .replace() to prevent TypeScript parsing issues with ${}.
+function buildInstructions(filePathPlaceholder: string): string {
+  return `
 
 **Your ONLY job: read the project files and create/improve an AGENTS.md file following the instructions below.**
 
-This task includes THREE phases that MUST be executed in order:
+This task has THREE phases that MUST be executed in order:
 1. **Build knowledge graph** (if graphify is available) — read the SKILL.md skill file, then follow it to generate \`graphify-out/GRAPH_REPORT.md\`
 2. **Read the project** — use the graph report to guide which files to read
 3. **Write AGENTS.md** — create or update the instruction file
 
 ---
 
-Create or update \`AGENTS.md\` for this repository.
+Create or update \`AGENTS.md\` for this target.
 
 ## ⚠️ Before you start: verify file existence (MANDATORY)
 
-You MUST use the file system tool to check whether \`AGENTS.md\` already exists at \`\${projectPath}/\${agentMdFile}\`. Do NOT rely on assumptions or memory.
+You MUST use the file system tool to check whether \`AGENTS.md\` already exists at \`${filePathPlaceholder}\`. Do NOT rely on assumptions or memory.
 
 - If the file EXISTS: read it first, then improve it in place. Preserve verified useful guidance, delete fluff or stale claims.
 - If the file DOES NOT EXIST: create it from scratch at that path.
@@ -190,61 +191,20 @@ If wiki has no relevant entries, rely solely on project source code and document
 \`\`\`
 
 ## Required output
-1. Write the AGENTS.md to: \`\${projectPath}/\${agentMdFile}\`
+1. Write the AGENTS.md to: \`${filePathPlaceholder}\`
 2. Use the write tool to save the file.`;
+}
 
-export const INIT_ADD_TEMPLATE = `Create or update \`AGENTS.md\` for this subdirectory.
+export const INIT_TEMPLATE = `---
+name: project-init
+description: 初始化或更新项目的 AGENTS.md 指令文件
+---
 
-## ⚠️ Before you start: verify file existence (MANDATORY)
+## ⚠️ EXECUTE INIT TASK${buildInstructions('${projectPath}/${agentMdFile}')}`;
 
-You MUST use the file system tool to check whether \`AGENTS.md\` already exists at \`\${projectPath}/\${agentMdFile}\`. Do NOT rely on assumptions or memory.
+export const INIT_ADD_TEMPLATE = `---
+name: project-add
+description: 为项目子模块创建或更新 AGENTS.md 指令文件
+---
 
-- If the file EXISTS: read it first, then improve it in place. Preserve verified useful guidance, delete fluff or stale claims.
-- If the file DOES NOT EXIST: create it from scratch at that path.
-
-Do NOT skip this step.
-
-The goal is a compact instruction file that helps future agent sessions understand this subdirectory's purpose, structure, and conventions.
-
-## Target
-- Project path: \`\${projectPath}\`
-- Target file: \`\${projectPath}/\${agentMdFile}\`
-
-## How to investigate
-
-Read the highest-value sources first:
-- Files in this subdirectory and its parent directories
-- README*, config files, manifests related to this subdirectory
-- Any existing instruction files in or near this subdirectory
-
-If architecture is still unclear, inspect representative code files to understand the subdirectory's role.
-
-## What to extract
-
-- The purpose and scope of this subdirectory
-- Developer commands specific to this subdirectory
-- How to run tests or verification steps for this subdirectory
-- Dependencies and relationships with other parts of the project
-- Subdirectory-specific conventions that differ from project defaults
-
-## Writing rules
-
-Include only high-signal, subdirectory-specific guidance.
-Exclude generic advice that applies to the whole project.
-When in doubt, omit.
-
-Prefer short sections and bullets.
-
-## Code analysis tools (MANDATORY)
-
-If the subdirectory's language has LSP support, you MUST add a "## Code analysis tools" section mentioning \`omoc_goto_definition\`, \`omoc_find_references\`, \`omoc_symbols\` for code exploration, and \`omoc_ast_grep_search\` as fallback.
-
-## Analysis workflow (CONDITIONAL)
-
-If the project has a knowledge graph or wiki, add an "## Analysis workflow" section with the same format as the main project AGENTS.md — tell future agents to check graphify-out/GRAPH_REPORT.md first, then use LSP tools, then wiki search.
-
-If a project wiki exists, also add a "## Project wiki" section. The wiki is a continuously growing knowledge base of verified-correct facts — agents should search it when they encounter something unfamiliar. If no wiki exists, still include the section telling agents to check with \`openclaw wiki status\`.
-
-## Required output
-1. Write the AGENTS.md to: \`\${projectPath}/\${agentMdFile}\`
-2. Use the write tool to save the file.`;
+## ⚠️ EXECUTE ADD TASK${buildInstructions('${agentMdFile}')}`;
