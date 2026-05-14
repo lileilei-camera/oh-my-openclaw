@@ -35,7 +35,7 @@ export function registerModeSwitch(api: OpenClawPluginApi): void {
 
       // start-work 是一次性模式：注入后立即关闭
       if (mode === 'start-work') {
-        resetModeSync();
+        resetModeSync(workspaceDir);
       }
 
       api.logger.info(`${LOG_PREFIX} before_prompt_build [${sessionKey.substring(0, 16)}…]: mode=${mode}`);
