@@ -64,22 +64,22 @@ describe('registerRalphCommands', () => {
     mockApi = createMockApi({ config: createMockConfig({ todo_enforcer_enabled: true }) });
   });
 
-  it('registers 3 commands (ralph_loop, ralph_stop, omoc_status)', () => {
+  it('registers 3 commands (omoc_ralph_loop, omoc_ralph_stop, omoc_status)', () => {
     registerRalphCommands(mockApi);
 
     expect(mockApi.registerCommand).toHaveBeenCalledTimes(3);
 
     const names = mockApi.registerCommand.mock.calls.map((c: any) => c[0].name);
-    expect(names).toContain('ralph_loop');
-    expect(names).toContain('ralph_stop');
+    expect(names).toContain('omoc_ralph_loop');
+    expect(names).toContain('omoc_ralph_stop');
     expect(names).toContain('omoc_status');
   });
 
-  it('ralph_loop parses args and calls startLoop', async () => {
+  it('omoc_ralph_loop parses args and calls startLoop', async () => {
     registerRalphCommands(mockApi);
 
     const ralphLoopCall = mockApi.registerCommand.mock.calls.find(
-      (c: any) => c[0].name === 'ralph_loop'
+      (c: any) => c[0].name === 'omoc_ralph_loop'
     );
     const handler = ralphLoopCall[0].handler;
     const result = await handler({ args: '5 task.md' });
@@ -89,11 +89,11 @@ describe('registerRalphCommands', () => {
     expect(result.text).toContain('Max iterations: 10');
   });
 
-  it('ralph_stop calls stopLoop', async () => {
+  it('omoc_ralph_stop calls stopLoop', async () => {
     registerRalphCommands(mockApi);
 
     const ralphStopCall = mockApi.registerCommand.mock.calls.find(
-      (c: any) => c[0].name === 'ralph_stop'
+      (c: any) => c[0].name === 'omoc_ralph_stop'
     );
     const handler = ralphStopCall[0].handler;
     const result = await handler({});

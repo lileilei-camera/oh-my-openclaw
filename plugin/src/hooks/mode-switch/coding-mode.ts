@@ -10,7 +10,7 @@ all implementation work to the appropriate coding channel. DO NOT write code you
 ### What You MUST Do
 1. **Gather Context First** — Before delegating, use omoc_delegate_task(agent_id="omoc_explorer") to understand existing codebase patterns and conventions
 2. **Choose the Right Channel** based on task complexity:
-   - **Heavy work** (multi-file refactors, test suites, build cycles): Delegate to OpenCode running in a tmux session via the opencode-controller skill
+   - **Heavy work** (multi-file refactors, test suites, build cycles): omoc_delegate_task(category="deep", agent_id="omoc_expert")
    - **Simple fixes** (single-file changes): omoc_delegate_task(category="quick", agent_id="omoc_coder")
    - **Complex refactoring** (architecture changes): omoc_delegate_task(category="deep", agent_id="omoc_expert")
 3. **Verify Results** — After coding completes, run tests, linter, type-check, and build via the tmux session to confirm correctness

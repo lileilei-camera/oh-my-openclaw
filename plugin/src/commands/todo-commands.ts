@@ -58,7 +58,7 @@ function collectAllTodos(): TodoItem[] {
 
 export function registerTodoCommands(api: OpenClawPluginApi): void {
   api.registerCommand({
-    name: 'todos',
+    name: 'omoc_todos',
     description: 'Show current todo list (auto-reply, no AI invocation)',
     handler: () => {
       const todos = collectAllTodos();

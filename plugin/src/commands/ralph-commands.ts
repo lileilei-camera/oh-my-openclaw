@@ -4,9 +4,9 @@ import { getMessageCount } from '../hooks/message-monitor.js';
 import { getPluginConfig } from '../types.js';
 
 export function registerRalphCommands(api: OpenClawPluginApi) {
-  // /ralph_loop command
+  // /omoc_ralph_loop command
   api.registerCommand({
-    name: 'ralph_loop',
+    name: 'omoc_ralph_loop',
     description: 'Start the Ralph Loop self-completion mechanism',
     acceptsArgs: true,
     handler: async (ctx: { args?: string }) => {
@@ -28,9 +28,9 @@ export function registerRalphCommands(api: OpenClawPluginApi) {
     },
   });
 
-  // /ralph_stop command
+  // /omoc_ralph_stop command
   api.registerCommand({
-    name: 'ralph_stop',
+    name: 'omoc_ralph_stop',
     description: 'Stop the active Ralph Loop',
     handler: async () => {
       const result = await stopLoop();
