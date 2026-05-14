@@ -48,8 +48,8 @@ export function registerProjectBootstrap(api: OpenClawPluginApi) {
         // 通过 prependContext 注入模板，appendContext 引导 LLM 执行
         const templateName = pending.type === 'add' ? 'project-add' : 'project-init';
         const appendMsg = pending.type === 'add'
-          ? `请使用上面的 ${templateName} 模板，为子模块 **${pending.projectName}** 完成 AGENTS.md 的建立。模板已注入到上方，按模板中的指令逐步执行。`
-          : `请使用上面的 ${templateName} 模板，为项目 **${pending.projectName}** 完成 AGENTS.md 的建立。模板已注入到上方，按模板中的指令逐步执行。`;
+          ? `我已经在上方给你发送了 ${templateName} 模板的完整指令。请严格按照模板中的步骤，为子模块 **${pending.projectName}** 创建或更新 AGENTS.md。\n\n⚠️ 如果你在上方找不到 project-add 模板内容，请立即停下来告诉我，不要自行猜测或执行。`
+          : `我已经在上方给你发送了 ${templateName} 模板的完整指令。请严格按照模板中的步骤，为项目 **${pending.projectName}** 创建或更新 AGENTS.md。\n\n⚠️ 如果你在上方找不到 project-init 模板内容，请立即停下来告诉我，不要自行猜测或执行。`;
 
         api.logger.info(`[omoc:project-init] Injected ${pending.type} template for project: ${pending.projectName}`);
         return { prependContext: template, appendContext: appendMsg };

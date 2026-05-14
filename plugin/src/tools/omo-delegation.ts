@@ -4,12 +4,12 @@ import { TOOL_PREFIX } from '../types.js';
 import { LOG_PREFIX } from '../constants.js';
 import { toolResponse, toolError } from '../utils/helpers.js';
 
-const VALID_ACP_AGENTS = ['opencode', 'codex', 'claude', 'gemini', 'pi'] as const;
+const VALID_ACP_AGENTS = ['omoc_coder', 'omoc_expert', 'omoc_architect', 'codex', 'claude', 'gemini', 'pi'] as const;
 
 const OmoDelegateParamsSchema = Type.Object({
   task: Type.String({ description: 'What OmO (OpenCode) should do — the coding task description. Use @agentname prefix to invoke OpenCode subagents (e.g., "@explore find auth files").' }),
-  agent: Type.Optional(Type.String({ description: 'ACP harness agent ID (default: "opencode"). Valid: opencode, codex, claude, gemini, pi' })),
-  opencode_agent: Type.Optional(Type.String({ description: 'OpenCode internal agent mode (e.g., "build", "plan", or custom agent name). Only applies when agent is "opencode". Defaults to OpenCode\'s configured primary agent. Uses ACP session mode switching.' })),
+  agent: Type.Optional(Type.String({ description: 'ACP harness agent ID (default: "omoc_coder"). Valid: omoc_coder, omoc_expert, omoc_architect, codex, claude, gemini, pi' })),
+  opencode_agent: Type.Optional(Type.String({ description: 'Internal agent mode override for omoc_* agents (e.g., "build", "plan", or custom agent name). Only applies when agent is an omoc_* agent. Defaults to the agent\'s configured primary mode. Uses ACP session mode switching.' })),
   model: Type.Optional(Type.String({ description: 'Override model — only when you need a specific model. Leave empty to use OpenCode\'s own configured default.' })),
   thread: Type.Optional(Type.Boolean({ description: 'Bind to a thread for persistent multi-turn session (default: false)', default: false })),
   label: Type.Optional(Type.String({ description: 'Label for easy identification in /subagents list and /acp sessions' })),
@@ -32,7 +32,7 @@ export function registerOmoDelegateTool(api: OpenClawPluginApi) {
         return toolError('Task too long (max 10000 chars)');
       }
 
-      const agent = params.agent || 'opencode';
+      const agent = params.agent || 'omoc_coder';
 
       if (!VALID_ACP_AGENTS.includes(agent as typeof VALID_ACP_AGENTS[number])) {
         return toolError(`Invalid ACP agent: ${agent}. Valid: ${VALID_ACP_AGENTS.join(', ')}`);
@@ -58,7 +58,7 @@ export function registerOmoDelegateTool(api: OpenClawPluginApi) {
         'Do NOT just return this metadata. Actually call sessions_spawn NOW.',
         params.opencode_agent ? [
           '',
-          `🔀 AFTER session is created, switch OpenCode agent mode to "${params.opencode_agent}":`,
+          `🔀 AFTER session is created, switch agent mode to "${params.opencode_agent}":`,
           `  Use ACP session mode switching (setSessionMode) to select "${params.opencode_agent}"`,
           '  Available modes are returned in the session creation response',
         ].join('\n') : '',

@@ -21,7 +21,7 @@ import { registerCheckpointTool } from './tools/checkpoint.js';
 import { registerWebSearchTool } from './tools/web-search.js';
 import { registerRalphCommands } from './commands/ralph-commands.js';
 import { registerStatusCommands } from './commands/status-commands.js';
-import { registerPersonaCommands } from './commands/persona-commands.js';
+import { registerOmocCommands } from './commands/omoc-commands.js';
 import { registerTodoCommands } from './commands/todo-commands.js';
 import { registerContextInjector } from './hooks/context-injector.js';
 import { registerGuardrailInjector } from './hooks/guardrail-injector.js';
@@ -30,9 +30,7 @@ import { registerGuardrailInjector } from './hooks/guardrail-injector.js';
 // session-sync removed — AGENTS.md is no longer modified in new approach
 import { registerSpawnGuard } from './hooks/spawn-guard.js';
 import { registerModeSwitch } from './hooks/mode-switch/hook.js';
-import { registerModeCommands } from './commands/mode-commands.js';
 import { registerProjectBootstrap } from './hooks/project-init/project-bootstrap.js';
-import { registerInitCommands } from './commands/init-commands.js';
 import { registerTodoReminder, registerAgentEndReminder, registerSessionCleanup } from './hooks/todo-reminder.js';
 import { registerTodoTools } from './tools/todo/index.js';
 import { registerGrepTool } from './tools/grep/index.js';
@@ -147,12 +145,10 @@ export default function register(api: OpenClawPluginApi) {
   })()
 
   // Register commands
-  registerRalphCommands(api); commandCount += 2; // /ralph_loop, /ralph_stop
-  registerStatusCommands(api); commandCount += 3; // /omoc_status, /omoc_health, /omoc_config
-  registerPersonaCommands(api); commandCount += 2; // /omoc, /omoc_personas
-  registerTodoCommands(api); commandCount += 4; // /todos + 3 todo commands
-  registerModeCommands(api); commandCount += 1; // /omoc_mode
-  registerInitCommands(api); commandCount += 1; // /omoc_init
+  registerRalphCommands(api); commandCount += 2; // /omoc_ralph_loop, /omoc_ralph_stop
+  registerStatusCommands(api); commandCount += 2; // /omoc_health, /omoc_config
+  registerOmocCommands(api); commandCount += 5; // /omoc (unified), /omoc_mode (alias), /omoc_init (alias), /start-work (alias), /plan (alias)
+  registerTodoCommands(api); commandCount += 1; // /omoc_todos
 
   // Register services
   registerRalphLoop(api); serviceCount++;
