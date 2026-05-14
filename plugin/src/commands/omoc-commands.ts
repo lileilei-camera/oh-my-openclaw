@@ -137,7 +137,7 @@ async function handlePersona(
         '|---|---------|------|------|------|',
         ...lines,
         '',
-        'Usage: `/omoc person <name>` — e.g., `/omoc person prometheus`',
+        'Usage: `/omoc person <name>` — e.g., `/omoc person delegate`',
       ].join('\n'),
     };
   }

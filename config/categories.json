@@ -1,54 +1,38 @@
 {
-  "_comment": "oh-my-openclaw configuration file - 百炼模型优化配置",
+  "_comment": "oh-my-openclaw configuration file — models resolved from openclaw.json agents.list",
   "categories": {
     "quick": {
-      "model": "bailian/qwen3-coder-next",
       "description": "简单修复、搜索、小任务、文件操作、代码库探索、文档查找",
-      "agents": ["sisyphus-junior", "explore", "librarian"],
-      "alternatives": ["bailian/qwen3.5-plus", "bailian/glm-4.7"]
+      "agents": ["sisyphus-junior", "explore", "librarian"]
     },
     "deep": {
-      "model": "bailian/qwen3-coder-plus",
       "description": "复杂重构、分析、差距检测、计划审查。面向目标的自主问题解决。",
-      "agents": ["hephaestus", "metis", "momus"],
-      "alternatives": ["bailian/qwen3-max-2026-01-23", "bailian/MiniMax-M2.5"]
+      "agents": ["hephaestus", "metis", "momus"]
     },
     "ultrabrain": {
-      "model": "bailian/qwen3-max-2026-01-23",
       "description": "深度逻辑推理、复杂架构决策需要广泛分析",
-      "agents": ["prometheus", "atlas", "oracle"],
-      "alternatives": ["bailian/qwen3-coder-plus", "bailian/MiniMax-M2.5"]
+      "agents": ["prometheus", "atlas", "oracle"]
     },
     "visual-engineering": {
-      "model": "bailian/qwen3.5-plus",
       "description": "前端、UI/UX、设计、样式、动画、视觉分析",
-      "agents": ["frontend", "multimodal-looker"],
-      "alternatives": ["bailian/kimi-k2.5"]
+      "agents": ["frontend", "multimodal-looker"]
     },
     "multimodal": {
-      "model": "bailian/qwen3.5-plus",
       "description": "PDF/图像/视频分析。通过 Gemini CLI tmux 会话运行。",
       "agents": ["multimodal-looker"],
-      "tool": "gemini-cli",
-      "alternatives": ["bailian/kimi-k2.5"]
+      "tool": "gemini-cli"
     },
     "artistry": {
-      "model": "bailian/qwen3-max-2026-01-23",
-      "description": "高度创意/艺术性任务、新颖想法、设计探索",
-      "alternatives": ["bailian/qwen3-coder-plus"]
+      "description": "高度创意/艺术性任务、新颖想法、设计探索"
     },
     "unspecified-low": {
-      "model": "bailian/qwen3-coder-next",
       "description": "不适合其他类别的任务，需要较少的精力"
     },
     "unspecified-high": {
-      "model": "bailian/qwen3-max-2026-01-23",
       "description": "不适合其他类别的任务，需要较多的精力"
     },
     "writing": {
-      "model": "bailian/qwen3.5-plus",
-      "description": "文档、散文、技术写作",
-      "alternatives": ["bailian/qwen3-coder-plus"]
+      "description": "文档、散文、技术写作"
     }
   },
   "defaults": {

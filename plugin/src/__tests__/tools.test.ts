@@ -72,22 +72,10 @@ describe('registerDelegateTaskTool', () => {
     });
 
     const text = result.content[0].text;
-    expect(text).toContain('claude-sonnet-4-6');
     expect(text).toContain('sessions_spawn');
     expect(text).toContain('test task');
-  });
-
-  it('uses custom model from config.model_routing', async () => {
-    const customApi = createMockApiAny({
-      config: createMockConfig({ model_routing: { quick: { model: 'custom-model-v1', alternatives: ['fallback-1'] } } }),
-    });
-    registerDelegateTaskTool(customApi);
-    const toolConfig = customApi.registerTool.mock.calls[0][0];
-
-    const result = await toolConfig.execute('test-call-id', { task_description: 'test', category: 'quick' });
-
-    expect(result.content[0].text).toContain('custom-model-v1');
-    expect(result.content[0].text).toContain('fallback-1');
+    // Model comes from openclaw.json agents.list (or default fallback)
+    expect(text).toContain('Model:');
   });
 
   it('returns error for empty task_description', async () => {
@@ -112,28 +100,6 @@ describe('registerDelegateTaskTool', () => {
     });
 
     expect(result.content[0].text).toContain('Task description too long (max 10000 chars)');
-  });
-
-  it('includes fallback suggestion text when alternatives exist', async () => {
-    const customApi = createMockApiAny({
-      config: createMockConfig({
-        model_routing: {
-          deep: {
-            model: 'custom-deep-model',
-            alternatives: ['fallback-a', 'fallback-b'],
-          },
-        },
-      }),
-    });
-    registerDelegateTaskTool(customApi);
-    const toolConfig = customApi.registerTool.mock.calls[0][0];
-
-    const result = await toolConfig.execute('test-call-id', {
-      task_description: 'test fallback messaging',
-      category: 'deep',
-    });
-
-    expect(result.content[0].text).toContain('Recommended fallback models (informational only): fallback-a, fallback-b');
   });
 
   it('execute returns error for invalid category', async () => {

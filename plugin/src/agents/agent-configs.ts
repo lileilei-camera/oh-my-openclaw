@@ -2,59 +2,12 @@
  * Defines the Oh-My-OpenClaw plugin's local agent configuration contracts
  * and the canonical list of built-in OMOC agent definitions.
  * 
- * Model configuration is loaded from config/agent-models.json at runtime.
- * Edit that file to change models - no rebuild required!
+ * Agent models are resolved from openclaw.json agents.list at runtime.
+ * Each agent's model field is omitted here — OpenClaw resolves it automatically
+ * from agents.list (or agents.defaults.model if not configured).
  */
 import { READ_ONLY_DENY } from '../constants.js';
-import { readFileSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-// __dirname is .../plugin/dist/agents/, so go up twice to reach plugin/
-const PLUGIN_ROOT = join(__dirname, '..', '..');
-
-interface AgentModelConfig {
-  primary: string;
-  fallbacks?: string[];
-}
-
-interface AgentModelsFile {
-  description: string;
-  agents: Record<string, AgentModelConfig>;
-}
-
-/**
- * Load agent model configuration from config/agent-models.json
- * Cached at module load time for performance.
- */
-function loadAgentModels(): AgentModelsFile {
-  try {
-    const configPath = join(PLUGIN_ROOT, 'config', 'agent-models.json');
-    const content = readFileSync(configPath, 'utf-8');
-    return JSON.parse(content) as AgentModelsFile;
-  } catch (error) {
-    console.warn('[omoc] Failed to load agent-models.json, using defaults:', error);
-    return {
-      description: 'Default agent models',
-      agents: {},
-    };
-  }
-}
-
-const agentModels = loadAgentModels();
-
-/**
- * Get model configuration for an agent from runtime config.
- * Falls back to bailian/qwen3.5-plus if not configured.
- */
-function getModelForAgent(agentId: string): string | { primary: string; fallbacks?: string[] } {
-  const config = agentModels.agents[agentId];
-  if (!config) {
-    return 'bailian/qwen3.5-plus';
-  }
-  return config.fallbacks ? config : config.primary;
-}
+import { readAgentModel } from '../utils/agent-model.js';
 
 export type OmocAgentConfig = {
   id: string;
@@ -78,7 +31,6 @@ export const OMOC_AGENT_CONFIGS: OmocAgentConfig[] = [
   {
     id: 'omoc_planner',
     name: 'Planner',
-    model: getModelForAgent('omoc_planner'),
     identity: {
       name: 'Planner',
       emoji: '📋',
@@ -91,7 +43,6 @@ export const OMOC_AGENT_CONFIGS: OmocAgentConfig[] = [
   {
     id: 'omoc_delegate',
     name: 'Delegate',
-    model: getModelForAgent('omoc_delegate'),
     identity: {
       name: 'Delegate',
       emoji: '🗺️',
@@ -104,7 +55,6 @@ export const OMOC_AGENT_CONFIGS: OmocAgentConfig[] = [
   {
     id: 'omoc_coder',
     name: 'Coder',
-    model: getModelForAgent('omoc_coder'),
     identity: {
       name: 'Coder',
       emoji: '💻',
@@ -119,7 +69,6 @@ export const OMOC_AGENT_CONFIGS: OmocAgentConfig[] = [
   {
     id: 'omoc_expert',
     name: 'Expert',
-    model: getModelForAgent('omoc_expert'),
     identity: {
       name: 'Expert',
       emoji: '⚙️',
@@ -134,7 +83,6 @@ export const OMOC_AGENT_CONFIGS: OmocAgentConfig[] = [
   {
     id: 'omoc_architect',
     name: 'Architect',
-    model: getModelForAgent('omoc_architect'),
     identity: {
       name: 'Architect',
       emoji: '🏗️',
@@ -149,7 +97,6 @@ export const OMOC_AGENT_CONFIGS: OmocAgentConfig[] = [
   {
     id: 'omoc_explorer',
     name: 'Explorer',
-    model: getModelForAgent('omoc_explorer'),
     identity: {
       name: 'Explorer',
       emoji: '🔎',
@@ -164,7 +111,6 @@ export const OMOC_AGENT_CONFIGS: OmocAgentConfig[] = [
   {
     id: 'omoc_researcher',
     name: 'Researcher',
-    model: getModelForAgent('omoc_researcher'),
     identity: {
       name: 'Researcher',
       emoji: '🔬',
@@ -179,7 +125,6 @@ export const OMOC_AGENT_CONFIGS: OmocAgentConfig[] = [
   {
     id: 'omoc_advisor',
     name: 'Advisor',
-    model: getModelForAgent('omoc_advisor'),
     identity: {
       name: 'Advisor',
       emoji: '💡',
@@ -194,7 +139,6 @@ export const OMOC_AGENT_CONFIGS: OmocAgentConfig[] = [
   {
     id: 'omoc_reviewer',
     name: 'Reviewer',
-    model: getModelForAgent('omoc_reviewer'),
     identity: {
       name: 'Reviewer',
       emoji: '📝',
@@ -209,7 +153,6 @@ export const OMOC_AGENT_CONFIGS: OmocAgentConfig[] = [
   {
     id: 'omoc_looker',
     name: 'Multimodal Looker',
-    model: getModelForAgent('omoc_looker'),
     identity: {
       name: 'Multimodal Looker',
       emoji: '👁️',
@@ -224,7 +167,6 @@ export const OMOC_AGENT_CONFIGS: OmocAgentConfig[] = [
   {
     id: 'omoc_frontend',
     name: 'Frontend',
-    model: getModelForAgent('omoc_frontend'),
     identity: {
       name: 'Frontend',
       emoji: '🎨',
