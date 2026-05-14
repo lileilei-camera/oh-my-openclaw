@@ -2,6 +2,7 @@ import { Type, Static } from '@sinclair/typebox';
 import type { OpenClawPluginApi } from '../../types.js';
 import { TOOL_PREFIX, LOG_PREFIX, CATEGORIES } from '../../constants.js';
 import { DEFAULT_CATEGORY_AGENTS } from './constants.js';
+import { readAgentModel } from '../../utils/agent-model.js';
 import { toolResponse, toolError } from '../../utils/helpers.js';
 
 const LOG_PREFIX_DELEGATE = `${LOG_PREFIX}[delegate]`;
@@ -18,8 +19,6 @@ const DelegateTaskParamsSchema = Type.Object({
 type DelegateTaskParams = Static<typeof DelegateTaskParamsSchema>;
 
 const categoryNames: string[] = [...CATEGORIES];
-
-const DEFAULT_MODEL = 'claude-sonnet-4-6';
 
 export function registerDelegateTaskTool(api: OpenClawPluginApi) {
   api.logger.info(`${LOG_PREFIX} Registering delegate-task tool`);
@@ -52,17 +51,10 @@ export function registerDelegateTaskTool(api: OpenClawPluginApi) {
           );
         }
 
-        // Resolve model from config.model_routing or use default
-        const routingConfig = (api.config as any).model_routing;
-        let model = DEFAULT_MODEL;
-        let alternatives: string[] | undefined;
-
-        if (routingConfig && routingConfig[normalizedCategory]) {
-          model = routingConfig[normalizedCategory].model ?? DEFAULT_MODEL;
-          alternatives = routingConfig[normalizedCategory].alternatives;
-        }
-
+        // Resolve model from openclaw.json agents.list via agentId
         const agentId = DEFAULT_CATEGORY_AGENTS[normalizedCategory];
+        const modelConfig = readAgentModel(agentId);
+        const model = modelConfig.primary;
 
         api.logger.info(`${LOG_PREFIX_DELEGATE} Category: ${normalizedCategory}, model: ${model}`);
 
@@ -86,10 +78,7 @@ export function registerDelegateTaskTool(api: OpenClawPluginApi) {
           '📋 Parameters:',
           `- Category: ${normalizedCategory}`,
           `- Agent: ${agentId}`,
-          `- Model: ${model} (recommended)`,
-          ...(alternatives && alternatives.length > 0
-            ? [`- Recommended fallback models (informational only): ${alternatives.join(', ')}`]
-            : []),
+          `- Model: ${model} (from openclaw.json agents.list)`,
           '',
           '⚠️ Do NOT just return this metadata. The CALLER must execute sessions_spawn.',
         ].filter(Boolean).join('\n');

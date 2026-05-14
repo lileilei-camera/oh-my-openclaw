@@ -3,6 +3,7 @@ import { promises as fs } from 'fs';
 import { join } from 'path';
 import { OMOC_AGENT_CONFIGS } from './agent-configs.js';
 import { PLUGIN_ROOT } from '../utils/paths.js';
+import { readAgentModel } from '../utils/agent-model.js';
 import { AGENT_MD_MAP } from './agent-ids.js';
 
 /** mtime-based file content cache (matches OpenClaw's readFileWithCache pattern) */
@@ -124,7 +125,7 @@ export function listPersonas(): Array<{
     emoji: agent.identity?.emoji ?? '',
     theme: agent.identity?.theme ?? '',
     descriptionCn: PERSONA_DESCRIPTIONS_CN[agent.id] ?? agent.identity?.theme ?? '',
-    model: getModelDisplay(agent.model),
+    model: getModelDisplay(readAgentModel(agent.id)),
   }));
 }
 

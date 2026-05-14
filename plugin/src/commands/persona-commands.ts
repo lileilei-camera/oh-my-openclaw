@@ -119,7 +119,7 @@ export function registerPersonaCommands(api: OpenClawPluginApi) {
             '|---|---------|------|------|------|',
             ...lines,
             '',
-            'Usage: `/omoc <command>` — e.g., `/omoc prometheus`',
+            'Usage: `/omoc <command>` — e.g., `/omoc delegate`',
           ].join('\n'),
         };
       }

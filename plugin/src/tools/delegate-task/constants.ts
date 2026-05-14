@@ -96,18 +96,6 @@ export const DEFAULT_CATEGORY_AGENTS: Record<string, string> = {
   writing: "omoc_coder",
 }
 
-export const DEFAULT_CATEGORY_MODELS: Record<string, string> = {
-  quick: "bailian/qwen3-coder-plus",
-  deep: "bailian/qwen3-coder-plus",
-  ultrabrain: "bailian/qwen3-max-2026-01-23",
-  "visual-engineering": "bailian/kimi-k2.5",
-  multimodal: "bailian/kimi-k2.5",
-  artistry: "bailian/qwen3-coder-plus",
-  "unspecified-low": "bailian/qwen3-coder-plus",
-  "unspecified-high": "bailian/qwen3-coder-plus",
-  writing: "bailian/qwen3-coder-plus",
-}
-
 export const CATEGORY_PROMPT_APPENDS: Record<string, string> = {
   "visual-engineering": VISUAL_CATEGORY_PROMPT_APPEND,
   ultrabrain: STRATEGIC_CATEGORY_PROMPT_APPEND,

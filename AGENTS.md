@@ -63,3 +63,15 @@ npm run typecheck    # tsc --noEmit
 3. **Wiki** — `wiki_search("query")` for verified-correct facts
 4. **AST grep** — `omoc_ast_grep_search` / `omoc_ast_grep_replace` when LSP falls short
 5. **Raw reading/grep** — last resort only
+
+## Architecture: workspaceDir 传递
+
+OpenClaw 采用多工作空间架构，每个子智能体有独立工作空间（如 `workspace-coder`），状态文件 `.omoc-state/` 按工作空间隔离。因此所有状态操作必须显式传递 `workspaceDir`，否则默认操作主工作空间，子智能体将无法感知状态变更。
+
+```typescript
+// 来源：钩子中 event.context.workspaceDir，命令中 CLI 上下文
+const workspaceDir = event.context?.workspaceDir;
+getActiveModeSync(workspaceDir);   // 读
+setActiveMode(mode, workspaceDir); // 写
+resetModeSync(workspaceDir);       // 重置
+```
