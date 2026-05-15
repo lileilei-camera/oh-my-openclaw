@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Session Log Viewer</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- 左侧栏 -->
+  <aside id="sidebar">
+    <div class="sidebar-header">
+      <h2>📋 会话日志</h2>
+    </div>
+
+    <!-- Agent 选择器 -->
+    <div class="section">
+      <div class="section-title">Agent</div>
+      <div class="agent-list" id="agentList">
+        <div class="loading-text">加载中...</div>
+      </div>
+    </div>
+
+    <!-- 会话列表 -->
+    <div class="section session-section">
+      <div class="section-title">会话</div>
+      <div class="session-list" id="sessionList">
+        <div class="empty-text">选择 Agent 后显示</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 主聊天区域 -->
+  <main id="main">
+    <!-- 未选择会话时的空状态 -->
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">📋</div>
+      <h3>Session Log Viewer</h3>
+      <p>左侧选择 Agent 和会话，这里将显示会话日志</p>
+    </div>
+
+    <!-- 聊天头部 -->
+    <div class="chat-header hidden" id="chatHeader">
+      <div class="chat-header-info">
+        <span class="agent-badge" id="headerAgent">main</span>
+        <span class="channel-badge" id="headerChannel">webchat</span>
+        <span class="session-id" id="headerSessionId">---</span>
+      </div>
+      <div class="chat-header-meta">
+        <span class="live-indicator hidden" id="liveIndicator">● Live</span>
+        <span class="msg-count" id="headerMsgCount">0 条消息</span>
+        <span class="time-range" id="headerTimeRange"></span>
+      </div>
+    </div>
+
+    <!-- 过滤栏 -->
+    <div class="filter-bar hidden" id="filterBar">
+      <div class="filter-toggles">
+        <label class="filter-toggle active" data-type="text">
+          <span class="toggle-icon">💬</span> 回复
+        </label>
+        <label class="filter-toggle active" data-type="thinking">
+          <span class="toggle-icon">🤔</span> 思考
+        </label>
+        <label class="filter-toggle active" data-type="toolCall">
+          <span class="toggle-icon">🛠️</span> 工具调用
+        </label>
+      </div>
+      <div class="filter-options">
+        <label class="option-toggle">
+          <input type="checkbox" id="liveMode" checked> Live 模式
+        </label>
+        <label class="option-toggle">
+          <input type="checkbox" id="shortMode"> Short 模式
+        </label>
+      </div>
+    </div>
+
+    <!-- 消息列表 -->
+    <div class="message-list" id="messageList"></div>
+  </main>
+
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>

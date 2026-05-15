@@ -18,6 +18,7 @@ import {
 } from './model-presets.js';
 import { CORE_MCP_SERVERS, OPTIONAL_MCP_SERVERS, runMcporterSetup } from './mcporter-setup.js';
 import { PLANNER_DENY } from '../constants.js';
+import { startViewer, stopViewer, restartViewer } from '../services/session-viewer/manager.js';
 
 type AgentsSection = {
   defaults?: Record<string, unknown>;
@@ -739,18 +740,45 @@ export function registerSetupCli(ctx: {
 }): void {
   ctx.program
     .command('omoc-setup')
-    .description('Inject OmOC agent definitions into your OpenClaw config')
+    .description('Oh-My-OpenClaw \u4e00\u7ad9\u5f0f\u914d\u7f6e\u5de5\u5177\u3002\n' +
+      '\u65e0\u53c2\u6570\u65f6\u8fdb\u5165\u4ea4\u4e92\u5f0f 4 \u6b65\u5411\u5bfc\u3002\n' +
+      '\n' +
+      'Examples:\n' +
+      '  openclaw omoc-setup                              # Interactive setup\n' +
+      '  openclaw omoc-setup --provider anthropic         # Silent install\n' +
+      '  openclaw omoc-setup --dry-run                    # Preview changes\n' +
+      '  openclaw omoc-setup --start_log                  # Start session viewer')
     .option('--force', 'Overwrite existing OmOC agent configs', false)
     .option('--dry-run', 'Preview changes without writing', false)
     .option('--config <path>', 'Path to OpenClaw config file')
-    .option('--provider <name>', 'AI provider preset: anthropic, openai, google (skips interactive)')
+    .option('--provider <name>', 'AI provider preset (skips interactive). Valid: anthropic, openai, google, bailian, custom')
+    .option('--start_log', 'Start session log viewer on 127.0.0.1 (default port 8765)', false)
+    .option('--stop_log', 'Stop session log viewer', false)
+    .option('--restart_log', 'Restart session log viewer', false)
     .action(async (...args: unknown[]) => {
       const opts = (args[0] ?? {}) as {
         force?: boolean;
         dryRun?: boolean;
         config?: string;
         provider?: string;
+        start_log?: boolean;
+        stop_log?: boolean;
+        restart_log?: boolean;
       };
+
+      // Handle session log viewer commands (no config interaction)
+      if (opts.start_log) {
+        await startViewer(ctx.logger);
+        return;
+      }
+      if (opts.stop_log) {
+        stopViewer(ctx.logger);
+        return;
+      }
+      if (opts.restart_log) {
+        await restartViewer(ctx.logger);
+        return;
+      }
       try {
         let provider = opts.provider;
 
