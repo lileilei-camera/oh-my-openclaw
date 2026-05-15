@@ -741,10 +741,11 @@ export function registerSetupCli(ctx: {
   ctx.program
     .command('omoc-setup')
     .description('Oh-My-OpenClaw \u4e00\u7ad9\u5f0f\u914d\u7f6e\u5de5\u5177\u3002\n' +
-      '\u65e0\u53c2\u6570\u65f6\u8fdb\u5165\u4ea4\u4e92\u5f0f 4 \u6b65\u5411\u5bfc\u3002\n' +
+      '\u4f7f\u7528 --interactive \u8fdb\u5165 4 \u6b65\u5411\u5bfc\uff0c\u65e0\u53c2\u6570\u65f6\u663e\u793a\u5e2e\u52a9\u3002\n' +
       '\n' +
       'Examples:\n' +
-      '  openclaw omoc-setup                              # Interactive setup\n' +
+      '  openclaw omoc-setup                              # Show help\n' +
+      '  openclaw omoc-setup --interactive                # Interactive wizard\n' +
       '  openclaw omoc-setup --provider anthropic         # Silent install\n' +
       '  openclaw omoc-setup --dry-run                    # Preview changes\n' +
       '  openclaw omoc-setup --start_log                  # Start session viewer')
@@ -752,6 +753,7 @@ export function registerSetupCli(ctx: {
     .option('--dry-run', 'Preview changes without writing', false)
     .option('--config <path>', 'Path to OpenClaw config file')
     .option('--provider <name>', 'AI provider preset (skips interactive). Valid: anthropic, openai, google, bailian, custom')
+    .option('--interactive', 'Enter interactive 4-step wizard', false)
     .option('--start_log', 'Start session log viewer on 127.0.0.1 (default port 8765)', false)
     .option('--stop_log', 'Stop session log viewer', false)
     .option('--restart_log', 'Restart session log viewer', false)
@@ -761,6 +763,7 @@ export function registerSetupCli(ctx: {
         dryRun?: boolean;
         config?: string;
         provider?: string;
+        interactive?: boolean;
         start_log?: boolean;
         stop_log?: boolean;
         restart_log?: boolean;
@@ -779,6 +782,35 @@ export function registerSetupCli(ctx: {
         await restartViewer(ctx.logger);
         return;
       }
+
+      // Show help if no actionable flags given
+      if (!opts.provider && !opts.interactive && !opts.force && !opts.dryRun) {
+        ctx.logger.info([
+          '',
+          'Oh-My-OpenClaw \u4e00\u7ad9\u5f0f\u914d\u7f6e\u5de5\u5177\u3002',
+          '\u4f7f\u7528 --interactive \u8fdb\u5165 4 \u6b65\u5411\u5bfc\uff0c\u65e0\u53c2\u6570\u65f6\u663e\u793a\u5e2e\u52a9\u3002',
+          '',
+          'Usage: openclaw omoc-setup [options]',
+          '',
+          'Options:',
+          '  --config <path>      Path to OpenClaw config file',
+          '  --provider <name>    AI provider preset (Valid: anthropic, openai, google, bailian, custom)',
+          '  --interactive        Enter interactive 4-step wizard',
+          '  --force              Overwrite existing OmOC agent configs',
+          '  --dry-run            Preview changes without writing',
+          '  --start_log          Start session log viewer on 127.0.0.1:8765',
+          '  --stop_log           Stop session log viewer',
+          '  --restart_log        Restart session log viewer',
+          '',
+          'Examples:',
+          '  openclaw omoc-setup                              # Show this help',
+          '  openclaw omoc-setup --interactive                # Interactive wizard',
+          '  openclaw omoc-setup --provider anthropic         # Silent install',
+          '  openclaw omoc-setup --dry-run                    # Preview changes',
+          '  openclaw omoc-setup --start_log                  # Start session viewer',
+        ].join('\n'));
+        return;
+      }
       try {
         let provider = opts.provider;
 
@@ -794,7 +826,7 @@ export function registerSetupCli(ctx: {
         let enableWebhookBridge: boolean | undefined;
         let webhookHooksToken: string | undefined;
 
-        if (!provider && process.stdin.isTTY) {
+        if (opts.interactive) {
           const result = await runInteractiveSetup(ctx.logger);
           if (!result.provider) return;
           provider = result.provider;
