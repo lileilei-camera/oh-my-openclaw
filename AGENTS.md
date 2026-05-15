@@ -30,21 +30,27 @@ npm run typecheck    # tsc --noEmit
 
 | Layer | Agents | Purpose |
 |-------|--------|---------|
-| **Planning** | Prometheus, Metis, Momus | Interview user, create/validate plans |
-| **Orchestration** | Atlas | Distribute tasks, verify completion |
-| **Workers** | Sisyphus-Junior, Hephaestus, Oracle, Explore, Librarian, Multimodal Looker, Frontend | Execute tasks |
+| **Planning** | Planner, Advisor, Reviewer | Create plans, analyze gaps, review |
+| **Orchestration** | Delegate | Distribute tasks, verify completion |
+| **Workers** | Coder, Expert, Architect, Explorer, Researcher, Looker, Frontend | Execute tasks, search, analyze, design |
+
+All 11 personas listed in AGENTS.md. Each has a dedicated persona prompt in `plugin/agents/`.
+
+### Model Configuration
+
+Agent models are configured in `openclaw.json` → `agents.list`. The plugin resolves models at runtime via `readAgentModel(agentId)` — no local model config file needed. `config/categories.json` no longer contains model fields. See `plugin/src/utils/agent-model.ts`.
 
 ### Category Routing
 
-`config/categories.json` maps intent → model. Key: `quick`=qwen3-coder-next, `deep`=qwen3-coder-plus, `ultrabrain`=qwen3-max, `visual-engineering`=qwen3.5-plus.
+`config/categories.json` maps intent → agent. The delegate-task tool resolves category → agentId → model from openclaw.json.
 
 ### Key God Nodes (knowledge graph)
 
 1. `register()` — entry point, wires 10+ hooks, 20+ tools, 13+ commands
-2. `SkillMcpManager` — cross-community bridge (Communities 0,1,7,11)
-3. `toolResponse()` / `toolError()` — tool result handling
-4. `LSPClient` — bridges LSP to Communities 6 and 9
-5. `getPluginConfig()` — config access across 18 edges
+2. `readAgentModel()` — reads agent models from openclaw.json agents.list
+3. `OMOC_AGENT_CONFIGS` — canonical agent definitions (model-free)
+4. `toolResponse()` / `toolError()` — tool result handling
+5. `LSPClient` — bridges LSP to Communities 6 and 9
 
 ### Conventions
 
@@ -52,7 +58,7 @@ npm run typecheck    # tsc --noEmit
 - **All hooks** register via `register*Hook(api)` — increments `hookCount`
 - **Async skill discovery** runs after sync registrations — `SkillMcpTool` and `SkillTool` depend on it
 - **Config** lives in `config/categories.json` — never hardcoded
-- **Tool restrictions** in `categories.json` → `tool_restrictions`: `oracle/librarian/explore/metis/momus` deny write/edit/spawn; `multimodal-looker` allow only `read,image,group:ui,exec`
+- **Tool restrictions** in `categories.json` → `tool_restrictions`: read-only agents deny write/edit/spawn; `multimodal-looker` allow only `read,image,group:ui,exec`
 
 ## Code Analysis Workflow
 

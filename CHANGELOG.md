@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.21.4] - 2026-05-14
+
+### Changed
+- **统一模型配置**: 插件不再维护独立模型配置文件（`agent-models.json`、`categories.json` 中的 model 字段），所有 agent 模型从 `openclaw.json` → `agents.list` 实时读取
+- `readAgentModel(agentId)` 新增工具函数，从 openclaw.json 解析 agent 模型，未配置则回退到 `agents.defaults.model`
+- `OMOC_AGENT_CONFIGS` 不再包含 `model` 字段，sessions_spawn 时由 OpenClaw 自动根据 agent.list 解析
+- delegate-task 移除 `model_routing` / `alternatives` / `DEFAULT_MODEL`，改为通过 `DEFAULT_CATEGORY_AGENTS` → `readAgentModel()` 获取模型
+- `/omoc person list` 模型列从 openclaw.json 实时读取，不再显示"未配置"
+
+### Removed
+- `plugin/config/agent-models.json` — 模型配置统一到 openclaw.json
+- `delegate-task/constants.ts` 中的 `DEFAULT_CATEGORY_MODELS`
+- `config/categories.json` 中所有 category 的 `model` 和 `alternatives` 字段
+
+### Fixed
+- **workspaceDir 传递**: `resetModeSync()` 调用时未传 `workspaceDir` 导致 start-work 模式写入错误工作空间
+- **mode-switch**: 钩子中 `workspaceDir` 从 `event.context.workspaceDir` 获取，读写操作配对传参
+- **persona list**: `/omoc person list` 用法提示 `prometheus` → `delegate`（希腊神话名→功能名）
+- **models**: 所有 coder/omoc agent 切换到 `deepseek-art/deepseek-v4-pro`，omoc_looker/frontend 保持 kimi-k2.5
+
 ## [0.13.2] - 2026-02-25
 
 ### Changed
