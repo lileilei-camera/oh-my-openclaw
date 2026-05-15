@@ -9,7 +9,7 @@
     "oh-my-openclaw": "bin/oh-my-openclaw.mjs"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && mkdir -p dist/services/session-viewer && cp src/services/session-viewer/server.mjs dist/services/session-viewer/ && cp -r src/services/session-viewer/static dist/services/session-viewer/",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest",
