@@ -59,12 +59,16 @@ export function registerProjectBootstrap(api: OpenClawPluginApi) {
       const project = getActiveProject(workspaceDir);
       if (!project) return;
 
-      const parts: string[] = [];
-
-      // Read each agent.md in order
-      const injectedPaths: string[] = [];
+      // Resolve all agent.md full paths first
+      const resolvedPaths: { relPath: string; fullPath: string }[] = [];
       for (const agentMd of project.agentMds) {
         const fullPath = resolve(project.path, agentMd);
+        resolvedPaths.push({ relPath: agentMd, fullPath });
+      }
+
+      // Read each agent.md and collect content
+      const fileContents: { fullPath: string; content: string; frontmatter?: { name: string; description: string } }[] = [];
+      for (const { fullPath } of resolvedPaths) {
         if (!existsSync(fullPath)) {
           api.logger.warn(`[omoc:project-init] agent.md not found: ${fullPath}`);
           continue;
@@ -74,7 +78,7 @@ export function registerProjectBootstrap(api: OpenClawPluginApi) {
           const content = readFileSync(fullPath, 'utf-8');
 
           // Try to extract YAML frontmatter for metadata display
-          let header = `--- Project: ${project.name} | File: ${agentMd} ---`;
+          let frontmatter: { name: string; description: string } | undefined;
           const fmMatch = content.match(/^---\n([\s\S]*?)\n---\n/);
           if (fmMatch) {
             const fmLines = fmMatch[1].split('\n');
@@ -83,26 +87,53 @@ export function registerProjectBootstrap(api: OpenClawPluginApi) {
               const kv = line.match(/^(\w+):\s*(.+)$/);
               if (kv) meta[kv[1].trim()] = kv[2].trim();
             }
-            const name = meta.name || agentMd;
-            const desc = meta.description || '';
-            header = `--- Skill: ${name} | ${desc} | File: ${agentMd} ---`;
-            api.logger.info(`[omoc:project-init] Parsed frontmatter: name="${name}", desc="${desc}"`);
+            if (meta.name || meta.description) {
+              frontmatter = { name: meta.name || '', description: meta.description || '' };
+              api.logger.info(`[omoc:project-init] Parsed frontmatter: name="${frontmatter.name}", desc="${frontmatter.description}"`);
+            }
           }
 
-          parts.push(`\n${header}\n${content}`);
-          injectedPaths.push(fullPath);
+          fileContents.push({ fullPath, content, frontmatter });
+          api.logger.info(`[omoc:project-init] Read agent.md: ${fullPath}`);
         } catch (err) {
           api.logger.error(`[omoc:project-init] Failed to read ${fullPath}:`, err);
         }
       }
 
-      if (parts.length > 0) {
-        api.logger.info(
-          `[omoc:project-init] Injected ${parts.length} agent.md file(s) for project: ${project.name}: ${injectedPaths.join(', ')}`
-        );
-        return { prependContext: parts.join('\n') };
+      if (fileContents.length === 0) return;
+
+      const parts: string[] = [];
+
+      // --- Project info header block ---
+      const mdPathsStr = resolvedPaths.map((p) => `  - ${p.fullPath}`).join('\n');
+      const projectInfo = [
+        `## Active Project: ${project.name}`,
+        ``,
+        `正在此项目下工作：`,
+        `- 项目名称：${project.name}`,
+        `- 项目路径：${project.path}`,
+        `- Agent 配置目录（AGENTS.md 文件）：`,
+        mdPathsStr,
+      ].join('\n');
+      parts.push(projectInfo);
+
+      // Inject each agent.md with full path header
+      for (const { fullPath, content, frontmatter } of fileContents) {
+        let header: string;
+        if (frontmatter && frontmatter.name) {
+          const desc = frontmatter.description || '';
+          header = `--- Skill: ${frontmatter.name} | ${desc} | File: ${fullPath} ---`;
+        } else {
+          header = `--- Project: ${project.name} | File: ${fullPath} ---`;
+        }
+        parts.push(`\n${header}\n${content}`);
       }
+
+      api.logger.info(
+        `[omoc:project-init] Injected ${fileContents.length} agent.md file(s) + project header for project: ${project.name}`
+      );
+      return { prependContext: parts.join('\n') };
     },
-    { priority: 75 },
+    { priority: 74 },  // Just below mode-switch (75) to avoid prependContext conflict
   );
 }
