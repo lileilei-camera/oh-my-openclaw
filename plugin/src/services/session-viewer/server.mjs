@@ -49,6 +49,8 @@ function parseJsonlLine(line) {
     }
 }
 function shouldDisplay(entry) {
+    if (entry.type === 'custom_message')
+        return true;
     if (entry.type !== 'message')
         return false;
     const message = entry.message || entry;
@@ -112,62 +114,114 @@ function parseContentItem(item, short) {
             result: null,
         };
     }
+    if (ctype === 'custom_message') {
+        const text = item.text || '';
+        return {
+            type: 'custom_message',
+            customType: item.customType || '',
+            text,
+            is_long: text.length > 500,
+            truncated_preview: short ? truncate(text, 500) : text,
+        };
+    }
     return { type: ctype };
 }
-// ── parse_session_messages（1:1 复刻 Python 版）────────────
+// ── parse_session_messages ─────────────────────────────────
+// Two-pass: first pass builds toolResult map, second pass builds messages by ID.
 function parseSessionMessages(filepath, short = false) {
     if (!fs.existsSync(filepath))
         return { sessionInfo: {}, messages: [] };
+
+    // ── Pass 1: read all lines, collect toolResults ────────
+    const content = fs.readFileSync(filepath, 'utf-8');
+    const lines = content.split('\n').filter((l) => l.trim());
+
+    // Map<toolCallId, resultText>
+    const toolResults = new Map();
+    const entries = [];
+
+    for (const line of lines) {
+        const entry = parseJsonlLine(line);
+        if (!entry) continue;
+        entries.push(entry);
+
+        if (entry.type === 'message') {
+            const msg = entry.message || entry;
+            if (msg.role === 'toolResult') {
+                const tcId = msg.toolCallId || '';
+                let text = '';
+                for (const c of msg.content || []) {
+                    if (c.text) { text = c.text; break; }
+                }
+                if (tcId) toolResults.set(tcId, text);
+            }
+        }
+    }
+
+    // ── Pass 2: build messages, match results by toolCallId ─
     const messages = [];
     const sessionInfo = {};
     let msgIndex = 0;
-    let pendingToolResult = null;
-    const content = fs.readFileSync(filepath, 'utf-8');
-    const lines = content.split('\n').filter((l) => l.trim());
-    for (const line of lines) {
-        const entry = parseJsonlLine(line);
-        if (!entry)
-            continue;
+
+    for (const entry of entries) {
         // 首个 session 条目记录元信息
         if (entry.type === 'session' && Object.keys(sessionInfo).length === 0) {
             sessionInfo.sessionId = entry.id || '';
             sessionInfo.timestamp = entry.timestamp || '';
             sessionInfo.cwd = entry.cwd || '';
-        }
-        // 缓存 toolResult
-        if (isToolResult(entry)) {
-            pendingToolResult = extractToolResultText(entry);
             continue;
         }
-        // 跳过不可显示的消息
-        if (!shouldDisplay(entry)) {
-            pendingToolResult = null;
+
+        // custom_message — 作为系统消息输出
+        if (entry.type === 'custom_message') {
+            msgIndex++;
+            messages.push({
+                index: msgIndex,
+                timestamp: formatTimestamp(entry.timestamp),
+                role: 'custom_message',
+                model: '',
+                stopReason: '',
+                content: [{
+                    type: 'custom_message',
+                    customType: entry.customType || '',
+                    text: entry.content || '',
+                    display: entry.display || false,
+                }],
+            });
             continue;
         }
-        msgIndex++;
+
+        if (entry.type !== 'message') continue;
+
         const message = entry.message || entry;
+        if (message.role === 'toolResult') continue;  // already consumed in pass 1
+
         const role = message.role || 'unknown';
         let model = (message.model || entry.model) || 'openclaw';
-        if (model === 'unknown')
-            model = 'openclaw';
+        if (model === 'unknown') model = 'openclaw';
         const stopReason = message.stopReason || '';
+
         const contentList = [];
         const rawContent = message.content || [];
         for (const item of rawContent) {
             const parsed = parseContentItem(item, short);
-            // toolCall + pending result
-            if (parsed.type === 'toolCall' && pendingToolResult) {
-                parsed.result = pendingToolResult;
-                parsed.result_is_long = pendingToolResult.length > 500;
-                parsed.result_truncated = short ? truncate(pendingToolResult, 500) : pendingToolResult;
-                pendingToolResult = null;
+            // Match toolCall result by id from pass 1 map
+            if (parsed.type === 'toolCall') {
+                const tcId = item.id || '';
+                const resultText = toolResults.get(tcId);
+                if (resultText != null) {
+                    parsed.result = resultText;
+                    parsed.result_is_long = resultText.length > 500;
+                    parsed.result_truncated = short ? truncate(resultText, 500) : resultText;
+                }
             }
             if (INTERESTING_TYPES.has(parsed.type)) {
                 contentList.push(parsed);
             }
         }
-        pendingToolResult = null;
+
         if (contentList.length > 0) {
+            msgIndex++;
             messages.push({
                 index: msgIndex,
                 timestamp: formatTimestamp(entry.timestamp),
@@ -178,6 +232,7 @@ function parseSessionMessages(filepath, short = false) {
             });
         }
     }
+
     return { sessionInfo, messages };
 }
 // ── get_agents（1:1 复刻 Python 版）────────────────────────
@@ -273,8 +328,30 @@ function handleStream(req, res, filepath, short) {
         // ignore
     }
     res.write(`event: init\ndata: ${JSON.stringify({ from_index: msgIndex })}\n\n`);
-    // tail -f 模式
-    let pendingToolResult = null;
+    // tail -f 模式 — 按 toolCallId 精确匹配结果，缓存至结果齐全再发送
+    const resultsMap = new Map(); // toolCallId → resultText
+    let cachedMsg = null; // { msgData, toolCallIds: Set } — 结果未齐的消息
+
+    const flushCached = () => {
+        if (!cachedMsg) return;
+        const { msgData, toolCallIds } = cachedMsg;
+        for (const item of msgData.content) {
+            if (item.type === 'toolCall') {
+                const result = resultsMap.get(item.id);
+                if (result != null) {
+                    item.result = result;
+                    item.result_is_long = result.length > 500;
+                    item.result_truncated = short ? truncate(result, 500) : result;
+                }
+            }
+        }
+        msgIndex++;
+        msgData.index = msgIndex;
+        res.write(`event: message\ndata: ${JSON.stringify(msgData)}\n\n`);
+        for (const id of toolCallIds) resultsMap.delete(id);
+        cachedMsg = null;
+    };
+
     let fileSize = fs.statSync(filepath).size;
     let stopped = false;
     const poll = () => {
@@ -295,49 +372,108 @@ function handleStream(req, res, filepath, short) {
                 const lines = buf.toString('utf-8').split('\n').filter((l) => l.trim());
                 for (const line of lines) {
                     const entry = parseJsonlLine(line);
-                    if (!entry)
-                        continue;
-                    // 缓存 toolResult
-                    if (isToolResult(entry)) {
-                        pendingToolResult = extractToolResultText(entry);
+                    if (!entry) continue;
+
+                    // toolResult — 存入 resultsMap，检查是否可 flush
+                    if (entry.type === 'message') {
+                        const md = entry.message || entry;
+                        if (md.role === 'toolResult') {
+                            const tcId = md.toolCallId || '';
+                            let text = '';
+                            for (const c of md.content || []) {
+                                if (c.text) { text = c.text; break; }
+                            }
+                            if (tcId) resultsMap.set(tcId, text);
+                            // 如果有缓存消息且全部结果就绪，flush
+                            if (cachedMsg) {
+                                const allReady = [...cachedMsg.toolCallIds].every((id) => resultsMap.has(id));
+                                if (allReady) flushCached();
+                            }
+                            continue;
+                        }
+                    }
+
+                    // custom_message — 直接发送
+                    if (entry.type === 'custom_message') {
+                        msgIndex++;
+                        const msg = {
+                            index: msgIndex,
+                            timestamp: formatTimestamp(entry.timestamp),
+                            role: 'custom_message',
+                            model: '',
+                            stopReason: '',
+                            content: [{
+                                type: 'custom_message',
+                                customType: entry.customType || '',
+                                text: entry.content || '',
+                                display: entry.display || false,
+                            }],
+                        };
+                        res.write(`event: message\ndata: ${JSON.stringify(msg)}\n\n`);
                         continue;
                     }
-                    if (!shouldDisplay(entry)) {
-                        pendingToolResult = null;
-                        continue;
-                    }
+
+                    if (!shouldDisplay(entry)) continue;
+
                     const message = entry.message || entry;
                     const role = message.role || 'unknown';
                     let model = (message.model || entry.model) || 'openclaw';
-                    if (model === 'unknown')
-                        model = 'openclaw';
+                    if (model === 'unknown') model = 'openclaw';
                     const stopReason = message.stopReason || '';
+
                     const contentList = [];
                     const rawContent = message.content || [];
+                    // 收集 toolCall ids
+                    const toolCallIds = new Set();
+                    let hasToolCall = false;
+
                     for (const item of rawContent) {
                         const parsed = parseContentItem(item, short);
-                        if (parsed.type === 'toolCall' && pendingToolResult) {
-                            parsed.result = pendingToolResult;
-                            parsed.result_is_long = pendingToolResult.length > 500;
-                            parsed.result_truncated = short ? truncate(pendingToolResult, 500) : pendingToolResult;
-                            pendingToolResult = null;
+                        if (parsed.type === 'toolCall') {
+                            hasToolCall = true;
+                            parsed.id = item.id || '';
+                            toolCallIds.add(parsed.id);
+                            const result = resultsMap.get(parsed.id);
+                            if (result != null) {
+                                parsed.result = result;
+                                parsed.result_is_long = result.length > 500;
+                                parsed.result_truncated = short ? truncate(result, 500) : result;
+                            }
                         }
                         if (INTERESTING_TYPES.has(parsed.type)) {
                             contentList.push(parsed);
                         }
                     }
-                    pendingToolResult = null;
-                    if (contentList.length > 0) {
+
+                    if (contentList.length === 0) continue;
+
+                    const msgData = {
+                        timestamp: formatTimestamp(entry.timestamp),
+                        role,
+                        model,
+                        stopReason,
+                        content: contentList,
+                    };
+
+                    if (hasToolCall) {
+                        // 检查全部结果是否已就绪
+                        const allReady = [...toolCallIds].every((id) => resultsMap.has(id));
+                        if (allReady) {
+                            msgIndex++;
+                            msgData.index = msgIndex;
+                            res.write(`event: message\ndata: ${JSON.stringify(msgData)}\n\n`);
+                            for (const id of toolCallIds) resultsMap.delete(id);
+                        } else {
+                            // 缓存消息，等结果到齐后再发送
+                            flushCached(); // 先 flush 旧的（如果有）
+                            cachedMsg = { msgData, toolCallIds };
+                        }
+                    } else {
+                        // 无 toolCall，先 flush 缓存再发送当前消息
+                        flushCached();
                         msgIndex++;
-                        const msg = {
-                            index: msgIndex,
-                            timestamp: formatTimestamp(entry.timestamp),
-                            role,
-                            model,
-                            stopReason,
-                            content: contentList,
-                        };
-                        res.write(`event: message\ndata: ${JSON.stringify(msg)}\n\n`);
+                        msgData.index = msgIndex;
+                        res.write(`event: message\ndata: ${JSON.stringify(msgData)}\n\n`);
                     }
                 }
                 fileSize = stats.size;
@@ -347,7 +483,8 @@ function handleStream(req, res, filepath, short) {
                 res.write('event: truncated\ndata: {}\n\n');
                 fileSize = 0;
                 msgIndex = 0;
-                pendingToolResult = null;
+                resultsMap.clear();
+                cachedMsg = null;
             }
             setTimeout(poll, 1000);
         }
