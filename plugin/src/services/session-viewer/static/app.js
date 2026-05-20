@@ -15,7 +15,7 @@ const state = {
   messages: [],
   activeAgent: null,
   activeSession: null,
-  filters: { text: true, thinking: true, toolCall: true },
+  filters: { text: true, thinking: true, toolCall: true, custom_message: true },
   shortMode: false,
   eventSource: null,  // SSE 连接
   liveMode: true,     // 默认开启 Live 模式
