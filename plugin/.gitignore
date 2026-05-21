@@ -1,0 +1,9 @@
+# Prevent OpenClaw workspace bootstrap files from appearing in plugin directory
+AGENTS.md
+BOOTSTRAP.md
+HEARTBEAT.md
+IDENTITY.md
+SOUL.md
+TOOLS.md
+USER.md
+.openclaw/
