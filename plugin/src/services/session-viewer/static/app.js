@@ -15,7 +15,7 @@ const state = {
   messages: [],
   activeAgent: null,
   activeSession: null,
-  filters: { text: true, thinking: true, toolCall: true },
+  filters: { text: true, thinking: true, toolCall: true, custom_message: true },
   shortMode: false,
   eventSource: null,  // SSE 连接
   liveMode: true,     // 默认开启 Live 模式
@@ -399,6 +399,7 @@ function appendMessage(msg) {
       case 'text': html += renderTextBubble(msg, item); break;
       case 'thinking': html += renderThinkingBubble(msg, item); break;
       case 'toolCall': html += renderToolCallBubble(msg, item); break;
+      case 'custom_message': html += renderCustomMessage(msg, item); break;
     }
   }
 
@@ -491,6 +492,9 @@ function renderMessages() {
         case 'toolCall':
           html += renderToolCallBubble(msg, item);
           break;
+        case 'custom_message':
+          html += renderCustomMessage(msg, item);
+          break;
       }
     }
   }
@@ -555,6 +559,25 @@ function renderThinkingBubble(msg, item) {
         ${isCollapsible ? `<span class="thinking-full hidden">${escapeHtml(text)}</span>` : ''}
       </div>
       ${isCollapsible ? '<span class="thinking-toggle" data-action="expand-thinking">展开全部 (' + text.length + ' 字)</span>' : ''}
+    </div>`;
+}
+
+function renderCustomMessage(msg, item) {
+  const text = item.text || '';
+  const customType = item.customType || '';
+  const isLong = item.is_long || text.length > 500;
+  const displayText = state.shortMode && isLong
+    ? escapeHtml((item.truncated_preview || text).substring(0, 500))
+    : escapeHtml(text);
+
+  return `
+    <div class="bubble bubble-custom">
+      <div class="bubble-header">
+        <span class="bubble-type-label">📋 系统上下文</span>
+        <span class="bubble-meta">#${msg.index} · ${msg.timestamp} · ${escapeHtml(customType)}</span>
+      </div>
+      <div class="bubble-text-content" data-full="${isLong && state.shortMode ? escapeHtml(text) : ''}">${displayText}</div>
+      ${isLong && state.shortMode ? '<span class="thinking-toggle" data-action="expand-text">展开全文</span>' : ''}
     </div>`;
 }
 
