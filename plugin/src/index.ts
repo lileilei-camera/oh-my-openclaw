@@ -13,7 +13,6 @@ import { registerRalphLoop } from './services/ralph-loop.js';
 import { registerWebhookBridge } from './services/webhook-bridge.js';
 import { registerSubagentTracker } from './hooks/subagent-tracker.js';
 import { registerDelegateTaskTool } from './tools/delegate-task/index.js';
-import { registerBackgroundTaskTool } from './tools/background-task/index.js';
 import { registerSlashcommandTool } from './tools/slashcommand/index.js';
 import { registerOmoDelegateTool } from './tools/omo-delegation.js';
 import { registerLookAtTool } from './tools/look-at/index.js';
@@ -25,9 +24,6 @@ import { registerOmocCommands } from './commands/omoc-commands.js';
 import { registerTodoCommands } from './commands/todo-commands.js';
 import { registerContextInjector } from './hooks/context-injector.js';
 import { registerGuardrailInjector } from './hooks/guardrail-injector.js';
-// registerPersonaBootstrap removed — replaced by agent:bootstrap internal hook
-// superpowers injector removed - not useful
-// session-sync removed — AGENTS.md is no longer modified in new approach
 import { registerSpawnGuard } from './hooks/spawn-guard.js';
 import { registerModeSwitch } from './hooks/mode-switch/hook.js';
 import { registerProjectBootstrap } from './hooks/project-init/project-bootstrap.js';
@@ -35,8 +31,6 @@ import { registerTodoReminder, registerAgentEndReminder, registerSessionCleanup 
 import { registerTodoTools } from './tools/todo/index.js';
 import { registerGrepTool } from './tools/grep/index.js';
 import { registerGlobTool } from './tools/glob/index.js';
-import { registerInteractiveBashTool } from './tools/interactive-bash/index.js';
-import { registerSessionListTool, registerSessionReadTool } from './tools/session-manager/index.js';
 import {
   registerLspGotoDefinitionTool,
   registerLspFindReferencesTool,
@@ -46,11 +40,6 @@ import {
   registerLspRenameTool,
 } from './tools/lsp/index.js';
 import { registerAstGrepTools } from './tools/ast-grep/index.js';
-import { registerCallOmoAgentTool } from './tools/call-omo-agent/index.js';
-import { SkillMcpManager } from './features/skill-mcp-manager/manager.js';
-import { registerSkillMcpTool } from './tools/skill-mcp/index.js'
-import { registerSkillTool } from './tools/skill/index.js';
-import { discoverBuiltinSkills, discoverUserSkills, discoverProjectSkills, mergeSkills } from './features/skill-loader/loader.js';
 import { registerSetupCli } from './cli/setup.js';
 import { initPersonaState } from './utils/persona-state.js';
 
@@ -87,9 +76,6 @@ export default function register(api: OpenClawPluginApi) {
   registerSubagentTracker(api); hookCount++;
   registerContextInjector(api); hookCount++;
   registerGuardrailInjector(api); hookCount++;
-  // persona-bootstrap removed — replaced by agent:bootstrap internal hook
-  // registerSuperpowersInjector(api); // removed
-  // registerSessionSync removed — AGENTS.md no longer modified
   registerSpawnGuard(api); hookCount++;
   registerModeSwitch(api); hookCount++;
   registerProjectBootstrap(api); hookCount++;
@@ -98,7 +84,6 @@ export default function register(api: OpenClawPluginApi) {
 
   // Register tools
   registerDelegateTaskTool(api); toolCount++; // delegate_task tool
-  registerBackgroundTaskTool(api); toolCount += 3; // background_task, background_output, background_cancel
   registerSlashcommandTool(api); toolCount++; // slashcommand
   registerOmoDelegateTool(api); toolCount++;
   registerLookAtTool(api); toolCount++;
@@ -107,9 +92,6 @@ export default function register(api: OpenClawPluginApi) {
   registerTodoTools(api); toolCount += 4; // 4 todo tools
   registerGrepTool(api); toolCount++; // grep tool
   registerGlobTool(api); toolCount++; // glob tool
-  registerInteractiveBashTool(api); toolCount++; // interactive-bash tool
-  registerSessionListTool(api); toolCount++; // session-list tool
-  registerSessionReadTool(api); toolCount++; // session-read tool
   registerLspGotoDefinitionTool(api); toolCount++; // lsp-goto-definition tool
   registerLspFindReferencesTool(api); toolCount++; // lsp-find-references tool
   registerLspSymbolsTool(api); toolCount++; // lsp-symbols tool
@@ -117,32 +99,6 @@ export default function register(api: OpenClawPluginApi) {
   registerLspPrepareRenameTool(api); toolCount++; // lsp-prepare-rename tool
   registerLspRenameTool(api); toolCount++; // lsp-rename tool
   registerAstGrepTools(api); toolCount += 2; // ast-grep-search, ast-grep-replace tools
-  registerCallOmoAgentTool(api); toolCount++; // call-omo-agent tool
-
-  // Defer skill-dependent registrations until async discovery completes
-  ;(async () => {
-    try {
-      const loadedSkills = mergeSkills(
-        await discoverBuiltinSkills(),
-        await discoverUserSkills(),
-        await discoverProjectSkills(api.workspaceDir || process.cwd())
-      )
-      const skillMcpManager = new SkillMcpManager()
-      const getSessionID = () => `openclaw-${Date.now()}`
-      registerSkillMcpTool(api, {
-        manager: skillMcpManager,
-        getLoadedSkills: () => loadedSkills,
-        getSessionID,
-      }); toolCount++; // skill_mcp tool
-      registerSkillTool(api, {
-        mcpManager: skillMcpManager,
-        getSessionID,
-      }); toolCount++; // skill tool
-      api.logger.info(`[${PLUGIN_ID}] Skill discovery complete: ${loadedSkills.length} skills loaded`)
-    } catch (err) {
-      api.logger.error(`[${PLUGIN_ID}] Skill discovery failed:`, err)
-    }
-  })()
 
   // Register commands
   registerRalphCommands(api); commandCount += 2; // /omoc_ralph_loop, /omoc_ralph_stop
