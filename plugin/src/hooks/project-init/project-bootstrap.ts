@@ -106,6 +106,14 @@ export function registerProjectBootstrap(api: OpenClawPluginApi) {
 
       // --- Project info header block ---
       const mdPathsStr = resolvedPaths.map((p) => `  - ${p.fullPath}`).join('\n');
+      const guardPrompt = [
+        ``,
+        `### 🔒 项目路径保护`,
+        `- 始终以 **${project.path}** 为当前工作目录`,
+        `- 偶尔需切到项目外查信息时（如 cd ~/other && ls），查看后**立刻切回项目目录**`,
+        `- write/edit/exec 越界会弹窗请求授权（项目目录、工作空间、/tmp 为安全区）`,
+      ].join('\n');
+
       const projectInfo = [
         `## Active Project: ${project.name}`,
         ``,
@@ -114,6 +122,7 @@ export function registerProjectBootstrap(api: OpenClawPluginApi) {
         `- 项目路径：${project.path}`,
         `- Agent 配置目录（AGENTS.md 文件）：`,
         mdPathsStr,
+        guardPrompt,
       ].join('\n');
       parts.push(projectInfo);
 
