@@ -25,7 +25,7 @@
 import type { OpenClawPluginApi } from '../types.js';
 import { LOG_PREFIX } from '../constants.js';
 import { join, resolve, isAbsolute } from 'path';
-import { existsSync, statSync } from 'fs';
+import { existsSync, statSync, mkdirSync, writeFileSync } from 'fs';
 import * as os from 'os';
 
 // ── Persona imports ──────────────────────────────────────────────────────────
@@ -90,6 +90,19 @@ function expandPath(p: string): string {
     return p === '~' ? home : resolve(home, p.slice(2));
   }
   return isAbsolute(p) ? resolve(p) : resolve(process.cwd(), p);
+}
+
+function timestamp(): string {
+  const d = new Date();
+  const offset = -d.getTimezoneOffset();
+  const sign = offset >= 0 ? '+' : '-';
+  const eh = String(Math.floor(Math.abs(offset) / 60)).padStart(2, '0');
+  const em = String(Math.abs(offset) % 60).padStart(2, '0');
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return (
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T` +
+    `${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}${sign}${eh}${em}`
+  );
 }
 
 function personaDisplayName(personaId: string): string {
@@ -492,6 +505,27 @@ export function registerOmocCommands(api: OpenClawPluginApi) {
         return { continueAgent: true };
       }
 
+      // dump
+      if (first === 'dump') {
+        if (!workspaceDir) {
+          return { text: '⚠️ **Error**: Cannot determine workspace directory.' };
+        }
+        const dumpOutPath = rest[0]
+          ? expandPath(rest[0])
+          : join(workspaceDir, '.omoc-dumps', `llm-input-${timestamp()}.json`);
+
+        const stateDir = join(workspaceDir, '.omoc-state');
+        if (!existsSync(stateDir)) {
+          mkdirSync(stateDir, { recursive: true });
+        }
+        writeFileSync(join(stateDir, 'dump_next_turn'), dumpOutPath, 'utf-8');
+        api.logger.info(`${LOG_PREFIX} [dump] Flag set → ${dumpOutPath}`);
+        return {
+          text: `📦 本次 LLM 调用时将 dump 完整上下文（system prompt + messages + tools）到:\n\`${dumpOutPath}\``,
+          continueAgent: true,
+        };
+      }
+
       // help
       if (first === 'help' || first === 'h' || first === '-h' || first === '--help') {
         return handleHelp();
@@ -631,6 +665,8 @@ function handleHelp(): { text: string } {
       '- `/omoc list` — List registered projects\n' +
       '- `/omoc set-active <name>` — Activate a project\n' +
       '- `/omoc off` — Deactivate project context\n\n' +
+      '## Debug\n' +
+      '- `/omoc dump [path]` — Dump LLM input to file on next turn\n\n' +
       '## Other\n' +
       '- `/omoc status` — View current persona & mode\n' +
       '- `/omoc help` — Show this help\n\n' +

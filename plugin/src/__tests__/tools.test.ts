@@ -11,6 +11,7 @@ vi.mock('fs', () => ({
     access: vi.fn(),
   },
   readFileSync: vi.fn(),
+  existsSync: vi.fn(),
 }));
 
 vi.mock('child_process', () => ({
@@ -32,6 +33,7 @@ vi.mock('../utils/config.js', () => ({
 }));
 
 import { execFile } from 'child_process';
+import * as nodeFs from 'node:fs';
 import { promises as fs } from 'fs';
 import { registerDelegateTaskTool } from '../tools/delegate-task/index.js';
 import { registerLookAtTool } from '../tools/look-at/index.js';
@@ -150,7 +152,7 @@ describe('registerOmoDelegateTool', () => {
     expect(toolConfig.optional).toBe(true);
   });
 
-  it('returns ACP instruction with default opencode agent', async () => {
+  it('returns ACP instruction with default omoc_coder agent', async () => {
     registerOmoDelegateTool(mockApi);
     const toolConfig = mockApi.registerTool.mock.calls[0][0];
 
@@ -161,7 +163,7 @@ describe('registerOmoDelegateTool', () => {
     const text = result.content[0].text;
     expect(text).toContain('ACP runtime');
     expect(text).toContain('runtime: "acp"');
-    expect(text).toContain('agentId: "opencode"');
+    expect(text).toContain('harness "omoc_coder"');
     expect(text).toContain('sessions_spawn');
     expect(text).toContain('fix auth bug in login.ts');
   });
@@ -267,7 +269,7 @@ describe('registerOmoDelegateTool', () => {
     const text = result.content[0].text;
     expect(text).toContain('setSessionMode');
     expect(text).toContain('"plan"');
-    expect(text).toContain('switch OpenCode agent mode');
+    expect(text).toContain('switch agent mode to');
   });
 
   it('does not include mode switching when opencode_agent is not provided', async () => {
@@ -310,6 +312,7 @@ describe('registerLookAtTool', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockApi = createMockApiAny();
+    vi.mocked(nodeFs.existsSync).mockReturnValue(true);
   });
 
   it("registers with name 'omoc_look_at' and optional=true", () => {
@@ -321,7 +324,7 @@ describe('registerLookAtTool', () => {
     expect(toolConfig.optional).toBe(true);
   });
 
-  it('calls execFile with correct arguments', async () => {
+  it('calls execFile with openclaw summarize and correct arguments', async () => {
     mockedExecFile.mockImplementation((_cmd: string, _args: string[], _opts: any, cb: Function) => {
       cb(null, 'Analysis result text', '');
     });
@@ -332,35 +335,36 @@ describe('registerLookAtTool', () => {
     const result = await toolConfig.execute('test-call-id', {
       file_path: '/path/to/image.png',
       goal: 'describe this image',
-      model: 'gemini-2.5-pro',
     });
 
     expect(mockedExecFile).toHaveBeenCalledOnce();
     const [cmd, args, opts] = mockedExecFile.mock.calls[0];
-    expect(cmd).toBe('gemini');
-    expect(args).toEqual(['-m', 'gemini-2.5-pro', '--prompt', 'describe this image', '-f', '/path/to/image.png', '-o', 'text']);
-    expect(opts).toMatchObject({ timeout: 60_000, maxBuffer: 10 * 1024 * 1024 });
-    expect(result.content[0].text).toBe('Analysis result text');
+    expect(cmd).toBe('openclaw');
+    expect(args).toEqual(['summarize', '/path/to/image.png']);
+    expect(opts).toMatchObject({ timeout: 60_000, maxBuffer: 20 * 1024 * 1024 });
+    expect(result.content[0].text).toContain('Analysis result text');
   });
 
-  it('uses default model gemini-3-flash-preview when model is not provided', async () => {
+  it('returns built-in tool guidance when summarize CLI has non-zero exit', async () => {
     mockedExecFile.mockImplementation((_cmd: string, _args: string[], _opts: any, cb: Function) => {
-      cb(null, 'output', '');
+      const error = new Error('exit 1') as any;
+      error.code = 1;
+      cb(error, '', 'CLI not available');
     });
 
     registerLookAtTool(mockApi);
     const toolConfig = mockApi.registerTool.mock.calls[0][0];
 
-    await toolConfig.execute('test-call-id', {
-      file_path: '/test.pdf',
+    const result = await toolConfig.execute('test-call-id', {
+      file_path: '/some/file.pdf',
       goal: 'analyze',
     });
 
-    const [, args] = mockedExecFile.mock.calls[0];
-    expect(args[1]).toBe('gemini-3-flash-preview');
+    expect(result.content[0].text).toContain('File Analysis Request');
+    expect(result.content[0].text).toContain('OpenClaw');
   });
 
-  it('returns toolError when CLI times out (error.killed === true)', async () => {
+  it('returns built-in tool guidance when summarize CLI times out', async () => {
     mockedExecFile.mockImplementation((_cmd: string, _args: string[], _opts: any, cb: Function) => {
       const error = new Error('process killed') as any;
       error.killed = true;
@@ -375,32 +379,10 @@ describe('registerLookAtTool', () => {
       goal: 'summarize',
     });
 
-    expect(result.content[0].text).toContain('Error');
-    expect(result.content[0].text).toContain('timed out after 60 seconds');
+    expect(result.content[0].text).toContain('File Analysis Request');
   });
 
-  it('returns toolError with stderr detail on non-zero exit', async () => {
-    mockedExecFile.mockImplementation((_cmd: string, _args: string[], _opts: any, cb: Function) => {
-      const error = new Error('exit 1') as any;
-      error.killed = false;
-      error.code = 1;
-      cb(error, '', 'model not found');
-    });
-
-    registerLookAtTool(mockApi);
-    const toolConfig = mockApi.registerTool.mock.calls[0][0];
-
-    const result = await toolConfig.execute('test-call-id', {
-      file_path: '/some/file.pdf',
-      goal: 'analyze',
-    });
-
-    expect(result.content[0].text).toContain('Error');
-    expect(result.content[0].text).toContain('Gemini CLI failed (exit 1)');
-    expect(result.content[0].text).toContain('model not found');
-  });
-
-  it('returns fallback message for empty stdout', async () => {
+  it('returns built-in tool guidance for empty summarize output', async () => {
     mockedExecFile.mockImplementation((_cmd: string, _args: string[], _opts: any, cb: Function) => {
       cb(null, '   ', '');
     });
@@ -413,7 +395,7 @@ describe('registerLookAtTool', () => {
       goal: 'describe',
     });
 
-    expect(result.content[0].text).toBe('(empty response from Gemini CLI)');
+    expect(result.content[0].text).toContain('File Analysis Request');
   });
 
   it('parameters schema has required file_path and goal fields', () => {

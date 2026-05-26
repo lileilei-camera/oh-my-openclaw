@@ -19,7 +19,7 @@ describe('mode-switch', () => {
 
     it('returns message for valid mode', () => {
       const msg = getModeMessage('search');
-      expect(msg).toContain('[search-mode]');
+      expect(msg).toContain('MODE: SEARCH');
     });
 
     it('returns empty string for invalid mode', () => {

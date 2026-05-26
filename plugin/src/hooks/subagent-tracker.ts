@@ -1,26 +1,17 @@
-import type { OpenClawPluginApi, PluginHookSubagentEndedEvent } from '../types.js';
+import type {
+  OpenClawPluginApi,
+  PluginHookSubagentEndedEvent,
+  PluginHookToolResultPersistEvent,
+  PluginHookToolResultPersistContext,
+  PluginHookMessageReceivedEvent,
+  PluginHookMessageContext,
+} from '../types.js';
 import { LOG_PREFIX } from '../constants.js';
 import { trackSubagentSpawn, clearSubagentTracking, getCallerSessionKey, getTrackedSubagents } from '../services/webhook-bridge.js';
 import { callHooksWake } from '../utils/webhook-client.js';
 import { getPluginConfig } from '../types.js';
 
 const SPAWN_TOOL_NAME = 'sessions_spawn';
-
-interface ToolResultPayload {
-  tool?: string;
-  content?: string;
-  sessionId?: string;
-  [key: string]: unknown;
-}
-
-
-interface SubagentEndedEvent {
-  runId?: string;
-  reason?: string;
-  outcome?: string;
-  error?: unknown;
-  [key: string]: unknown;
-}
 
 function extractSpawnResult(content: string): { runId: string; childSessionKey: string; task: string } | null {
   try {
@@ -45,6 +36,16 @@ function extractSpawnResult(content: string): { runId: string; childSessionKey: 
   }
 
   return null;
+}
+
+/**
+ * Extracts plain text from AgentMessage content blocks.
+ */
+function extractText(content: Array<{ type: string; [key: string]: unknown }>): string {
+  return content
+    .filter((c): c is { type: 'text'; text: string } => c.type === 'text' && typeof (c as Record<string, unknown>).text === 'string')
+    .map((c) => (c as { type: 'text'; text: string }).text)
+    .join('');
 }
 
 /**
@@ -89,35 +90,25 @@ function findTrackedSubagentInContent(content: string): string | null {
 }
 
 export function registerSubagentTracker(api: OpenClawPluginApi): void {
-  api.registerHook(
+  api.on<PluginHookToolResultPersistEvent, void>(
     'tool_result_persist',
-    (payload: ToolResultPayload): ToolResultPayload | undefined => {
-      if (payload.tool !== SPAWN_TOOL_NAME) return undefined;
+    (event: PluginHookToolResultPersistEvent, ctx: PluginHookToolResultPersistContext): void => {
+      if (event.toolName !== SPAWN_TOOL_NAME) return;
 
-      const content = typeof payload.content === 'string' ? payload.content : '';
+      const content = extractText(event.message.content);
       const spawnResult = extractSpawnResult(content);
 
       if (spawnResult) {
-        const callerSessionKey = typeof payload.sessionId === 'string'
-          ? payload.sessionId
-          : undefined;
-
         trackSubagentSpawn({
           ...spawnResult,
           spawnedAt: Date.now(),
-          callerSessionKey,
+          callerSessionKey: ctx.sessionKey,
         });
-        api.logger.info(`${LOG_PREFIX} Tracking sub-agent spawn: runId=${spawnResult.runId}, callerSession=${callerSessionKey ?? 'unknown'}`);
+        api.logger.info(`${LOG_PREFIX} Tracking sub-agent spawn: runId=${spawnResult.runId}, callerSession=${ctx.sessionKey ?? 'unknown'}`);
       }
-
-      return undefined;
     },
-    {
-      name: 'oh-my-openclaw.subagent-tracker',
-      description: 'Tracks sessions_spawn results for stale sub-agent detection',
-    },
+    { priority: 100 },
   );
-
 
   api.on<PluginHookSubagentEndedEvent, void>(
     'subagent_ended',
@@ -143,9 +134,6 @@ export function registerSubagentTracker(api: OpenClawPluginApi): void {
           ? `[System] Sub-agent completed (runId=${runId}, requester=${requesterSessionKey}). Process the result and continue pending work.`
           : `[System] Sub-agent completed (runId=${runId}). Process the result and continue pending work.`;
 
-        // Use /hooks/wake to directly inject system event into the main session
-        // and trigger an immediate heartbeat. /hooks/agent creates a NEW isolated
-        // session which is not what we want — we need the main agent to wake up.
         const result = await callHooksWake(
           wakeMessage,
           { gateway_url: config.gateway_url, hooks_token: config.hooks_token },
@@ -162,17 +150,17 @@ export function registerSubagentTracker(api: OpenClawPluginApi): void {
     { priority: 120 },
   );
 
-  api.registerHook(
-    'message:received',
-    (context: { content?: string; [key: string]: unknown }): typeof context | undefined => {
-      const content = context?.content ?? '';
+  api.on<PluginHookMessageReceivedEvent, void>(
+    'message_received',
+    async (event: PluginHookMessageReceivedEvent, _ctx: PluginHookMessageContext): Promise<void> => {
+      const content = event.content ?? '';
 
       // Skip empty/short messages
-      if (content.length < 10) return undefined;
+      if (content.length < 10) return;
 
       // Try to find a tracked sub-agent in this message
       const matchedRunId = findTrackedSubagentInContent(content);
-      if (!matchedRunId) return undefined;
+      if (!matchedRunId) return;
 
       // Found a match — this is likely a sub-agent announce
       const callerSession = getCallerSessionKey(matchedRunId);
@@ -194,13 +182,8 @@ export function registerSubagentTracker(api: OpenClawPluginApi): void {
           }
         });
       }
-
-      return undefined;
     },
-    {
-      name: 'oh-my-openclaw.subagent-announce-detector',
-      description: 'Detects sub-agent announce messages via multi-strategy matching, clears stale tracking, and wakes main agent',
-    },
+    { priority: 100 },
   );
 }
 

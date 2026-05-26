@@ -141,7 +141,29 @@ export function registerProjectBootstrap(api: OpenClawPluginApi) {
       api.logger.info(
         `[omoc:project-init] Injected ${fileContents.length} agent.md file(s) + project header for project: ${project.name}`
       );
-      return { prependContext: parts.join('\n') };
+
+      // appendContext: 引导 LLM 先阅读并使用注入的项目知识和开发方法
+      const agentMdNames = resolvedPaths.map((p) => p.relPath).join('、');
+      const appendContext = [
+        ``,
+        `---`,
+        `## 📋 项目知识已注入`,
+        ``,
+        `上方的系统提示中已注入当前项目的 AGENTS.md（${agentMdNames}），包含：`,
+        `- 项目架构、技术栈、编码规范`,
+        `- 开发工作流程和方法`,
+        `- Agent persona 定义与协作规则`,
+        ``,
+        `**在处理任何任务之前，请先理解注入的项目知识：**`,
+        `1. 如果 AGENTS.md 中定义了工作流程（如 delegate → sub-agents），严格遵循`,
+        `2. 使用项目指定的技术栈和编码规范`,
+        `3. 遵循项目中定义的命名约定、文件组织结构`,
+        `4. 如果有不确定的地方，优先查阅上方注入的 AGENTS.md 内容`,
+        ``,
+        `⚠️ 项目知识是权威参考 —— 当它与你的默认知识冲突时，以注入的项目知识为准。`,
+      ].join('\n');
+
+      return { prependContext: parts.join('\n'), appendContext };
     },
     { priority: 74 },  // Just below mode-switch (75) to avoid prependContext conflict
   );
