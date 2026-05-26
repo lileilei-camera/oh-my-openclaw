@@ -69,16 +69,15 @@ export function registerLookAtTool(api: OpenClawPluginApi) {
 
       // Method 1: Try OpenClaw summarize CLI (supports images, PDFs, audio, video)
       try {
-        return await new Promise((resolve) => {
+        const summarizeResult = await new Promise<ReturnType<typeof toolResponse> | null>((resolve) => {
           execFile(
             'openclaw',
             ['summarize', file_path],
             { timeout: OPENCLAW_TIMEOUT_MS, maxBuffer: 20 * 1024 * 1024 },
             (error, stdout, stderr) => {
               if (error) {
-                // summarize CLI not available or failed
                 api.logger.warn(`${LOG_PREFIX_LOOK_AT} summarize CLI failed: ${(error as any).message}`);
-                resolve(null as any); // Will fall through to Method 2
+                resolve(null);
                 return;
               }
 
@@ -87,11 +86,15 @@ export function registerLookAtTool(api: OpenClawPluginApi) {
                 const response = `📋 OpenClaw Analysis Result (${fileType}):\n\n${output}\n\n---\n🎯 User Goal: ${goal}`;
                 resolve(toolResponse(response));
               } else {
-                resolve(null as any);
+                resolve(null);
               }
             },
           );
         });
+
+        if (summarizeResult) {
+          return summarizeResult;
+        }
       } catch (e) {
         api.logger.warn(`${LOG_PREFIX_LOOK_AT} summarize CLI error: ${(e as Error).message}`);
       }

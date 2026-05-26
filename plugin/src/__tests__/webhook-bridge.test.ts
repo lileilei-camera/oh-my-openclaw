@@ -21,7 +21,7 @@ import { createMockApi, createMockConfig } from './helpers/mock-factory.js';
 const createMockApiAny = createMockApi as (...args: any[]) => any;
 
 function getHookHandler(mockApi: any, callIndex = 0) {
-  return mockApi.registerHook.mock.calls[callIndex][1];
+  return mockApi.on.mock.calls[callIndex][1];
 }
 
 function getServiceHandler(mockApi: any) {
@@ -344,17 +344,20 @@ describe('subagent-tracker', () => {
   });
 
   describe('registerSubagentTracker', () => {
-    it('registers 2 hooks (tool_result_persist + message:received)', () => {
+    it('registers 3 hooks (tool_result_persist + subagent_ended + message_received)', () => {
       const mockApi = createMockApiAny();
       registerSubagentTracker(mockApi);
 
-      expect(mockApi.registerHook).toHaveBeenCalledTimes(2);
+      expect(mockApi.on).toHaveBeenCalledTimes(3);
 
-      const firstCall = mockApi.registerHook.mock.calls[0];
+      const firstCall = mockApi.on.mock.calls[0];
       expect(firstCall[0]).toBe('tool_result_persist');
 
-      const secondCall = mockApi.registerHook.mock.calls[1];
-      expect(secondCall[0]).toBe('message:received');
+      const secondCall = mockApi.on.mock.calls[1];
+      expect(secondCall[0]).toBe('subagent_ended');
+
+      const thirdCall = mockApi.on.mock.calls[2];
+      expect(thirdCall[0]).toBe('message_received');
     });
   });
 
@@ -397,14 +400,13 @@ describe('subagent-tracker', () => {
       registerSubagentTracker(mockApi);
 
       const handler = getHookHandler(mockApi, 0);
-      const payload = {
-        tool: 'some_other_tool',
-        content: 'some content',
+      const event = {
+        toolName: 'some_other_tool',
+        message: { role: 'toolResult', content: [{ type: 'text', text: 'some content' }] },
       };
 
-      const result = handler(payload);
+      handler(event, {});
 
-      expect(result).toBeUndefined();
       expect(getTrackedSubagents().size).toBe(0);
     });
 
@@ -420,12 +422,12 @@ describe('subagent-tracker', () => {
         task: 'tracked task',
       });
 
-      const payload = {
-        tool: 'sessions_spawn',
-        content: spawnContent,
+      const event = {
+        toolName: 'sessions_spawn',
+        message: { role: 'toolResult', content: [{ type: 'text', text: spawnContent }] },
       };
 
-      handler(payload);
+      handler(event, { sessionKey: 'caller-session' });
 
       const tracked = getTrackedSubagents();
       expect(tracked.has('run-tracked-123')).toBe(true);
@@ -433,13 +435,13 @@ describe('subagent-tracker', () => {
     });
   });
 
-  describe('message:received hook', () => {
+  describe('message_received hook', () => {
     it('clears tracking on announce detection', () => {
       const mockApi = createMockApiAny();
       registerSubagentTracker(mockApi);
 
       const toolHandler = getHookHandler(mockApi, 0);
-      const messageHandler = getHookHandler(mockApi, 1);
+      const messageHandler = getHookHandler(mockApi, 2);
 
       const spawnContent = JSON.stringify({
         status: 'accepted',
@@ -448,18 +450,17 @@ describe('subagent-tracker', () => {
         task: 'announce task',
       });
 
-      toolHandler({
-        tool: 'sessions_spawn',
-        content: spawnContent,
-      });
+      toolHandler(
+        { toolName: 'sessions_spawn', message: { role: 'toolResult', content: [{ type: 'text', text: spawnContent }] } },
+        { sessionKey: 'caller' },
+      );
 
       expect(getTrackedSubagents().has('run-announce-123')).toBe(true);
 
-      const announceMessage = {
-        content: 'Sub-agent runId: "run-announce-123" has completed',
-      };
-
-      messageHandler(announceMessage);
+      messageHandler(
+        { content: 'Sub-agent runId: "run-announce-123" has completed', from: 'bot' },
+        { channelId: 'test' },
+      );
 
       expect(getTrackedSubagents().has('run-announce-123')).toBe(false);
     });
@@ -469,7 +470,7 @@ describe('subagent-tracker', () => {
       registerSubagentTracker(mockApi);
 
       const toolHandler = getHookHandler(mockApi, 0);
-      const messageHandler = getHookHandler(mockApi, 1);
+      const messageHandler = getHookHandler(mockApi, 2);
 
       const spawnContent = JSON.stringify({
         status: 'accepted',
@@ -478,18 +479,17 @@ describe('subagent-tracker', () => {
         task: 'ignore task',
       });
 
-      toolHandler({
-        tool: 'sessions_spawn',
-        content: spawnContent,
-      });
+      toolHandler(
+        { toolName: 'sessions_spawn', message: { role: 'toolResult', content: [{ type: 'text', text: spawnContent }] } },
+        {},
+      );
 
       expect(getTrackedSubagents().has('run-ignore-123')).toBe(true);
 
-      const regularMessage = {
-        content: 'Just a regular chat message with no special terms',
-      };
-
-      messageHandler(regularMessage);
+      messageHandler(
+        { content: 'Just a regular chat message with no special terms', from: 'bot' },
+        { channelId: 'test' },
+      );
 
       expect(getTrackedSubagents().has('run-ignore-123')).toBe(true);
     });

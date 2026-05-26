@@ -27,6 +27,8 @@ import { registerGuardrailInjector } from './hooks/guardrail-injector.js';
 import { registerSpawnGuard } from './hooks/spawn-guard.js';
 import { registerModeSwitch } from './hooks/mode-switch/hook.js';
 import { registerProjectBootstrap } from './hooks/project-init/project-bootstrap.js';
+import { registerProjectGuard } from './hooks/project-guard/guard-register.js';
+import { registerDumpContext } from './hooks/dump-context.js';
 import { registerTodoReminder, registerAgentEndReminder, registerSessionCleanup } from './hooks/todo-reminder.js';
 import { registerTodoTools } from './tools/todo/index.js';
 import { registerGrepTool } from './tools/grep/index.js';
@@ -79,6 +81,8 @@ export default function register(api: OpenClawPluginApi) {
   registerSpawnGuard(api); hookCount++;
   registerModeSwitch(api); hookCount++;
   registerProjectBootstrap(api); hookCount++;
+  registerProjectGuard(api); hookCount += 2; // before_tool_call + agent_end
+  registerDumpContext(api); hookCount++; // llm_input
   registerTodoReminder(api); hookCount += 3; // 3 hooks
   registerAgentEndReminder(api); hookCount++;
 

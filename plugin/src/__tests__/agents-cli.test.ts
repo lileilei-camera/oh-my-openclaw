@@ -171,9 +171,11 @@ describe('Agent Configs', () => {
       });
     });
 
-    it('should have all agents with model defined', () => {
+    it('should have all agents with id, name, and identity', () => {
       OMOC_AGENT_CONFIGS.forEach((agent) => {
-        expect(agent.model).toBeDefined();
+        expect(agent.id).toBeDefined();
+        expect(agent.name).toBeDefined();
+        expect(agent.identity).toBeDefined();
       });
     });
   });

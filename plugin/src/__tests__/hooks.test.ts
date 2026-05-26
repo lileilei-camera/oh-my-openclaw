@@ -553,55 +553,52 @@ describe('comment-checker hook', () => {
     vi.clearAllMocks();
   });
 
+  function makeEvent(content: string, file?: string) {
+    return {
+      toolName: 'write',
+      message: { role: 'toolResult', content: content } as unknown as { role: string; content: unknown; file?: string; [key: string]: unknown },
+    };
+  }
+
+  function addFile(event: ReturnType<typeof makeEvent>, file: string) {
+    (event.message as Record<string, unknown>).file = file;
+    return event;
+  }
+
   it('detects AI slop comment: // Import the necessary modules', () => {
     const api = createMockApi({ config: createMockConfig({ comment_checker_enabled: true }) });
     registerCommentChecker(api);
 
-    const handler = api.registerHook.mock.calls[0][1] as (
-      payload: ToolResultPayload
-    ) => ToolResultPayload | undefined;
-    const payload: ToolResultPayload = {
-      file: 'src/file.ts',
-      content: '// Import the necessary modules\nimport fs from "node:fs";',
-    };
-
-    const result = handler(payload);
+    expect(api.on).toHaveBeenCalledWith('tool_result_persist', expect.any(Function), expect.any(Object));
+    const handler = api.on.mock.calls[0][1] as (...args: unknown[]) => unknown;
+    const event = addFile(makeEvent('// Import the necessary modules\nimport fs from "node:fs";'), 'src/file.ts');
+    const result = handler(event, {}) as { message?: { content?: string } } | undefined;
 
     expect(result).toBeDefined();
-    expect(result?.content).toContain('[OMOC Comment Checker] Found 1 AI slop comment(s)');
+    const msg = (result!.message as Record<string, unknown>);
+    expect(msg.content).toBeDefined();
+    expect(String(msg.content)).toContain('[OMOC Comment Checker] Found 1 AI slop comment(s)');
   });
 
   it('detects AI slop comment: // This function handles...', () => {
     const api = createMockApi({ config: createMockConfig({ comment_checker_enabled: true }) });
     registerCommentChecker(api);
 
-    const handler = api.registerHook.mock.calls[0][1] as (
-      payload: ToolResultPayload
-    ) => ToolResultPayload | undefined;
-    const payload: ToolResultPayload = {
-      file: 'src/file.ts',
-      content: '// This function handles user login\nexport function login() {}',
-    };
-
-    const result = handler(payload);
+    const handler = api.on.mock.calls[0][1] as (...args: unknown[]) => unknown;
+    const event = addFile(makeEvent('// This function handles user login\nexport function login() {}'), 'src/file.ts');
+    const result = handler(event, {}) as { message?: { content?: string } } | undefined;
 
     expect(result).toBeDefined();
-    expect(result?.content).toContain('AI slop: obvious/narrating comment');
+    expect(String((result!.message as Record<string, unknown>).content)).toContain('AI slop: obvious/narrating comment');
   });
 
   it('ignores clean comments like TODO notes', () => {
     const api = createMockApi({ config: createMockConfig({ comment_checker_enabled: true }) });
     registerCommentChecker(api);
 
-    const handler = api.registerHook.mock.calls[0][1] as (
-      payload: ToolResultPayload
-    ) => ToolResultPayload | undefined;
-    const payload: ToolResultPayload = {
-      file: 'src/file.ts',
-      content: '// TODO: fix race condition\nconst value = 1;',
-    };
-
-    const result = handler(payload);
+    const handler = api.on.mock.calls[0][1] as (...args: unknown[]) => unknown;
+    const event = addFile(makeEvent('// TODO: fix race condition\nconst value = 1;'), 'src/file.ts');
+    const result = handler(event, {});
 
     expect(result).toBeUndefined();
   });
@@ -610,15 +607,9 @@ describe('comment-checker hook', () => {
     const api = createMockApi({ config: createMockConfig({ comment_checker_enabled: false }) });
     registerCommentChecker(api);
 
-    const handler = api.registerHook.mock.calls[0][1] as (
-      payload: ToolResultPayload
-    ) => ToolResultPayload | undefined;
-    const payload: ToolResultPayload = {
-      file: 'src/file.ts',
-      content: '// Import modules\nconst x = 1;',
-    };
-
-    const result = handler(payload);
+    const handler = api.on.mock.calls[0][1] as (...args: unknown[]) => unknown;
+    const event = addFile(makeEvent('// Import modules\nconst x = 1;'), 'src/file.ts');
+    const result = handler(event, {});
 
     expect(result).toBeUndefined();
   });
@@ -627,15 +618,9 @@ describe('comment-checker hook', () => {
     const api = createMockApi({ config: createMockConfig({ comment_checker_enabled: true }) });
     registerCommentChecker(api);
 
-    const handler = api.registerHook.mock.calls[0][1] as (
-      payload: ToolResultPayload
-    ) => ToolResultPayload | undefined;
-    const payload: ToolResultPayload = {
-      file: 'readme.md',
-      content: '// Import the necessary modules\nnot code',
-    };
-
-    const result = handler(payload);
+    const handler = api.on.mock.calls[0][1] as (...args: unknown[]) => unknown;
+    const event = addFile(makeEvent('// Import the necessary modules\nnot code'), 'readme.md');
+    const result = handler(event, {});
 
     expect(result).toBeUndefined();
   });
@@ -650,15 +635,12 @@ describe('message-monitor hook', () => {
     const api = createMockApi();
     registerMessageMonitor(api);
 
-    expect(api.registerHook).toHaveBeenCalledTimes(2);
-    expect(api.registerHook.mock.calls[0][0]).toBe('message:sent');
-    expect(api.registerHook.mock.calls[1][0]).toBe('message:received');
+    expect(api.on).toHaveBeenCalledTimes(2);
+    expect(api.on.mock.calls[0][0]).toBe('message_sent');
+    expect(api.on.mock.calls[1][0]).toBe('message_received');
 
-    const handler = api.registerHook.mock.calls[0][1] as (context: {
-      content?: string;
-      channelId?: string;
-    }) => undefined;
-    handler({ content: 'Hello world', channelId: 'channel-1' });
+    const handler = api.on.mock.calls[0][1] as (event: { content: string }, ctx: { channelId: string }) => void;
+    handler({ content: 'Hello world' }, { channelId: 'channel-1' });
 
     expect(api.logger.info).toHaveBeenCalledTimes(1);
     expect(api.logger.info).toHaveBeenCalledWith(
@@ -675,13 +657,10 @@ describe('message-monitor hook', () => {
     const api = createMockApi();
     registerMessageMonitor(api);
 
-    const handler = api.registerHook.mock.calls[0][1] as (context: {
-      content?: string;
-      channelId?: string;
-    }) => undefined;
+    const handler = api.on.mock.calls[0][1] as (event: { content: string }, ctx: { channelId: string }) => void;
 
     const before = getMessageCount();
-    handler({ content: 'Count me', channelId: 'channel-2' });
+    handler({ content: 'Count me' }, { channelId: 'channel-2' });
     const after = getMessageCount();
 
     expect(after).toBe(before + 1);
@@ -691,19 +670,13 @@ describe('message-monitor hook', () => {
     const api = createMockApi();
     registerMessageMonitor(api);
 
-    const sentHandler = api.registerHook.mock.calls[0][1] as (context: {
-      content?: string;
-      channelId?: string;
-    }) => undefined;
-    const receivedHandler = api.registerHook.mock.calls[1][1] as (context: {
-      content?: string;
-      channelId?: string;
-    }) => undefined;
+    const sentHandler = api.on.mock.calls[0][1] as (event: { content: string }, ctx: { channelId: string }) => void;
+    const receivedHandler = api.on.mock.calls[1][1] as (event: { content: string }, ctx: { channelId: string }) => void;
 
     const before = getMessageCount();
-    sentHandler({ content: 'sent msg', channelId: 'channel-3' });
+    sentHandler({ content: 'sent msg' }, { channelId: 'channel-3' });
     const afterSent = getMessageCount();
-    receivedHandler({ content: 'received msg', channelId: 'channel-3' });
+    receivedHandler({ content: 'received msg' }, { channelId: 'channel-3' });
     const afterReceived = getMessageCount();
 
     expect(afterSent).toBe(before + 1);
@@ -723,13 +696,10 @@ describe('message-monitor hook', () => {
     const api = createMockApi();
     messageMonitor.registerMessageMonitor(api);
 
-    const sentHandler = api.registerHook.mock.calls[0][1] as (context: {
-      content?: string;
-      channelId?: string;
-    }) => undefined;
+    const sentHandler = api.on.mock.calls[0][1] as (event: { content: string }, ctx: { channelId: string }) => void;
 
     for (let i = 0; i <= 1000; i++) {
-      sentHandler({ content: `message-${i}`, channelId: `mm-${i}` });
+      sentHandler({ content: `message-${i}` }, { channelId: `mm-${i}` });
     }
 
     expect(messageMonitor.getMessageCount('mm-0')).toBe(0);
@@ -743,17 +713,16 @@ describe('startup hook', () => {
     vi.clearAllMocks();
   });
 
-  it('registers gateway:startup hook and logs plugin activation', () => {
+  it('registers gateway_start hook and logs plugin activation', () => {
     const api = createMockApi();
     registerStartupHook(api);
 
-    expect(api.registerHook).toHaveBeenCalledTimes(1);
-    expect(api.registerHook.mock.calls[0][0]).toBe('gateway:startup');
+    expect(api.on).toHaveBeenCalledTimes(1);
+    expect(api.on.mock.calls[0][0]).toBe('gateway_start');
 
-    const handler = api.registerHook.mock.calls[0][1] as () => undefined;
-    const result = handler();
+    const handler = api.on.mock.calls[0][1] as (event: unknown, ctx: unknown) => void;
+    handler({ port: 18789 }, {});
 
-    expect(result).toBeUndefined();
     expect(api.logger.info).toHaveBeenCalledWith(expect.stringContaining('Gateway started'));
   });
 });

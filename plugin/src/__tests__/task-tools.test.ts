@@ -1,4 +1,46 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
+
+vi.mock('fs', () => ({
+  promises: {
+    readFile: vi.fn(),
+    writeFile: vi.fn(),
+    readdir: vi.fn(),
+    stat: vi.fn(),
+    mkdir: vi.fn(),
+    unlink: vi.fn(),
+    access: vi.fn(),
+  },
+  readFileSync: vi.fn(),
+  existsSync: vi.fn(),
+}));
+
+vi.mock('node:fs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:fs')>();
+  return { ...actual, existsSync: vi.fn() };
+});
+
+vi.mock('child_process', () => ({
+  exec: vi.fn(),
+  execSync: vi.fn(),
+  execFile: vi.fn(),
+}));
+
+vi.mock('../utils/state.js', () => ({
+  readState: vi.fn(),
+  writeState: vi.fn(),
+  ensureDir: vi.fn(),
+}));
+
+vi.mock('../utils/config.js', () => ({
+  getConfig: vi.fn((api: any) => ({
+    ...api.config,
+  })),
+}));
+
+import { execFile } from 'child_process';
+import * as nodeFs from 'node:fs';
+import { promises as fs } from 'fs';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import {
   createTodo,
   listTodos,
@@ -21,8 +63,23 @@ import { createMockApi, createMockContext } from './helpers/mock-factory.js';
 
 const createMockApiAny = createMockApi as (...args: any[]) => any;
 
-function getHookHandler(mockApi: any, callIndex = 0) {
-  return mockApi.registerHook.mock.calls[callIndex][1];
+function getHookHandler(mockApi: any, callIndex = 0): any {
+  return mockApi.on.mock.calls[callIndex][1];
+}
+// Helpers for modern api.on handler (tool_result_persist: event + ctx)
+function tr(text: string) { return { type: 'text', text } as const; }
+function tev(toolName: string, text: string) {
+  return { toolName, message: { role: 'toolResult', content: [tr(text)] } };
+}
+function tctx(sessionKey?: string) {
+  return { sessionKey: sessionKey ?? '__default__' };
+}
+function rtext(r: any): string | undefined {
+  if (!r || !r.message) return undefined;
+  const c = (r.message as any).content;
+  if (typeof c === 'string') return c;
+  if (Array.isArray(c)) return c.map((b: any) => b.text || '').join('');
+  return undefined;
 }
 
 function getOnHandler(mockApi: any, hookName: string) {
@@ -210,21 +267,18 @@ describe('Todo Reminder Hook', () => {
   it('registers hook on tool_result_persist', () => {
     registerTodoReminder(mockApi);
 
-    expect(mockApi.registerHook).toHaveBeenCalledOnce();
-    expect(mockApi.registerHook.mock.calls[0][0]).toBe('tool_result_persist');
-    expect(mockApi.registerHook.mock.calls[0][2]).toEqual({
-      name: 'oh-my-openclaw.todo-reminder',
-      description: 'Reminds agent to check todo list after prolonged non-todo tool usage',
-    });
+    expect(mockApi.on).toHaveBeenCalled();
+    expect(mockApi.on.mock.calls[0][0]).toBe('tool_result_persist');
+    expect(mockApi.on.mock.calls[0][2]).toEqual({ priority: 100 });
   });
 
   it('returns undefined for omoc_todo_* calls (resets counter)', () => {
     registerTodoReminder(mockApi);
     const handler = getHookHandler(mockApi);
 
-    expect(handler({ tool: 'omoc_todo_create', content: '{}' })).toBeUndefined();
-    expect(handler({ tool: 'omoc_todo_list', content: '{}' })).toBeUndefined();
-    expect(handler({ tool: 'omoc_todo_update', content: '{}' })).toBeUndefined();
+    expect(handler(tev('omoc_todo_create', '{}'), tctx())).toBeUndefined();
+    expect(handler(tev('omoc_todo_list', '{}'), tctx())).toBeUndefined();
+    expect(handler(tev('omoc_todo_update', '{}'), tctx())).toBeUndefined();
   });
 
   it('resets counter on omoc_todo_* usage', () => {
@@ -232,11 +286,11 @@ describe('Todo Reminder Hook', () => {
     const handler = getHookHandler(mockApi);
 
     for (let i = 0; i < 8; i++) {
-      handler({ tool: 'some_tool', content: 'result' });
+      handler(tev('some_tool', 'result'), tctx());
     }
     expect(_sessionCounters.get('__default__')).toBe(8);
 
-    handler({ tool: 'omoc_todo_list', content: '[]' });
+    handler(tev('omoc_todo_list', '[]'), tctx());
     expect(_sessionCounters.get('__default__')).toBe(0);
   });
 
@@ -245,15 +299,15 @@ describe('Todo Reminder Hook', () => {
     const handler = getHookHandler(mockApi);
 
     for (let i = 0; i < 9; i++) {
-      const result = handler({ tool: 'other_tool', content: 'result' });
+      const result = handler(tev('other_tool', 'result'), tctx());
       expect(result).toBeUndefined();
     }
 
-    const result = handler({ tool: 'other_tool', content: 'original content' });
+    const result = handler(tev('other_tool', 'original content'), tctx());
     expect(result).toBeDefined();
-    expect(result.content).toContain('original content');
-    expect(result.content).toContain('[OMOC Todo Reminder]');
-    expect(result.content).toContain('omoc_todo_list');
+    expect(rtext(result)).toContain('original content');
+    expect(rtext(result)).toContain('[OMOC Todo Reminder]');
+    expect(rtext(result)).toContain('omoc_todo_list');
   });
 
   it('appends reminder again at 20 calls', () => {
@@ -261,12 +315,12 @@ describe('Todo Reminder Hook', () => {
     const handler = getHookHandler(mockApi);
 
     for (let i = 0; i < 19; i++) {
-      handler({ tool: 'other_tool', content: 'result' });
+      handler(tev('other_tool', 'result'), tctx());
     }
 
-    const result = handler({ tool: 'other_tool', content: 'content at 20' });
+    const result = handler(tev('other_tool', 'content at 20'), tctx());
     expect(result).toBeDefined();
-    expect(result.content).toContain('[OMOC Todo Reminder]');
+    expect(rtext(result)).toContain('[OMOC Todo Reminder]');
   });
 
   it('does not append reminder at non-threshold counts', () => {
@@ -274,10 +328,10 @@ describe('Todo Reminder Hook', () => {
     const handler = getHookHandler(mockApi);
 
     for (let i = 0; i < 10; i++) {
-      handler({ tool: 'other_tool', content: 'result' });
+      handler(tev('other_tool', 'result'), tctx());
     }
 
-    const result = handler({ tool: 'other_tool', content: 'result at 11' });
+    const result = handler(tev('other_tool', 'result at 11'), tctx());
     expect(result).toBeUndefined();
   });
 
@@ -285,7 +339,7 @@ describe('Todo Reminder Hook', () => {
     registerTodoReminder(mockApi);
     const handler = getHookHandler(mockApi);
 
-    const result = handler({ content: 'no tool' });
+    const result = handler({ message: { role: 'toolResult', content: [tr('no tool')] } }, tctx());
     expect(result).toBeUndefined();
   });
 
@@ -294,18 +348,18 @@ describe('Todo Reminder Hook', () => {
     const handler = getHookHandler(mockApi);
 
     for (let i = 0; i < 10; i++) {
-      handler({ tool: 'other_tool', content: 'result', sessionId: 'sess-a' });
+      handler(tev('other_tool', 'result'), tctx('sess-a'));
     }
 
-    const resultA = handler({ tool: 'other_tool', content: 'result', sessionId: 'sess-a' });
+    const resultA = handler(tev('other_tool', 'result'), tctx('sess-a'));
     expect(resultA).toBeUndefined();
 
     for (let i = 0; i < 9; i++) {
-      handler({ tool: 'other_tool', content: 'result', sessionId: 'sess-b' });
+      handler(tev('other_tool', 'result'), tctx('sess-b'));
     }
-    const resultB = handler({ tool: 'other_tool', content: 'result', sessionId: 'sess-b' });
+    const resultB = handler(tev('other_tool', 'result'), tctx('sess-b'));
     expect(resultB).toBeDefined();
-    expect(resultB.content).toContain('[OMOC Todo Reminder]');
+    expect(rtext(resultB)).toContain('[OMOC Todo Reminder]');
   });
 });
 

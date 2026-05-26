@@ -81,3 +81,89 @@ getActiveModeSync(workspaceDir);   // 读
 setActiveMode(mode, workspaceDir); // 写
 resetModeSync(workspaceDir);       // 重置
 ```
+
+## Architecture: Plugin Hook 回调参数与工作空间获取
+
+> 经验来源: 2026-05-22 Project Guard 开发，详见 `plans/project-guard.md`
+
+### Hook 回调的第二个参数 `ctx` 是 agent/session 上下文的唯一来源
+
+所有 hook 回调都是 `(event, ctx) => { ... }` 形式。`ctx` 携带运行时 agent/session 信息：
+
+| Hook | ctx 类型 | 关键字段 |
+|------|---------|---------|
+| `before_tool_call` | `PluginHookToolContext` | `agentId?`, `sessionKey?`, `sessionId?`, `toolName`, `toolCallId?` |
+| `agent_end` | `PluginHookAgentContext` | `agentId?`, `sessionKey?`, `sessionId?` |
+| `before_prompt_build` | `PluginHookAgentContext` | `agentId?`, `sessionKey?`, `workspaceDir?`, `modelProviderId?`, `modelId?` |
+
+类型定义在 `openclaw/dist/plugin-sdk/src/plugins/hook-types.d.ts`。
+
+### `api.config` 是全局配置快照，不含单一 agent 身份
+
+```typescript
+api.config.agentId    // ❌ undefined — OpenClawConfig 没有此字段
+api.config.sessionKey // ❌ undefined — 同上
+```
+
+**原因**：同一 Gateway 可并发运行多 agent，agent 身份由 session 路由在运行时决定。
+
+### 正确获取 agent 配置（workspace 等）
+
+```typescript
+// 1. agent 身份 → hook ctx（运行时决定）
+ctx.agentId      // "coder"
+ctx.sessionKey   // "agent:coder:main"
+
+// 2. agent 配置 → api.config.agents.list[] 按 id 匹配
+const agent = (api.config as any).agents?.list?.find(a => a.id === ctx.agentId);
+agent?.workspace  // "/home/llli/.openclaw/workspace-coder"
+```
+
+`AgentConfig` 类型（`types.agents.d.ts:63`）：`{ id: string; workspace?: string; ... }`
+
+### 工作空间获取方式演进
+
+| 方式 | 代码 | 结果 |
+|------|------|------|
+| ❌ `api.config.agentId` | `api.config.agentId` | `undefined`（字段不存在） |
+| ❌ 无依据拼接 | `join(home, 'workspace-' + agentId)` | `workspace-main` 错误（实际是 `workspace`） |
+| ✅ 查 agent 配置 | `agents.list.find(a => a.id === agentId)?.workspace` | 配置中的真实路径 |
+
+### `path.normalize()` 尾部斜杠陷阱
+
+`normalize()` 按 POSIX 语义保留尾部 `/`：
+
+```javascript
+normalize("/home/user/project/")  // → "/home/user/project/"  ← 斜杠保留
+normalize("/home/user/project")   // → "/home/user/project"
+```
+
+前缀匹配时 `".../project/" + sep` 产生 `".../project//"` 双斜杠，导致 `startsWith` 永不匹配。
+
+**修复**：比较前 `stripTrailingSep`（`p.replace(/\/+$/, '') || '/'`）。
+
+### 日志级别策略
+
+| 级别 | 生产可见 | 适用场景 |
+|------|---------|---------|
+| `api.logger.debug()` | ❌ | 开发期详细追踪 |
+| `api.logger.info()` | ✅（默认 level: info） | 关键路径决策点 |
+| `api.logger.warn()` | ✅ | 越界/异常 |
+
+**规则**：guard 决策路径（skip/pass/block）用 `info`，确保默认配置下可见。
+
+### 编译后验证清单
+
+1. `npx tsc --noEmit` — 类型检查
+2. `npm run build` — 编译到 dist
+3. 确认 dist 文件 mtime > 编译时间
+4. 确认 Gateway 启动时间 > dist mtime（否则加载旧缓存）
+5. 通过 Gateway 重启时日志中的 `[oh-my-openclaw] Initializing plugin vX.Y.Z` 确认版本
+
+**注意**：symlink 安装的插件（`npm link`），源码路径不变，Node.js 缓存旧版。改 dist 后必须重启 Gateway。
+
+### `parseCdTarget` 局限性
+
+- 只能解析 `cd /some/path` 格式
+- OpenClaw 可能在 exec 前注入 wrapper（`cd $workspaceDir && ...`），guard 看到的是 wrapper 的 cd
+- 不含 `cd` 的命令（纯 `grep`、`ps` 等）返回 null，guard 直接 passthrough

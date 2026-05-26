@@ -106,6 +106,14 @@ export function registerProjectBootstrap(api: OpenClawPluginApi) {
 
       // --- Project info header block ---
       const mdPathsStr = resolvedPaths.map((p) => `  - ${p.fullPath}`).join('\n');
+      const guardPrompt = [
+        ``,
+        `### 🔒 项目路径保护`,
+        `- 始终以 **${project.path}** 为当前工作目录`,
+        `- 偶尔需切到项目外查信息时（如 cd ~/other && ls），查看后**立刻切回项目目录**`,
+        `- write/edit/exec 越界会弹窗请求授权（项目目录、工作空间、/tmp 为安全区）`,
+      ].join('\n');
+
       const projectInfo = [
         `## Active Project: ${project.name}`,
         ``,
@@ -114,6 +122,7 @@ export function registerProjectBootstrap(api: OpenClawPluginApi) {
         `- 项目路径：${project.path}`,
         `- Agent 配置目录（AGENTS.md 文件）：`,
         mdPathsStr,
+        guardPrompt,
       ].join('\n');
       parts.push(projectInfo);
 
@@ -132,7 +141,29 @@ export function registerProjectBootstrap(api: OpenClawPluginApi) {
       api.logger.info(
         `[omoc:project-init] Injected ${fileContents.length} agent.md file(s) + project header for project: ${project.name}`
       );
-      return { prependContext: parts.join('\n') };
+
+      // appendContext: 引导 LLM 先阅读并使用注入的项目知识和开发方法
+      const agentMdNames = resolvedPaths.map((p) => p.relPath).join('、');
+      const appendContext = [
+        ``,
+        `---`,
+        `## 📋 项目知识已注入`,
+        ``,
+        `上方的系统提示中已注入当前项目的 AGENTS.md（${agentMdNames}），包含：`,
+        `- 项目架构、技术栈、编码规范`,
+        `- 开发工作流程和方法`,
+        `- Agent persona 定义与协作规则`,
+        ``,
+        `**在处理任何任务之前，请先理解注入的项目知识：**`,
+        `1. 如果 AGENTS.md 中定义了工作流程（如 delegate → sub-agents），严格遵循`,
+        `2. 使用项目指定的技术栈和编码规范`,
+        `3. 遵循项目中定义的命名约定、文件组织结构`,
+        `4. 如果有不确定的地方，优先查阅上方注入的 AGENTS.md 内容`,
+        ``,
+        `⚠️ 项目知识是权威参考 —— 当它与你的默认知识冲突时，以注入的项目知识为准。`,
+      ].join('\n');
+
+      return { prependContext: parts.join('\n'), appendContext };
     },
     { priority: 74 },  // Just below mode-switch (75) to avoid prependContext conflict
   );

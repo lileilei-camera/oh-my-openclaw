@@ -1,4 +1,12 @@
-import type { OpenClawPluginApi, PluginHookAgentEndEvent, PluginHookSessionStartEvent, PluginHookSessionEndEvent } from '../types.js';
+import type {
+  OpenClawPluginApi,
+  PluginHookAgentEndEvent,
+  PluginHookSessionStartEvent,
+  PluginHookSessionEndEvent,
+  PluginHookToolResultPersistEvent,
+  PluginHookToolResultPersistContext,
+  PluginHookToolResultPersistResult,
+} from '../types.js';
 import { TOOL_PREFIX, LOG_PREFIX } from '../constants.js';
 import { getIncompleteTodos, resetStore } from '../tools/todo/store.js';
 import { getPluginConfig } from '../types.js';
@@ -20,38 +28,20 @@ const REMINDER_MESSAGE = `
 **Action required:** Call \`${TOOL_PREFIX}todo_list\` to review pending todos before continuing.
 Ensure you are not drifting from the plan. Mark completed todos, update in-progress ones.`;
 
-interface ToolResultPayload {
-  tool?: string;
-  content?: string;
-  [key: string]: unknown;
-}
-
-interface AgentEndEvent {
-  messages: unknown[];
-  success: boolean;
-  error?: string;
-  durationMs?: number;
-}
-
 const sessionCounters = new Map<string, number>();
 
-function getSessionKey(payload: ToolResultPayload): string {
-  const sessionId = (payload as Record<string, unknown>).sessionId;
-  return typeof sessionId === 'string' ? sessionId : '__default__';
-}
-
 export function registerTodoReminder(api: OpenClawPluginApi): void {
-  api.registerHook(
+  api.on<PluginHookToolResultPersistEvent, PluginHookToolResultPersistResult | void>(
     'tool_result_persist',
-    (payload: ToolResultPayload): ToolResultPayload | undefined => {
-      const toolName = payload.tool;
-      if (!toolName) return undefined;
+    (event: PluginHookToolResultPersistEvent, ctx: PluginHookToolResultPersistContext): PluginHookToolResultPersistResult | void => {
+      const toolName = event.toolName;
+      if (!toolName) return;
 
-      const sessionKey = getSessionKey(payload);
+      const sessionKey = ctx.sessionKey ?? '__default__';
 
       if (TODO_TOOL_NAMES.has(toolName)) {
         sessionCounters.set(sessionKey, 0);
-        return undefined;
+        return;
       }
 
       const current = sessionCounters.get(sessionKey) ?? 0;
@@ -59,19 +49,25 @@ export function registerTodoReminder(api: OpenClawPluginApi): void {
       sessionCounters.set(sessionKey, next);
 
       if (next >= TURN_THRESHOLD && next % TURN_THRESHOLD === 0) {
-        const content = typeof payload.content === 'string' ? payload.content : '';
+        // Append reminder to the first text block in message content
+        const blocks = event.message.content.map((block: Record<string, unknown>) => {
+          if (block.type === 'text' && typeof block.text === 'string') {
+            return { ...block, text: block.text + REMINDER_MESSAGE };
+          }
+          return block;
+        });
+
         return {
-          ...payload,
-          content: content + REMINDER_MESSAGE,
+          message: {
+            ...event.message,
+            content: blocks,
+          },
         };
       }
 
-      return undefined;
+      return;
     },
-    {
-      name: 'oh-my-openclaw.todo-reminder',
-      description: 'Reminds agent to check todo list after prolonged non-todo tool usage',
-    },
+    { priority: 100 },
   );
 }
 
@@ -119,17 +115,6 @@ export function registerAgentEndReminder(api: OpenClawPluginApi): void {
     },
     { priority: 50 },
   );
-}
-
-interface SessionStartEvent {
-  sessionId: string;
-  resumedFrom?: string;
-}
-
-interface SessionEndEvent {
-  sessionId: string;
-  messageCount: number;
-  durationMs?: number;
 }
 
 function clearSession(sessionKey: string, api: OpenClawPluginApi, reason: string): void {

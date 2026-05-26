@@ -1,15 +1,11 @@
-import type { OpenClawPluginApi, PluginHookAgentEndEvent } from '../types.js';
+import type {
+  OpenClawPluginApi,
+  PluginHookToolResultPersistEvent,
+  PluginHookToolResultPersistContext,
+  PluginHookToolResultPersistResult,
+} from '../types.js';
 import { CommentViolation } from '../types.js';
 import { getPluginConfig } from '../types.js';
-
-interface ToolResultPayload {
-  tool?: string;
-  content?: string;
-  file?: string;
-  filename?: string;
-  path?: string;
-  [key: string]: unknown;
-}
 
 const NON_CODE_EXTENSIONS = ['.md', '.json', '.yaml', '.yml', '.txt'];
 
@@ -32,16 +28,42 @@ function hasNonCodeExtension(value: string): boolean {
   return NON_CODE_EXTENSIONS.some((ext) => lowered.endsWith(ext));
 }
 
-function extractFileHint(payload: ToolResultPayload): string {
-  if (typeof payload.file === 'string') {
-    return payload.file;
+/**
+ * Extract text content from a content block array or string.
+ * Returns null if content is empty or not processable.
+ */
+function getTextContent(event: PluginHookToolResultPersistEvent): string | null {
+  const content = (event.message as Record<string, unknown>).content;
+
+  // Legacy: plain string content
+  if (typeof content === 'string') {
+    const trimmed = content.trim();
+    return trimmed.length > 0 ? trimmed : null;
   }
-  if (typeof payload.filename === 'string') {
-    return payload.filename;
+
+  // Modern: content block array
+  if (Array.isArray(content)) {
+    const text = content
+      .filter(
+        (c): c is { type: 'text'; text: string } =>
+          typeof c === 'object' && c !== null && (c as Record<string, unknown>).type === 'text' && typeof (c as Record<string, unknown>).text === 'string',
+      )
+      .map((c) => c.text)
+      .join('');
+    return text.trim().length > 0 ? text : null;
   }
-  if (typeof payload.path === 'string') {
-    return payload.path;
-  }
+
+  return null;
+}
+
+/**
+ * Get a file hint from various possible fields on the event or context.
+ */
+function extractFileHint(event: PluginHookToolResultPersistEvent, _ctx: PluginHookToolResultPersistContext): string {
+  const msg = event.message as Record<string, unknown>;
+  if (typeof msg.file === 'string') return msg.file;
+  if (typeof msg.filename === 'string') return msg.filename;
+  if (typeof msg.path === 'string') return msg.path;
   return 'unknown';
 }
 
@@ -80,38 +102,60 @@ function appendViolationSummary(content: string, violations: CommentViolation[])
 }
 
 export function registerCommentChecker(api: OpenClawPluginApi): void {
-  api.registerHook(
+  api.on<PluginHookToolResultPersistEvent, PluginHookToolResultPersistResult | void>(
     'tool_result_persist',
-    (payload: ToolResultPayload): ToolResultPayload | undefined => {
+    (event: PluginHookToolResultPersistEvent, ctx: PluginHookToolResultPersistContext): PluginHookToolResultPersistResult | void => {
       const config = getPluginConfig(api);
       if (!config.comment_checker_enabled) {
-        return undefined;
+        return;
       }
 
-      const { content } = payload;
-      if (typeof content !== 'string' || content.trim().length === 0) {
-        return undefined;
-      }
+      const content = getTextContent(event);
+      if (!content) return;
 
-      const fileHint = extractFileHint(payload);
+      const fileHint = extractFileHint(event, ctx);
       if (hasNonCodeExtension(fileHint) || contentLooksNonCode(content)) {
-        return undefined;
+        return;
       }
 
       const violations = findViolations(content, fileHint);
       if (violations.length === 0) {
-        return undefined;
+        return;
       }
 
       const updatedContent = appendViolationSummary(content, violations);
-      return {
-        ...payload,
-        content: updatedContent,
-      };
+
+      // Modify message content to append the violation summary
+      const rawContent = (event.message as Record<string, unknown>).content;
+
+      if (typeof rawContent === 'string') {
+        return {
+          message: {
+            ...event.message,
+            content: updatedContent,
+          } as typeof event.message,
+        };
+      }
+
+      // Content block array: append to last text block
+      if (Array.isArray(rawContent)) {
+        const blocks = rawContent.map((block, i) => {
+          if (i === rawContent.length - 1 && typeof block === 'object' && block !== null && (block as Record<string, unknown>).type === 'text' && typeof (block as Record<string, unknown>).text === 'string') {
+            return { ...block, text: (block as { text: string }).text + '\n\n---\n' + updatedContent.split('\n').slice(2).join('\n') };
+          }
+          return block;
+        });
+
+        return {
+          message: {
+            ...event.message,
+            content: blocks,
+          } as typeof event.message,
+        };
+      }
+
+      return;
     },
-    {
-      name: 'oh-my-openclaw.comment-checker',
-      description: 'Detects AI slop comments in code',
-    }
+    { priority: 90 },
   );
 }
