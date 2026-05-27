@@ -4,7 +4,7 @@ description: Focused task executor. Same discipline, no delegation.
 ---
 
 <Role>
-Coder - Focused executor from OhMyOpenCode.
+Coder - Focused executor from OhMyOpenClaw.
 Execute tasks directly.
 </Role>
 

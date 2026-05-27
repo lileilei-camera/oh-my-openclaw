@@ -47,9 +47,9 @@ function createBootstrapContext(workspaceDir: string) {
     workspaceDir,
     bootstrapFiles: [
       {
-        name: 'AGENTS.md',
-        path: join(workspaceDir, 'AGENTS.md'),
-        content: '# Original AGENTS.md\n\nThis is the default content.',
+        name: 'SOUL.md',
+        path: join(workspaceDir, 'SOUL.md'),
+        content: '# Original SOUL.md\n\nThis is the default content.',
         missing: false,
       },
       {
@@ -81,7 +81,7 @@ async function main() {
   const handler = await loadHandler();
   console.log('\n🧪 persona-bootstrap internal hook tests\n');
 
-  await test('should NOT modify AGENTS.md when no state file exists', async () => {
+  await test('should NOT modify SOUL.md when no state file exists', async () => {
     const ws = join(tmpBase, 'ws-no-state');
     mkdirSync(ws, { recursive: true });
     const ctx = createBootstrapContext(ws);
@@ -89,11 +89,11 @@ async function main() {
 
     handler(ctx);
 
-    assert(ctx.bootstrapFiles[0].content === originalContent, 'AGENTS.md content should not change');
+    assert(ctx.bootstrapFiles[0].content === originalContent, 'SOUL.md content should not change');
     assert(ctx.bootstrapFiles[0].missing === false, 'missing flag should not change');
   });
 
-  await test('should NOT modify AGENTS.md when persona is __OFF__', async () => {
+  await test('should NOT modify SOUL.md when persona is __OFF__', async () => {
     const ws = join(tmpBase, 'ws-off');
     setupWorkspace(ws, '__OFF__');
     const ctx = createBootstrapContext(ws);
@@ -101,10 +101,10 @@ async function main() {
 
     handler(ctx);
 
-    assert(ctx.bootstrapFiles[0].content === originalContent, 'AGENTS.md content should not change');
+    assert(ctx.bootstrapFiles[0].content === originalContent, 'SOUL.md content should not change');
   });
 
-  await test('should NOT modify AGENTS.md when state file is empty', async () => {
+  await test('should NOT modify SOUL.md when state file is empty', async () => {
     const ws = join(tmpBase, 'ws-empty');
     setupWorkspace(ws, '');
     const ctx = createBootstrapContext(ws);
@@ -112,21 +112,21 @@ async function main() {
 
     handler(ctx);
 
-    assert(ctx.bootstrapFiles[0].content === originalContent, 'AGENTS.md content should not change');
+    assert(ctx.bootstrapFiles[0].content === originalContent, 'SOUL.md content should not change');
   });
 
-  await test('should replace AGENTS.md content when valid persona is active (omoc_delegate)', async () => {
+  await test('should replace SOUL.md content when valid persona is active (omoc_delegate)', async () => {
     const ws = join(tmpBase, 'ws-atlas');
     setupWorkspace(ws, 'omoc_delegate');
     const ctx = createBootstrapContext(ws);
 
     handler(ctx);
 
-    const agentsFile = ctx.bootstrapFiles.find(f => f.name === 'AGENTS.md');
-    assert(agentsFile !== undefined, 'AGENTS.md should exist');
-    assert(agentsFile!.content !== '# Original AGENTS.md\n\nThis is the default content.',
-      'AGENTS.md content should be replaced');
-    assert(agentsFile!.content.length > 0, 'AGENTS.md content should not be empty');
+    const agentsFile = ctx.bootstrapFiles.find(f => f.name === 'SOUL.md');
+    assert(agentsFile !== undefined, 'SOUL.md should exist');
+    assert(agentsFile!.content !== '# Original SOUL.md\n\nThis is the default content.',
+      'SOUL.md content should be replaced');
+    assert(agentsFile!.content.length > 0, 'SOUL.md content should not be empty');
     assert(agentsFile!.missing === false, 'missing should be false');
     // Verify it actually loaded the atlas persona file
     assert(
@@ -135,21 +135,21 @@ async function main() {
     );
   });
 
-  await test('should replace AGENTS.md content for omoc_coder persona', async () => {
+  await test('should replace SOUL.md content for omoc_coder persona', async () => {
     const ws = join(tmpBase, 'ws-sisyphus');
     setupWorkspace(ws, 'omoc_coder');
     const ctx = createBootstrapContext(ws);
 
     handler(ctx);
 
-    const agentsFile = ctx.bootstrapFiles.find(f => f.name === 'AGENTS.md');
-    assert(agentsFile !== undefined, 'AGENTS.md should exist');
-    assert(agentsFile!.content.length > 0, 'AGENTS.md content should not be empty');
-    assert(agentsFile!.content !== '# Original AGENTS.md\n\nThis is the default content.',
-      'AGENTS.md content should be replaced');
+    const agentsFile = ctx.bootstrapFiles.find(f => f.name === 'SOUL.md');
+    assert(agentsFile !== undefined, 'SOUL.md should exist');
+    assert(agentsFile!.content.length > 0, 'SOUL.md content should not be empty');
+    assert(agentsFile!.content !== '# Original SOUL.md\n\nThis is the default content.',
+      'SOUL.md content should be replaced');
   });
 
-  await test('should NOT modify AGENTS.md when persona ID is invalid', async () => {
+  await test('should NOT modify SOUL.md when persona ID is invalid', async () => {
     const ws = join(tmpBase, 'ws-invalid');
     setupWorkspace(ws, 'omoc_nonexistent_persona');
     const ctx = createBootstrapContext(ws);
@@ -158,7 +158,7 @@ async function main() {
     handler(ctx);
 
     assert(ctx.bootstrapFiles[0].content === originalContent,
-      'AGENTS.md content should not change for invalid persona');
+      'SOUL.md content should not change for invalid persona');
   });
 
   await test('should extract agentId from sessionKey and use agent-specific workspace', async () => {
@@ -174,13 +174,13 @@ async function main() {
     handler(ctx);
 
     // Should inject omoc_planner content from our test workspace
-    const agentsFile = ctx.bootstrapFiles.find(f => f.name === 'AGENTS.md');
-    assert(agentsFile !== undefined, 'AGENTS.md should exist');
+    const agentsFile = ctx.bootstrapFiles.find(f => f.name === 'SOUL.md');
+    assert(agentsFile !== undefined, 'SOUL.md should exist');
     assert(agentsFile!.content !== originalContent,
-      'AGENTS.md content should be replaced with persona content');
+      'SOUL.md content should be replaced with persona content');
   });
 
-  await test('should not crash when bootstrapFiles has no AGENTS.md', async () => {
+  await test('should not crash when bootstrapFiles has no SOUL.md', async () => {
     const ws = join(tmpBase, 'ws-no-agents');
     setupWorkspace(ws, 'omoc_delegate');
     const ctx = {

@@ -6,7 +6,7 @@ import { homedir } from 'os';
 /**
  * Persona Bootstrap Internal Hook
  *
- * Uses the agent:bootstrap internal hook to replace AGENTS.md content
+ * Uses the agent:bootstrap internal hook to replace SOUL.md content
  * with the active persona's prompt at runtime.
  *
  * This is the correct approach — no disk modification, clean runtime injection.
@@ -90,7 +90,7 @@ function resolveWorkspaceDir(agentId: string | null, profile: string | undefined
 /**
  * agent:bootstrap internal hook handler
  *
- * Modifies context.bootstrapFiles to replace AGENTS.md content
+ * Modifies context.bootstrapFiles to replace SOUL.md content
  * with the active persona's prompt.
  */
 export default function personaBootstrapHandler(event: unknown): void {
@@ -191,22 +191,22 @@ export default function personaBootstrapHandler(event: unknown): void {
     }
     console.log('[persona-bootstrap] Persona content loaded, length:', personaContent.length, 'bytes');
 
-    // 4. Find and replace AGENTS.md in bootstrapFiles
-    const agentsFile = ctx.bootstrapFiles.find(f => f.name === 'AGENTS.md');
+    // 4. Find and replace SOUL.md in bootstrapFiles
+    const agentsFile = ctx.bootstrapFiles.find(f => f.name === 'SOUL.md');
     if (!agentsFile) {
-      console.log('[persona-bootstrap] AGENTS.md not found in bootstrapFiles — skipping');
+      console.log('[persona-bootstrap] SOUL.md not found in bootstrapFiles — skipping');
       return;
     }
 
-    console.log('[persona-bootstrap] Found AGENTS.md in bootstrapFiles, original length:', agentsFile.content.length, 'bytes');
+    console.log('[persona-bootstrap] Found SOUL.md in bootstrapFiles, original length:', agentsFile.content.length, 'bytes');
 
-    // Replace AGENTS.md content with persona content
+    // Replace SOUL.md content with persona content
     agentsFile.content = personaContent;
     agentsFile.missing = false;
 
     // 5. Log success
     console.log(
-      `[persona-bootstrap] ✅ Injected persona '${personaId}' into AGENTS.md (workspace: ${workspaceDir}, new length: ${personaContent.length} bytes)`
+      `[persona-bootstrap] ✅ Injected persona '${personaId}' into SOUL.md (workspace: ${workspaceDir}, new length: ${personaContent.length} bytes)`
     );
   } catch (err) {
     console.error('[persona-bootstrap] ❌ Hook error:', err);
