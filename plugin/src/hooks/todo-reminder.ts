@@ -122,7 +122,7 @@ export function registerAgentEndReminder(api: OpenClawPluginApi): void {
             api.logger.warn(`${LOG_PREFIX} No sessionKey available for wake after agent_end — skipping to avoid new session creation`);
           } else {
             callHooksAgent(
-              `This session has ${incomplete.length} pending task(s) to complete:\n\n${summary}`,
+              `Resuming to complete ${incomplete.length} pending task(s).`,
               { gateway_url: config.gateway_url, hooks_token: config.hooks_token },
               { sessionKey, deliver: false },
               api.logger,
