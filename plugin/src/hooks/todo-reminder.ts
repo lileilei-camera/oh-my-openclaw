@@ -81,6 +81,7 @@ export function registerAgentEndReminder(api: OpenClawPluginApi): void {
     async (_event: PluginHookAgentEndEvent, ctx: { sessionKey?: string }): Promise<void> => {
       try {
         const sessionKey = ctx.sessionKey;
+        api.logger.info(`${LOG_PREFIX} agent_end fired: sessionKey=${sessionKey ?? 'N/A'}`);
         // Only dashboard sessions (not heartbeat/main) should check todos
         // Match :dashboard:<uuid> but NOT :dashboard:<uuid>:heartbeat
         const isDashboard = sessionKey && /:dashboard:[a-f0-9-]+$/.test(sessionKey);
@@ -121,7 +122,7 @@ export function registerAgentEndReminder(api: OpenClawPluginApi): void {
             api.logger.warn(`${LOG_PREFIX} No sessionKey available for wake after agent_end — skipping to avoid new session creation`);
           } else {
             callHooksAgent(
-              `[SYSTEM] This session ended with ${incomplete.length} incomplete todo(s). Execute each todo immediately, mark complete when done.\n\nIncomplete todos:\n${summary}\n\nBegin now.`,
+              `This session has ${incomplete.length} pending task(s) to complete:\n\n${summary}`,
               { gateway_url: config.gateway_url, hooks_token: config.hooks_token },
               { sessionKey, deliver: false },
               api.logger,
