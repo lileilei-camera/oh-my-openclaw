@@ -1,6 +1,5 @@
 import type {
   OpenClawPluginApi,
-  PluginHookAgentContext,
   PluginHookAgentEndEvent,
   PluginHookSessionStartEvent,
   PluginHookSessionEndEvent,
@@ -75,10 +74,18 @@ export function registerTodoReminder(api: OpenClawPluginApi): void {
 export function registerAgentEndReminder(api: OpenClawPluginApi): void {
   api.on<PluginHookAgentEndEvent, void>(
     'agent_end',
-    async (_event: PluginHookAgentEndEvent, ctx: PluginHookAgentContext): Promise<void> => {
+    async (_event: PluginHookAgentEndEvent, ctx: { sessionKey?: string }): Promise<void> => {
       try {
         const sessionKey = ctx.sessionKey;
-        const incomplete = getIncompleteTodos(sessionKey);
+        // Only dashboard sessions (not heartbeat/main) should check todos
+        const isDashboard = sessionKey && /:dashboard:/.test(sessionKey);
+        if (!isDashboard) return;
+
+        // Dashboard todos may be in __default__ or session-specific store
+        const incomplete = [
+          ...getIncompleteTodos(sessionKey),
+          ...getIncompleteTodos('__default__'),
+        ];
         if (incomplete.length === 0) return;
 
         const summary = incomplete
