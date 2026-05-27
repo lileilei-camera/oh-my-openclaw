@@ -1,5 +1,6 @@
 import type {
   OpenClawPluginApi,
+  PluginHookAgentContext,
   PluginHookAgentEndEvent,
   PluginHookSessionStartEvent,
   PluginHookSessionEndEvent,
@@ -74,9 +75,9 @@ export function registerTodoReminder(api: OpenClawPluginApi): void {
 export function registerAgentEndReminder(api: OpenClawPluginApi): void {
   api.on<PluginHookAgentEndEvent, void>(
     'agent_end',
-    async (_event: PluginHookAgentEndEvent): Promise<void> => {
+    async (_event: PluginHookAgentEndEvent, ctx: PluginHookAgentContext): Promise<void> => {
       try {
-        const sessionKey = (api.config.sessionKey as string) ?? (api.config.sessionId as string);
+        const sessionKey = ctx.sessionKey;
         const incomplete = getIncompleteTodos(sessionKey);
         if (incomplete.length === 0) return;
 
