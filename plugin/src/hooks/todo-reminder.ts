@@ -110,7 +110,13 @@ export function registerAgentEndReminder(api: OpenClawPluginApi): void {
               { gateway_url: config.gateway_url, hooks_token: config.hooks_token },
               api.logger,
               { sessionKey },
-            ).catch(() => {});
+            ).then((result) => {
+              if (result.ok) {
+                api.logger.info(`${LOG_PREFIX} hooks/wake sent for agent_end (${incomplete.length} todos, session=${sessionKey})`);
+              } else {
+                api.logger.warn(`${LOG_PREFIX} hooks/wake failed for agent_end: ${result.error ?? `status ${result.status}`}`);
+              }
+            }).catch(() => {});
           }
         }
 
