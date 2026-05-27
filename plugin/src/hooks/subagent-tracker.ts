@@ -138,6 +138,7 @@ export function registerSubagentTracker(api: OpenClawPluginApi): void {
           wakeMessage,
           { gateway_url: config.gateway_url, hooks_token: config.hooks_token },
           api.logger,
+          requesterSessionKey ? { sessionKey: requesterSessionKey } : undefined,
         );
 
         if (result.ok) {
