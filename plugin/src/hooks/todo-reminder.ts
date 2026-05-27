@@ -10,7 +10,7 @@ import type {
 import { TOOL_PREFIX, LOG_PREFIX } from '../constants.js';
 import { getIncompleteTodos, resetStore } from '../tools/todo/store.js';
 import { getPluginConfig } from '../types.js';
-import { callHooksWake } from '../utils/webhook-client.js';
+import { callHooksAgent } from '../utils/webhook-client.js';
 
 const TODO_TOOL_NAMES = new Set([
   `${TOOL_PREFIX}todo_create`,
@@ -105,16 +105,16 @@ export function registerAgentEndReminder(api: OpenClawPluginApi): void {
           if (!sessionKey) {
             api.logger.warn(`${LOG_PREFIX} No sessionKey available for wake after agent_end — skipping to avoid new session creation`);
           } else {
-            callHooksWake(
-              `⚠️ Agent ended with ${incomplete.length} incomplete todo(s). Resume work.`,
+            callHooksAgent(
+              `⚠️ Agent ended with ${incomplete.length} incomplete todo(s). Resume work.\n\nIncomplete todos:\n${summary}`,
               { gateway_url: config.gateway_url, hooks_token: config.hooks_token },
+              { sessionKey, deliver: false },
               api.logger,
-              { sessionKey },
             ).then((result) => {
               if (result.ok) {
-                api.logger.info(`${LOG_PREFIX} hooks/wake sent for agent_end (${incomplete.length} todos, session=${sessionKey})`);
+                api.logger.info(`${LOG_PREFIX} hooks/agent sent for agent_end (${incomplete.length} todos, session=${sessionKey})`);
               } else {
-                api.logger.warn(`${LOG_PREFIX} hooks/wake failed for agent_end: ${result.error ?? `status ${result.status}`}`);
+                api.logger.warn(`${LOG_PREFIX} hooks/agent failed for agent_end: ${result.error ?? `status ${result.status}`}`);
               }
             }).catch(() => {});
           }
