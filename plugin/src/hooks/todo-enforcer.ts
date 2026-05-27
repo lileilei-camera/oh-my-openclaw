@@ -102,7 +102,11 @@ export function registerTodoEnforcer(api: OpenClawPluginApi): void {
       // Continuation injection always runs, independent of todo_enforcer_enabled toggle.
       // (The agent:bootstrap directive hook above IS gated by the toggle.)
       const sessionKey = ctx.sessionKey ?? (api.config.sessionId as string) ?? (api.config.agentId as string) ?? 'default';
-      const incomplete = getIncompleteTodos(sessionKey);
+      // Merge __default__ store (where dashboard todos land) with session-specific store
+      const incomplete = [
+        ...getIncompleteTodos(sessionKey),
+        ...(sessionKey && sessionKey !== '__default__' ? getIncompleteTodos('__default__') : []),
+      ];
       if (incomplete.length === 0) return;
 
       const todoSummary = incomplete

@@ -12,6 +12,10 @@ import { getIncompleteTodos, resetStore } from '../tools/todo/store.js';
 import { getPluginConfig } from '../types.js';
 import { callHooksAgent } from '../utils/webhook-client.js';
 
+// Prevent agent_end → hooks/agent → agent_end infinite loop within 30s
+const agentEndCooldowns = new Map<string, number>();
+const AGENT_END_COOLDOWN_MS = 30_000;
+
 const TODO_TOOL_NAMES = new Set([
   `${TOOL_PREFIX}todo_create`,
   `${TOOL_PREFIX}todo_list`,
@@ -80,6 +84,16 @@ export function registerAgentEndReminder(api: OpenClawPluginApi): void {
         // Only dashboard sessions (not heartbeat/main) should check todos
         const isDashboard = sessionKey && /:dashboard:/.test(sessionKey);
         if (!isDashboard) return;
+
+        // Cooldown: prevent infinite agent_end → hooks/agent loop
+        if (sessionKey) {
+          const lastFired = agentEndCooldowns.get(sessionKey) ?? 0;
+          if (Date.now() - lastFired < AGENT_END_COOLDOWN_MS) {
+            api.logger.info(`${LOG_PREFIX} agent_end cooldown active, skipping wake (${Math.round((Date.now() - lastFired) / 1000)}s since last)`);
+            return;
+          }
+          agentEndCooldowns.set(sessionKey, Date.now());
+        }
 
         // Dashboard todos may be in __default__ or session-specific store
         const incomplete = [
