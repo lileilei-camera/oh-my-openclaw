@@ -13,7 +13,6 @@ import { registerRalphLoop } from './services/ralph-loop.js';
 import { registerWebhookBridge } from './services/webhook-bridge.js';
 import { registerSubagentTracker } from './hooks/subagent-tracker.js';
 import { registerDelegateTaskTool } from './tools/delegate-task/index.js';
-import { registerSlashcommandTool } from './tools/slashcommand/index.js';
 import { registerOmoDelegateTool } from './tools/omo-delegation.js';
 import { registerLookAtTool } from './tools/look-at/index.js';
 import { registerCheckpointTool } from './tools/checkpoint.js';
@@ -88,7 +87,6 @@ export default function register(api: OpenClawPluginApi) {
 
   // Register tools
   registerDelegateTaskTool(api); toolCount++; // delegate_task tool
-  registerSlashcommandTool(api); toolCount++; // slashcommand
   registerOmoDelegateTool(api); toolCount++;
   registerLookAtTool(api); toolCount++;
   registerCheckpointTool(api); toolCount++;

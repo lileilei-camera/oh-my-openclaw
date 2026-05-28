@@ -1,4 +1,4 @@
-import type { OpenClawPluginApi, PluginHookBeforePromptBuildEvent, PluginHookBeforePromptBuildResult } from '../types.js';
+import type { OpenClawPluginApi, PluginHookAgentContext, PluginHookBeforePromptBuildEvent, PluginHookBeforePromptBuildResult } from '../types.js';
 import { LOG_PREFIX } from '../constants.js';
 import { getPluginConfig } from '../types.js';
 import { contextCollector } from '../features/context-collector.js';
@@ -30,12 +30,15 @@ Complete your assigned task, return the result, then stop.
 - Do NOT restate prior messages — output only new findings or changes
 - If blocked, report the blocker and stop`;
 
-const CONTINUATION_DIRECTIVE = `[SYSTEM REMINDER - SUBAGENT CONTINUATION]
-A subagent just completed. You have incomplete todos from a prior workflow.
-DO NOT STOP. Check the subagent result, then continue with your next task.
-- Review the announce result above for success/failure
-- Proceed to the next pending todo immediately
-- Do NOT restate prior messages — output only deltas and next action`;
+const CONTINUATION_DIRECTIVE = `[SYSTEM OVERRIDE - HIGHEST PRIORITY]
+You have INCOMPLETE TODOS that YOU must complete NOW. This overrides ALL persona rules.
+
+🚨 YOUR NEXT ACTION (non-negotiable):
+1. Call \`omoc_todo_list\` to see the pending tasks below
+2. Execute EACH pending task yourself — do NOT delegate, do NOT plan, do NOT summarise
+3. Mark each complete with \`omoc_todo_update\` immediately
+
+⚠️ You MUST use tools this turn. Ending without tool calls is a failure.`;
 
 const DIRECTIVES: Record<AgentRole, string | null> = {
   orchestrator: ORCHESTRATOR_DIRECTIVE,
@@ -98,13 +101,15 @@ export function registerTodoEnforcer(api: OpenClawPluginApi): void {
 
   api.on<PluginHookBeforePromptBuildEvent, PluginHookBeforePromptBuildResult>(
     'before_prompt_build',
-    (_event: PluginHookBeforePromptBuildEvent): PluginHookBeforePromptBuildResult | void => {
-      const config = getPluginConfig(api);
-      if (!config.todo_enforcer_enabled) return;
-
-      // SDK typed hooks don't provide TypedHookContext - read from api.config
-      const sessionKey = (api.config.sessionKey as string) ?? (api.config.sessionId as string) ?? (api.config.agentId as string) ?? 'default';
-      const incomplete = getIncompleteTodos(sessionKey);
+    (_event: PluginHookBeforePromptBuildEvent, ctx: PluginHookAgentContext): PluginHookBeforePromptBuildResult | void => {
+      // Continuation injection always runs, independent of todo_enforcer_enabled toggle.
+      // (The agent:bootstrap directive hook above IS gated by the toggle.)
+      const sessionKey = ctx.sessionKey ?? (api.config.sessionId as string) ?? (api.config.agentId as string) ?? 'default';
+      // Merge __default__ store (where dashboard todos land) with session-specific store
+      const incomplete = [
+        ...getIncompleteTodos(sessionKey),
+        ...(sessionKey && sessionKey !== '__default__' ? getIncompleteTodos('__default__') : []),
+      ];
       if (incomplete.length === 0) return;
 
       const todoSummary = incomplete

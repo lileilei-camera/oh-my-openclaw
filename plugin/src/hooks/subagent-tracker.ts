@@ -127,17 +127,18 @@ export function registerSubagentTracker(api: OpenClawPluginApi): void {
 
       const config = getPluginConfig(api);
       if (config.webhook_bridge_enabled && config.gateway_url && config.hooks_token) {
-        const requesterSessionKey = typeof (api.config.requesterSessionKey as string) === 'string'
-          ? (api.config.requesterSessionKey as string)
-          : undefined;
+        // Use callerSession from tracking store (reliable), not api.config.requesterSessionKey
+        const requesterSessionKey = callerSession;
         const wakeMessage = requesterSessionKey
           ? `[System] Sub-agent completed (runId=${runId}, requester=${requesterSessionKey}). Process the result and continue pending work.`
           : `[System] Sub-agent completed (runId=${runId}). Process the result and continue pending work.`;
 
+        api.logger.info(`${LOG_PREFIX} Sending hooks/wake for runId=${runId} requesterSessionKey=${requesterSessionKey ?? 'N/A'}`);
         const result = await callHooksWake(
           wakeMessage,
           { gateway_url: config.gateway_url, hooks_token: config.hooks_token },
           api.logger,
+          requesterSessionKey ? { sessionKey: requesterSessionKey } : undefined,
         );
 
         if (result.ok) {

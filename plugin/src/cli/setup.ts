@@ -444,7 +444,7 @@ function resolveAgentWorkspaceDir(agentId: string): string {
  * For each agent:
  *   1. Create workspace directory if it doesn't exist
  *   2. Read persona MD from plugin/agents/{mdName}.md
- *   3. Write to {workspaceDir}/AGENTS.md
+ *   3. Write to {workspaceDir}/SOUL.md
  *   4. Create .omoc-state/active-persona with agent ID
  * Idempotent: safe to run multiple times.
  */
@@ -481,11 +481,11 @@ export function syncWorkspacePersonas(
         logger.info(`  Created workspace: ${workspaceDir}`);
       }
 
-      // Read persona content and write to AGENTS.md
+      // Read persona content and write to SOUL.md
       const personaContent = fs.readFileSync(personaPath, 'utf-8');
-      const agentsMdPath = path.join(workspaceDir, 'AGENTS.md');
-      fs.writeFileSync(agentsMdPath, personaContent, 'utf-8');
-      logger.info(`  Synced ${mdName}.md → ${agentsMdPath} (${personaContent.length} bytes)`);
+      const soulMdPath = path.join(workspaceDir, 'SOUL.md');
+      fs.writeFileSync(soulMdPath, personaContent, 'utf-8');
+      logger.info(`  Synced ${mdName}.md → ${soulMdPath} (${personaContent.length} bytes)`);
 
       synced.push(agentId);
     } catch (err) {

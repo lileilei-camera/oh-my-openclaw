@@ -31,7 +31,11 @@ export function registerModeSwitch(api: OpenClawPluginApi): void {
       if (!message) return;
 
       const label = getModeLabel(mode as ModeId);
-      const appendGuidance = `你现在处于 **${label}** 模式,${label} 模式的规则我已经发给你，按照规则执行任务，如果你看不到规则，停下来告诉我。`;
+      const appendGuidance = [
+        `━━━ 🔔 当前模式：${label} ━━━`,
+        `你现在处于 **${label}** 模式，${label} 模式的规则我已经发给你，按照规则执行任务。`,
+        `如果你看不到规则，停下来告诉我。`,
+      ].join('\n');
 
       // start-work 是一次性模式：注入后立即关闭
       if (mode === 'start-work') {

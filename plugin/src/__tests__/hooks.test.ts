@@ -235,6 +235,7 @@ describe('todo-enforcer continuation hook (before_prompt_build)', () => {
     const handler = getContinuationHandler(api);
     const result = handler(
       { prompt: 'subagent completed' },
+      { sessionKey: 'sess-cont' },
     );
 
     expect(result).toBeDefined();
@@ -258,7 +259,8 @@ describe('todo-enforcer continuation hook (before_prompt_build)', () => {
     expect(result).toBeUndefined();
   });
 
-  it('returns void when todo_enforcer_enabled=false', () => {
+  it('continuation runs even when todo_enforcer_enabled=false', () => {
+    // Per source: "Continuation injection always runs, independent of todo_enforcer_enabled toggle"
     const api = createMockApi({ config: createMockConfig({ todo_enforcer_enabled: false }) });
     registerTodoEnforcer(api);
 
@@ -270,7 +272,8 @@ describe('todo-enforcer continuation hook (before_prompt_build)', () => {
       { sessionKey: 'sess-disabled' },
     );
 
-    expect(result).toBeUndefined();
+    expect(result).toBeDefined();
+    expect(result!.prependContext).toContain('Some task');
   });
 
   it('includes todo status and content in prepended context', () => {
@@ -284,6 +287,7 @@ describe('todo-enforcer continuation hook (before_prompt_build)', () => {
     const handler = getContinuationHandler(api);
     const result = handler(
       { prompt: 'announce result' },
+      { sessionKey: 'sess-detail' },
     );
 
     expect(result).toBeDefined();
@@ -292,30 +296,32 @@ describe('todo-enforcer continuation hook (before_prompt_build)', () => {
     expect(result!.prependContext).not.toContain('Task C');
   });
 
-  it('falls back through sessionId and agentId when sessionKey is missing', () => {
-    const api = createMockApi({ config: createMockConfig({ todo_enforcer_enabled: true, agentId: 'my-agent' }) });
+  it('uses ctx.sessionKey for continuation (not config)', () => {
+    // config has agentId but NOT sessionKey — ctx.sessionKey is the source of truth
+    const api = createMockApi({ config: createMockConfig({ todo_enforcer_enabled: true, agentId: 'from-config-agent' }) });
     registerTodoEnforcer(api);
 
-    createTodo('Fallback task', 'high', 'pending', 'my-agent');
+    createTodo('Fallback task', 'high', 'pending', 'from-ctx');
 
     const handler = getContinuationHandler(api);
 
     const result = handler(
       { prompt: 'hello' },
+      { sessionKey: 'from-ctx' },
     );
 
     expect(result).toBeDefined();
     expect(result!.prependContext).toContain('Fallback task');
   });
 
-  it('falls back to default when no context keys are present', () => {
+  it('detects incomplete todos via ctx.sessionKey', () => {
     const api = createMockApi({ config: createMockConfig({ todo_enforcer_enabled: true }) });
     registerTodoEnforcer(api);
 
-    createTodo('Default task', 'high', 'pending', 'default');
+    createTodo('Default task', 'high', 'pending', 'my-session');
 
     const handler = getContinuationHandler(api);
-    const result = handler({ prompt: 'hello' });
+    const result = handler({ prompt: 'hello' }, { sessionKey: 'my-session' });
 
     expect(result).toBeDefined();
     expect(result!.prependContext).toContain('Default task');
@@ -328,7 +334,7 @@ describe('todo-enforcer continuation hook (before_prompt_build)', () => {
     createTodo('Log task', 'high', 'pending', 'sess-log');
 
     const handler = getContinuationHandler(api);
-    handler({ prompt: 'hello' });
+    handler({ prompt: 'hello' }, { sessionKey: 'sess-log' });
 
     expect(api.logger.info).toHaveBeenCalledWith(
       expect.stringContaining('Todo continuation injected: 1 incomplete todo(s)'),

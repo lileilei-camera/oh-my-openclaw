@@ -393,7 +393,7 @@ describe('Agent End Reminder', () => {
     registerAgentEndReminder(mockApi);
     const handler = getOnHandler(mockApi, 'agent_end');
 
-    await handler({ messages: [], success: true });
+    await handler({ messages: [], success: true }, { sessionKey: 'test-session' });
 
     expect(mockApi.runtime.system.enqueueSystemEvent).toHaveBeenCalledOnce();
     const [warning, opts] = mockApi.runtime.system.enqueueSystemEvent.mock.calls[0];
@@ -428,19 +428,18 @@ describe('Agent End Reminder', () => {
     expect(mockApi.runtime.system.enqueueSystemEvent).not.toHaveBeenCalled();
   });
 
-  it('falls back to sessionId when sessionKey is absent', async () => {
-    mockApi.config.sessionId = 'fallback-id';
-    mockApi.config.sessionKey = undefined;
-    createTodo('Pending task', 'high', 'pending', 'fallback-id');
+  it('uses sessionKey from ctx parameter', async () => {
+    mockApi.config.sessionId = 'should-not-use-this';
+    mockApi.config.sessionKey = 'should-not-use-this-either';
+    createTodo('Pending task', 'high', 'pending', 'ctx-session');
 
     registerAgentEndReminder(mockApi);
     const handler = getOnHandler(mockApi, 'agent_end');
-    const ctx = createMockContext({ sessionKey: undefined, sessionId: 'fallback-id' });
 
-    await handler({ messages: [], success: true });
+    await handler({ messages: [], success: true }, { sessionKey: 'ctx-session' });
 
     const [, opts] = mockApi.runtime.system.enqueueSystemEvent.mock.calls[0];
-    expect(opts.sessionKey).toBe('fallback-id');
+    expect(opts.sessionKey).toBe('ctx-session');
   });
 
   it('does not throw on errors (graceful degradation)', async () => {
@@ -464,7 +463,7 @@ describe('Agent End Reminder', () => {
     registerAgentEndReminder(mockApi);
     const handler = getOnHandler(mockApi, 'agent_end');
 
-    await handler({ messages: [], success: true });
+    await handler({ messages: [], success: true }, { sessionKey: 'test-session' });
 
     expect(mockApi.logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('1 incomplete todo(s)'),

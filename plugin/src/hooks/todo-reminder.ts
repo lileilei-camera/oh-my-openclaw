@@ -1,6 +1,7 @@
 import type {
   OpenClawPluginApi,
   PluginHookAgentEndEvent,
+  PluginHookAgentContext,
   PluginHookSessionStartEvent,
   PluginHookSessionEndEvent,
   PluginHookToolResultPersistEvent,
@@ -10,7 +11,11 @@ import type {
 import { TOOL_PREFIX, LOG_PREFIX } from '../constants.js';
 import { getIncompleteTodos, resetStore } from '../tools/todo/store.js';
 import { getPluginConfig } from '../types.js';
-import { callHooksWake } from '../utils/webhook-client.js';
+// import { callHooksAgent, callHooksWake } from '../utils/webhook-client.js';
+
+// Prevent agent_end → hooks/agent → agent_end infinite loop within 30s
+const agentEndCooldowns = new Map<string, number>();
+const AGENT_END_COOLDOWN_MS = 30_000;
 
 const TODO_TOOL_NAMES = new Set([
   `${TOOL_PREFIX}todo_create`,
@@ -74,43 +79,37 @@ export function registerTodoReminder(api: OpenClawPluginApi): void {
 export function registerAgentEndReminder(api: OpenClawPluginApi): void {
   api.on<PluginHookAgentEndEvent, void>(
     'agent_end',
-    async (_event: PluginHookAgentEndEvent): Promise<void> => {
+    async (_event: PluginHookAgentEndEvent, ctx: PluginHookAgentContext): Promise<void> => {
       try {
-        const sessionKey = (api.config.sessionKey as string) ?? (api.config.sessionId as string);
-        const incomplete = getIncompleteTodos(sessionKey);
-        if (incomplete.length === 0) return;
+        const sessionKey = ctx.sessionKey;
+        api.logger.info(`${LOG_PREFIX} agent_end fired: sessionKey=${sessionKey ?? 'N/A'}`);
+        const isDashboard = sessionKey && /:dashboard:[a-f0-9-]+$/.test(sessionKey);
+        api.logger.info(`${LOG_PREFIX} agent_end isDashboard=${isDashboard}`);
+        if (!isDashboard) return;
 
-        const summary = incomplete
-          .map((t) => `  - [${t.status}] ${t.id}: ${t.content}`)
-          .join('\n');
-
-        const warning =
-          `⚠️ [OMOC] ${incomplete.length} incomplete todo(s):\n${summary}\n\n` +
-          `Call \`${TOOL_PREFIX}todo_list\` to review and resume work.`;
-
+        // Cooldown: prevent rapid re-entry
         if (sessionKey) {
-          api.runtime.system.enqueueSystemEvent(warning, { sessionKey });
-        }
-
-        const config = getPluginConfig(api);
-        if (config.webhook_bridge_enabled && config.hooks_token) {
-          if (!sessionKey) {
-            api.logger.warn(`${LOG_PREFIX} No sessionKey available for wake after agent_end — skipping to avoid new session creation`);
-          } else {
-            callHooksWake(
-              `⚠️ Agent ended with ${incomplete.length} incomplete todo(s). Resume work.`,
-              { gateway_url: config.gateway_url, hooks_token: config.hooks_token },
-              api.logger,
-              { sessionKey },
-            ).catch(() => {});
+          const lastFired = agentEndCooldowns.get(sessionKey) ?? 0;
+          if (Date.now() - lastFired < AGENT_END_COOLDOWN_MS) {
+            api.logger.info(`${LOG_PREFIX} agent_end cooldown active, skipping (${Math.round((Date.now() - lastFired) / 1000)}s since last)`);
+            return;
           }
+          agentEndCooldowns.set(sessionKey, Date.now());
         }
 
-        api.logger.warn(
-          `${LOG_PREFIX} Agent ended with ${incomplete.length} incomplete todo(s)`,
-        );
-      } catch {
-        // graceful degradation
+        const incomplete = [
+          ...getIncompleteTodos(sessionKey),
+          ...getIncompleteTodos('__default__'),
+        ];
+        api.logger.info(`${LOG_PREFIX} agent_end incomplete count=${incomplete.length}`);
+        if (incomplete.length > 0) {
+          const summary = incomplete
+            .map((t) => `  - [${t.status}] ${t.id}: ${t.content}`)
+            .join('\n');
+          api.logger.warn(`${LOG_PREFIX} Agent ended with ${incomplete.length} incomplete todo(s):\n${summary}`);
+        }
+      } catch (err) {
+        api.logger.error(`${LOG_PREFIX} agent_end handler error: ${err instanceof Error ? err.message : String(err)}`);
       }
     },
     { priority: 50 },
