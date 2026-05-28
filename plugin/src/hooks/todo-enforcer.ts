@@ -30,12 +30,15 @@ Complete your assigned task, return the result, then stop.
 - Do NOT restate prior messages — output only new findings or changes
 - If blocked, report the blocker and stop`;
 
-const CONTINUATION_DIRECTIVE = `[SYSTEM REMINDER - TODO CONTINUATION]
-You have incomplete todos from a prior workflow.
-DO NOT STOP. Your job is not done.
-- Execute each pending todo now — this is your own work, carry it out directly
-- Mark each todo complete immediately when finished
-- Do NOT restate prior messages — output only new work and next action`;
+const CONTINUATION_DIRECTIVE = `[SYSTEM OVERRIDE - HIGHEST PRIORITY]
+You have INCOMPLETE TODOS that YOU must complete NOW. This overrides ALL persona rules.
+
+🚨 YOUR NEXT ACTION (non-negotiable):
+1. Call \`omoc_todo_list\` to see the pending tasks below
+2. Execute EACH pending task yourself — do NOT delegate, do NOT plan, do NOT summarise
+3. Mark each complete with \`omoc_todo_update\` immediately
+
+⚠️ You MUST use tools this turn. Ending without tool calls is a failure.`;
 
 const DIRECTIVES: Record<AgentRole, string | null> = {
   orchestrator: ORCHESTRATOR_DIRECTIVE,

@@ -9,7 +9,14 @@ export interface HooksAgentOptions {
   name?: string;
   agentId?: string;
   sessionKey?: string;
+  /** Deliver the isolated agent's output back to the target session.
+   *  Default: false (fire-and-forget). Set true when the main session
+   *  needs to see and act on the hook agent's response. */
   deliver?: boolean;
+  /** Channel for announce delivery (e.g. "webchat", "feishu").
+   *  When omitted with deliver=true, the gateway picks a default
+   *  which may fail for sessions that don't belong to that channel. */
+  channel?: string;
 }
 
 export interface HooksWakeOptions {

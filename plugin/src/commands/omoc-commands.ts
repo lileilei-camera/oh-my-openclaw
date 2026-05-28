@@ -521,8 +521,8 @@ export function registerOmocCommands(api: OpenClawPluginApi) {
         writeFileSync(join(stateDir, 'dump_next_turn'), dumpOutPath, 'utf-8');
         api.logger.info(`${LOG_PREFIX} [dump] Flag set → ${dumpOutPath}`);
         return {
-          text: `📦 本次 LLM 调用时将 dump 完整上下文（system prompt + messages + tools）到:\n\`${dumpOutPath}\``,
-          continueAgent: true,
+          text: `📦 已设置 dump 标志，**下次发送消息时**将 dump 完整上下文到:\n\`${dumpOutPath}\``,
+          continueAgent: false,
         };
       }
 

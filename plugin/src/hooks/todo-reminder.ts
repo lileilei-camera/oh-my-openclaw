@@ -1,6 +1,7 @@
 import type {
   OpenClawPluginApi,
   PluginHookAgentEndEvent,
+  PluginHookAgentContext,
   PluginHookSessionStartEvent,
   PluginHookSessionEndEvent,
   PluginHookToolResultPersistEvent,
@@ -10,7 +11,7 @@ import type {
 import { TOOL_PREFIX, LOG_PREFIX } from '../constants.js';
 import { getIncompleteTodos, resetStore } from '../tools/todo/store.js';
 import { getPluginConfig } from '../types.js';
-import { callHooksAgent } from '../utils/webhook-client.js';
+// import { callHooksAgent, callHooksWake } from '../utils/webhook-client.js';
 
 // Prevent agent_end → hooks/agent → agent_end infinite loop within 30s
 const agentEndCooldowns = new Map<string, number>();
@@ -78,69 +79,37 @@ export function registerTodoReminder(api: OpenClawPluginApi): void {
 export function registerAgentEndReminder(api: OpenClawPluginApi): void {
   api.on<PluginHookAgentEndEvent, void>(
     'agent_end',
-    async (_event: PluginHookAgentEndEvent, ctx: { sessionKey?: string }): Promise<void> => {
+    async (_event: PluginHookAgentEndEvent, ctx: PluginHookAgentContext): Promise<void> => {
       try {
         const sessionKey = ctx.sessionKey;
         api.logger.info(`${LOG_PREFIX} agent_end fired: sessionKey=${sessionKey ?? 'N/A'}`);
-        // Only dashboard sessions (not heartbeat/main) should check todos
-        // Match :dashboard:<uuid> but NOT :dashboard:<uuid>:heartbeat
         const isDashboard = sessionKey && /:dashboard:[a-f0-9-]+$/.test(sessionKey);
+        api.logger.info(`${LOG_PREFIX} agent_end isDashboard=${isDashboard}`);
         if (!isDashboard) return;
 
-        // Cooldown: prevent infinite agent_end → hooks/agent loop
+        // Cooldown: prevent rapid re-entry
         if (sessionKey) {
           const lastFired = agentEndCooldowns.get(sessionKey) ?? 0;
           if (Date.now() - lastFired < AGENT_END_COOLDOWN_MS) {
-            api.logger.info(`${LOG_PREFIX} agent_end cooldown active, skipping wake (${Math.round((Date.now() - lastFired) / 1000)}s since last)`);
+            api.logger.info(`${LOG_PREFIX} agent_end cooldown active, skipping (${Math.round((Date.now() - lastFired) / 1000)}s since last)`);
             return;
           }
           agentEndCooldowns.set(sessionKey, Date.now());
         }
 
-        // Dashboard todos may be in __default__ or session-specific store
         const incomplete = [
           ...getIncompleteTodos(sessionKey),
           ...getIncompleteTodos('__default__'),
         ];
-        if (incomplete.length === 0) return;
-
-        const summary = incomplete
-          .map((t) => `  - [${t.status}] ${t.id}: ${t.content}`)
-          .join('\n');
-
-        const warning =
-          `⚠️ [OMOC] ${incomplete.length} incomplete todo(s):\n${summary}\n\n` +
-          `Call \`${TOOL_PREFIX}todo_list\` to review and resume work.`;
-
-        if (sessionKey) {
-          api.runtime.system.enqueueSystemEvent(warning, { sessionKey });
+        api.logger.info(`${LOG_PREFIX} agent_end incomplete count=${incomplete.length}`);
+        if (incomplete.length > 0) {
+          const summary = incomplete
+            .map((t) => `  - [${t.status}] ${t.id}: ${t.content}`)
+            .join('\n');
+          api.logger.warn(`${LOG_PREFIX} Agent ended with ${incomplete.length} incomplete todo(s):\n${summary}`);
         }
-
-        const config = getPluginConfig(api);
-        if (config.webhook_bridge_enabled && config.hooks_token) {
-          if (!sessionKey) {
-            api.logger.warn(`${LOG_PREFIX} No sessionKey available for wake after agent_end — skipping to avoid new session creation`);
-          } else {
-            callHooksAgent(
-              `Resuming to complete ${incomplete.length} pending task(s).`,
-              { gateway_url: config.gateway_url, hooks_token: config.hooks_token },
-              { sessionKey, deliver: false },
-              api.logger,
-            ).then((result) => {
-              if (result.ok) {
-                api.logger.info(`${LOG_PREFIX} hooks/agent sent for agent_end (${incomplete.length} todos, session=${sessionKey})`);
-              } else {
-                api.logger.warn(`${LOG_PREFIX} hooks/agent failed for agent_end: ${result.error ?? `status ${result.status}`}`);
-              }
-            }).catch(() => {});
-          }
-        }
-
-        api.logger.warn(
-          `${LOG_PREFIX} Agent ended with ${incomplete.length} incomplete todo(s)`,
-        );
-      } catch {
-        // graceful degradation
+      } catch (err) {
+        api.logger.error(`${LOG_PREFIX} agent_end handler error: ${err instanceof Error ? err.message : String(err)}`);
       }
     },
     { priority: 50 },
