@@ -12,14 +12,14 @@
  *   /omoc mode <name>            → switch mode
  *   /omoc mode list              → list modes
  *   /omoc mode off               → deactivate mode
- *   /omoc init <dir> <name>      → initialize project
- *   /omoc add <name> <path>      → add agent.md to project
- *   /omoc delete <name> [file]   → delete project or agent.md
- *   /omoc list                   → list projects
- *   /omoc set-active <name>      → activate project
- *   /omoc off                    → deactivate persona/project/mode
- *   /omoc status                 → view status
- *   /omoc start-work             → start work mode
+ *   /omoc project init <dir> <n>  → initialize project
+ *   /omoc project add <n> <p>     → add agent.md to project
+ *   /omoc project delete <n> [f]  → delete project or agent.md
+ *   /omoc project list            → list projects
+ *   /omoc project active <n>  → activate project
+ *   /omoc project off             → deactivate project
+ *   /omoc status                  → view status
+ *   /omoc start-work              → start work mode
  */
 
 import type { OpenClawPluginApi } from '../types.js';
@@ -120,16 +120,20 @@ async function handlePersona(
   const action = (subArgs[0] ?? '').toLowerCase();
 
   if (!action) {
-    // /omoc person — activate default
-    const previousId = await getActivePersona(workspaceDir);
-    await setActivePersonaId(DEFAULT_PERSONA_ID, workspaceDir);
-    const name = personaDisplayName(DEFAULT_PERSONA_ID);
-    const switched =
-      previousId && previousId !== DEFAULT_PERSONA_ID
-        ? `\n\nSwitched from **${personaDisplayName(previousId)}**.`
-        : '';
     return {
-      text: `# OmOC Persona\n\nActive persona: **${name}**${switched}\n\nUse \`/omoc person list\` to see available personas, or \`/omoc person <name>\` to switch.`,
+      text:
+        '# OmOC Persona Help\n\n' +
+        '## Commands\n' +
+        '- `/omoc person` — Persona help + list\n' +
+        '- `/omoc person <name>` — Switch to a persona (e.g. `delegate`, `coder`)\n' +
+        '- `/omoc person list` — List all personas with descriptions\n' +
+        '- `/omoc person off` — Deactivate current persona\n' +
+        '- `/omoc person help` — Show this help\n\n' +
+        '## Personas\n' +
+        listPersonas().map((p) => `| ${p.emoji} | \`${p.shortName}\` | ${p.displayName} | ${p.descriptionCn} |`)
+          .join('\n') +
+        '\n\n' +
+        '## Note\nPersona controls the agent\'s role and work style. It is independent from mode.',
     };
   }
 
@@ -166,6 +170,24 @@ async function handlePersona(
     };
   }
 
+  if (action === 'help') {
+    return {
+      text:
+        '# OmOC Persona Help\n\n' +
+        '## Commands\n' +
+        '- `/omoc person` — Persona help + list\n' +
+        '- `/omoc person <name>` — Switch to a persona (e.g. `delegate`, `coder`)\n' +
+        '- `/omoc person list` — List all personas with descriptions\n' +
+        '- `/omoc person off` — Deactivate current persona\n' +
+        '- `/omoc person help` — Show this help\n\n' +
+        '## Personas\n' +
+        listPersonas().map((p) => `| ${p.emoji} | \`${p.shortName}\` | ${p.displayName} | ${p.descriptionCn} |`)
+          .join('\n') +
+        '\n\n' +
+        '## Note\nPersona controls the agent\'s role and work style. It is independent from mode.',
+    };
+  }
+
   // /omoc person <name>
   const resolvedId = resolvePersonaId(action);
   if (!resolvedId) {
@@ -195,11 +217,19 @@ async function handleMode(
   const action = (subArgs[0] ?? '').toLowerCase();
 
   if (!action) {
-    const currentMode = getActiveModeSync(workspaceDir);
     return {
-      text: currentMode
-        ? `# OmOC Mode\n\nCurrent mode: **${currentMode}**\n\nUse \`/omoc mode list\` to see available modes, or \`/omoc mode <name>\` to switch.`
-        : '# OmOC Mode\n\nNo mode is currently active.\n\nUse `/omoc mode list` to see available modes.',
+      text:
+        '# OmOC Mode Help\n\n' +
+        '## Commands\n' +
+        '- `/omoc mode` — Show current mode\n' +
+        '- `/omoc mode <name>` — Switch to a mode\n' +
+        '- `/omoc mode list` — List all modes with descriptions\n' +
+        '- `/omoc mode off` — Deactivate mode injection\n' +
+        '- `/omoc mode help` — Show this help\n\n' +
+        '## Modes\n' +
+        listModes().map((m) => `| \`${m.id}\` | ${m.label} | ${m.description} |`).join('\n') +
+        '\n\n' +
+        '## Note\nMode injects behavioral context. Switching mode does NOT change persona.',
     };
   }
 
@@ -232,6 +262,23 @@ async function handleMode(
     };
   }
 
+  if (action === 'help') {
+    return {
+      text:
+        '# OmOC Mode Help\n\n' +
+        '## Commands\n' +
+        '- `/omoc mode` — Show current mode\n' +
+        '- `/omoc mode <name>` — Switch to a mode\n' +
+        '- `/omoc mode list` — List all modes with descriptions\n' +
+        '- `/omoc mode off` — Deactivate mode injection\n' +
+        '- `/omoc mode help` — Show this help\n\n' +
+        '## Modes\n' +
+        listModes().map((m) => `| \`${m.id}\` | ${m.label} | ${m.description} |`).join('\n') +
+        '\n\n' +
+        '## Note\nMode injects behavioral context. Switching mode does NOT change persona.',
+    };
+  }
+
   // /omoc mode <name>
   if (!isValidMode(action)) {
     const modes = listModes();
@@ -259,21 +306,23 @@ function handleProject(
   workspaceDir: string,
   subArgs: string[],
 ): { text?: string; continueAgent?: boolean } {
-  // Parse: /omoc init <dir> <name>  OR  /omoc <subcommand> ...
+  // Parse: /omoc project <subcmd> [args] ...
   const first = (subArgs[0] ?? '').trim();
   const firstLower = first.toLowerCase();
 
   if (!first) {
     return {
       text:
-        '# OmOC Init\n\n' +
-        'Usage:\n' +
-        '- `/omoc init <dir> <project-name>` — Initialize a new project\n' +
-        '- `/omoc add <project-name> <sub-path-agent-md>` — Add extra agent.md\n' +
-        '- `/omoc delete <project-name> [agent-md]` — Remove project or agent.md\n' +
-        '- `/omoc list` — List all projects\n' +
-        '- `/omoc set-active <project-name>` — Activate a project\n' +
-        '- `/omoc off` — Deactivate current project',
+        '# OmOC Project Help\n\n' +
+        '## Commands\n' +
+        '- `/omoc project init <dir> <name>` — Initialize a new project\n' +
+        '- `/omoc project add <name> <path>` — Add extra agent.md\n' +
+        '- `/omoc project delete <name> [agent-md]` — Remove project or agent.md\n' +
+        '- `/omoc project list` — List registered projects\n' +
+        '- `/omoc project active <name>` — Activate a project\n' +
+        '- `/omoc project off` — Deactivate project context\n' +
+        '- `/omoc project help` — Show this help\n\n' +
+        '## Note\nProject context injects AGENTS.md from the active project into the system prompt.',
     };
   }
 
@@ -283,7 +332,7 @@ function handleProject(
     const projectName = subArgs[2]?.trim();
 
     if (!dir || !projectName) {
-      return { text: '⚠️ **Error**: Directory and project name required.\n\nUsage: `/omoc init <dir> <project-name>`' };
+      return { text: '⚠️ **Error**: Directory and project name required.\n\nUsage: `/omoc project init <dir> <project-name>`' };
     }
     if (!existsSync(dir) || !statSync(dir).isDirectory()) {
       return { text: `⚠️ **Error**: Directory does not exist: \`${dir}\`` };
@@ -320,7 +369,7 @@ function handleProject(
     const projectName = subArgs[1]?.trim();
     const subPath = subArgs.slice(2).join(' ').trim();
     if (!projectName || !subPath) {
-      return { text: '⚠️ **Error**: Both project name and path required.\n\nUsage: `/omoc add <project-name> <path>`' };
+      return { text: '⚠️ **Error**: Both project name and path required.\n\nUsage: `/omoc project add <project-name> <path>`' };
     }
     const project = findProjectByName(workspaceDir, projectName);
     if (!project) {
@@ -349,7 +398,7 @@ function handleProject(
     const projectName = subArgs[1]?.trim();
     const agentMd = subArgs.slice(2).join(' ').trim();
     if (!projectName) {
-      return { text: '⚠️ **Error**: Project name required.\n\nUsage: `/omoc delete <project-name> [agent-md]`' };
+      return { text: '⚠️ **Error**: Project name required.\n\nUsage: `/omoc project delete <project-name> [agent-md]`' };
     }
     const project = findProjectByName(workspaceDir, projectName);
     if (!project) {
@@ -370,11 +419,11 @@ function handleProject(
     return { text: formatProjectList(workspaceDir) };
   }
 
-  // --- set-active <name> ---
-  if (firstLower === 'set-active') {
+  // --- active <name> ---
+  if (firstLower === 'active') {
     const projectName = subArgs[1]?.trim();
     if (!projectName) {
-      return { text: '⚠️ **Error**: Project name required.\n\nUsage: `/omoc set-active <project-name>`' };
+      return { text: '⚠️ **Error**: Project name required.\n\nUsage: `/omoc project active <project-name>`' };
     }
     const project = findProjectByName(workspaceDir, projectName);
     if (!project) return { text: `⚠️ **Error**: Project not found: \`${projectName}\`` };
@@ -388,34 +437,23 @@ function handleProject(
     return { text: '✅ Project context injection deactivated.' };
   }
 
-  // Bare <dir> <name> — legacy /omoc_init style
-  const dir = expandPath(first);
-  const projectName = subArgs[1]?.trim();
-  if (projectName && existsSync(dir) && statSync(dir).isDirectory()) {
-    let effectiveName = projectName;
-    const existingByPath = findProjectByPath(workspaceDir, dir);
-    if (existingByPath) {
-      const existingByName = findProjectByName(workspaceDir, projectName);
-      if (!existingByName && projectName !== existingByPath.name) {
-        effectiveName = projectName;
-      } else {
-        effectiveName = existingByPath.name;
-      }
-    }
-    if (!findProjectByName(workspaceDir, effectiveName)) {
-      addProject(workspaceDir, { name: effectiveName, path: dir, agentMds: ['AGENTS.md'] });
-    }
-    setActiveProject(workspaceDir, effectiveName);
-    setPendingInit(workspaceDir, {
-      type: 'init',
-      projectName: effectiveName,
-      projectPath: dir,
-      agentMdFile: 'AGENTS.md',
-    });
-    return { continueAgent: true };
+  if (firstLower === 'help') {
+    return {
+      text:
+        '# OmOC Project Help\n\n' +
+        '## Commands\n' +
+        '- `/omoc project init <dir> <name>` — Initialize a new project\n' +
+        '- `/omoc project add <name> <path>` — Add extra agent.md\n' +
+        '- `/omoc project delete <name> [agent-md]` — Remove project or agent.md\n' +
+        '- `/omoc project list` — List registered projects\n' +
+        '- `/omoc project active <name>` — Activate a project\n' +
+        '- `/omoc project off` — Deactivate project context\n' +
+        '- `/omoc project help` — Show this help\n\n' +
+        '## Note\nProject context injects AGENTS.md from the active project into the system prompt.',
+    };
   }
 
-  return { text: '⚠️ Unknown subcommand. Use `/omoc` for usage.' };
+  return { text: '⚠️ Unknown subcommand. Use `/omoc project help` for usage.' };
 }
 
 function formatProjectList(workspaceDir: string): string {
@@ -483,16 +521,14 @@ export function registerOmocCommands(api: OpenClawPluginApi) {
         return handleMode(api, workspaceDir, rest);
       }
 
-      // Init / project subcommands
-      if (first === 'init' || first === 'project' || first === 'projects' ||
-          first === 'add' || first === 'delete' ||
-          first === 'list' || first === 'set-active' || first === 'off') {
+      // Project subcommands — must be prefixed with "project"
+      if (first === 'project' || first === 'projects') {
         if (!workspaceDir) {
           api.logger.warn('[omoc] Cannot resolve workspaceDir');
           return { text: '⚠️ **Error**: Cannot determine workspace directory.' };
         }
         api.logger.info(`[omoc] workspaceDir=[${workspaceDir}]`);
-        return handleProject(api, workspaceDir, parts);
+        return handleProject(api, workspaceDir, rest);
       }
 
       // start-work alias
@@ -568,12 +604,12 @@ export function registerOmocCommands(api: OpenClawPluginApi) {
           '- `/omoc mode <name>` — Switch mode\n' +
           '- `/omoc mode list` — List modes\n' +
           '- `/omoc mode off` — Deactivate mode\n' +
-          '- `/omoc init <dir> <name>` — Initialize project\n' +
-          '- `/omoc add <name> <path>` — Add agent.md\n' +
-          '- `/omoc delete <name>` — Remove project\n' +
-          '- `/omoc list` — List projects\n' +
-          '- `/omoc set-active <name>` — Activate project\n' +
-          '- `/omoc off` — Deactivate project\n' +
+          '- `/omoc project init <dir> <name>` — Initialize project\n' +
+          '- `/omoc project add <name> <path>` — Add agent.md\n' +
+          '- `/omoc project delete <name>` — Remove project\n' +
+          '- `/omoc project list` — List projects\n' +
+          '- `/omoc project active <name>` — Activate project\n' +
+          '- `/omoc project off` — Deactivate project\n' +
           '- `/omoc start-work` — Start work mode\n' +
           '- `/omoc status` — View status',
       };
@@ -597,7 +633,7 @@ export function registerOmocCommands(api: OpenClawPluginApi) {
 
   api.registerCommand({
     name: 'omoc_init',
-    description: 'Initialize or manage project agent.md files (alias for /omoc init)',
+    description: 'Initialize or manage project agent.md files (alias for /omoc project init)',
     acceptsArgs: true,
     handler: async (ctx: { args?: string; sessionKey?: string; config?: Record<string, unknown> }) => {
       const workspaceDir = resolveWorkspaceDir(ctx);
@@ -649,29 +685,34 @@ function handleHelp(): { text: string } {
     text:
       '# OmOC Help\n\n' +
       '## Persona\n' +
+      '- `/omoc person` — Persona help + list\n' +
       '- `/omoc person <name>` — Switch to a persona\n' +
       '- `/omoc person list` — List available personas\n' +
       '- `/omoc person off` — Deactivate persona\n' +
-      '- `/omoc` — Activate default persona\n\n' +
+      '- `/omoc person help` — Persona help + list\n\n' +
       '## Mode\n' +
       '- `/omoc mode <name>` — Switch to a mode\n' +
       '- `/omoc mode list` — List available modes\n' +
       '- `/omoc mode off` — Deactivate mode\n' +
-      '- `/omoc start-work` — Start work mode\n\n' +
+      '- `/omoc mode help` — Mode help + list\n\n' +
       '## Project\n' +
-      '- `/omoc init <dir> <name>` — Initialize a new project\n' +
-      '- `/omoc add <name> <path>` — Add agent.md to project\n' +
-      '- `/omoc delete <name> [file]` — Remove project or agent.md\n' +
-      '- `/omoc list` — List registered projects\n' +
-      '- `/omoc set-active <name>` — Activate a project\n' +
-      '- `/omoc off` — Deactivate project context\n\n' +
+      '- `/omoc project init <dir> <name>` — Initialize a new project\n' +
+      '- `/omoc project add <name> <path>` — Add agent.md to project\n' +
+      '- `/omoc project delete <name> [file]` — Remove project or agent.md\n' +
+      '- `/omoc project list` — List registered projects\n' +
+      '- `/omoc project active <name>` — Activate a project\n' +
+      '- `/omoc project off` — Deactivate project context\n' +
+      '- `/omoc project help` — Project help\n\n' +
+      '## Work\n' +
+      '- `/omoc start-work` — Enter start-work mode\n' +
+      '- `/omoc plan` — Enter planning mode\n\n' +
       '## Debug\n' +
       '- `/omoc dump [path]` — Dump LLM input to file on next turn\n\n' +
       '## Other\n' +
-      '- `/omoc status` — View current persona & mode\n' +
+      '- `/omoc status` — View current persona, mode & project\n' +
       '- `/omoc help` — Show this help\n\n' +
       '## Aliases\n' +
-      '`/omoc_mode` → `/omoc mode` · `/omoc_init` → `/omoc init` · `/start-work` → `/omoc start-work` · `/plan` → `/omoc mode plan`\n\n' +
+      '`/omoc_mode` → `/omoc mode` · `/omoc_init` → `/omoc project init` · `/start-work` → `/omoc start-work` · `/plan` → `/omoc mode plan`\n\n' +
       '## Related Commands\n' +
       '- `/omoc_ralph_loop` — Start the Ralph Loop self-completion mechanism\n' +
       '- `/omoc_ralph_stop` — Stop the active Ralph Loop\n' +
