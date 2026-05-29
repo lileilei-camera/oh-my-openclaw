@@ -6,6 +6,11 @@ import type {
 import { LOG_PREFIX } from '../../constants.js';
 import { getModeMessage, getModeLabel, isValidMode, ModeId } from './mode-registry.js';
 import { getActiveModeSync, resetModeSync } from './mode-state.js';
+import { OFF_MARKER, getActivePersonaSync } from '../../utils/persona-state.js';
+import { listPersonas } from '../../agents/persona-prompts.js';
+import { resolveOpenClawWorkspaceDir } from '../../utils/paths.js';
+import { readFileSync, existsSync } from 'fs';
+import { join } from 'path';
 
 /*
  * Mode switch hook — reads .omoc-state/active_mode and injects mode context.
@@ -31,11 +36,35 @@ export function registerModeSwitch(api: OpenClawPluginApi): void {
       if (!message) return;
 
       const label = getModeLabel(mode as ModeId);
-      const appendGuidance = [
+      const lines: string[] = [
         `━━━ 🔔 当前模式：${label} ━━━`,
         `你现在处于 **${label}** 模式，${label} 模式的规则我已经发给你，按照规则执行任务。`,
         `如果你看不到规则，停下来告诉我。`,
-      ].join('\n');
+      ];
+
+      // Add persona context — read from disk (sync, same as mode)
+      const ws = resolveOpenClawWorkspaceDir(workspaceDir);
+      const personaFile = join(ws, '.omoc-state', 'active-persona');
+      let activePersona = getActivePersonaSync();
+      if (!activePersona && existsSync(personaFile)) {
+        try {
+          const raw = readFileSync(personaFile, 'utf-8').trim();
+          if (raw && raw !== OFF_MARKER) activePersona = raw;
+        } catch { /* ignore */ }
+      }
+      if (activePersona) {
+        const personas = listPersonas();
+        const info = personas.find((p) => p.id === activePersona);
+        if (info) {
+          lines.push(
+            '',
+            `━━━ 🎭 当前角色：${info.displayName}（${info.descriptionCn}）━━━`,
+            `你当前扮演 **${info.displayName}**，该角色的规则已注入到系统上下文，按照角色规则执行任务。`,
+          );
+        }
+      }
+
+      const appendGuidance = lines.join('\n');
 
       // start-work 是一次性模式：注入后立即关闭
       if (mode === 'start-work') {
