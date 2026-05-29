@@ -1,46 +1,39 @@
 import { execFile } from 'node:child_process';
 import { Type, Static } from '@sinclair/typebox';
 import { existsSync } from 'node:fs';
+import { resolve, isAbsolute } from 'node:path';
 import type { OpenClawPluginApi } from '../../types.js';
 import { LOOK_AT_DESCRIPTION } from './constants.js';
 import { toolResponse, toolError } from '../../utils/helpers.js';
 import { TOOL_PREFIX, LOG_PREFIX } from '../../constants.js';
 
 const LOG_PREFIX_LOOK_AT = `${LOG_PREFIX}[look-at]`;
-const OPENCLAW_TIMEOUT_MS = 60_000;
+const OPENCLAW_TIMEOUT_MS = 120_000;
 
 const LookAtParamsSchema = Type.Object({
   file_path: Type.String({
-    description: 'Absolute path to the file to analyze',
+    description: 'Path to the file to analyze (absolute or relative to workspace)',
   }),
   goal: Type.String({
     description: 'What specific information to extract from the file',
   }),
   model: Type.Optional(Type.String({
-    description: 'OpenClaw summarize model to use (optional)',
+    description: 'Model override for the summarization (optional)',
   })),
 });
 
 type LookAtParams = Static<typeof LookAtParamsSchema>;
 
-/**
- * Check if OpenClaw summarize CLI is available.
- */
-function isOpenClawSummarizeAvailable(): boolean {
-  // Check if openclaw CLI exists and summarize plugin is enabled
-  return true; // We'll try and handle errors gracefully
-}
-
-/**
- * Detect file type by extension to choose appropriate analysis method.
- */
-function detectFileType(filePath: string): 'image' | 'pdf' | 'document' | 'unknown' {
+function detectFileType(filePath: string): 'image' | 'pdf' | 'document' | 'office' | 'unknown' {
   const ext = filePath.toLowerCase().split('.').pop() || '';
   if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(ext)) {
     return 'image';
   }
   if (ext === 'pdf') {
     return 'pdf';
+  }
+  if (['docx', 'pptx', 'xlsx', 'doc', 'ppt', 'xls'].includes(ext)) {
+    return 'office';
   }
   if (['md', 'txt', 'html', 'json', 'xml', 'csv', 'yaml', 'yml', 'ts', 'js', 'py', 'c', 'h', 'cpp', 'java'].includes(ext)) {
     return 'document';
@@ -49,32 +42,40 @@ function detectFileType(filePath: string): 'image' | 'pdf' | 'document' | 'unkno
 }
 
 export function registerLookAtTool(api: OpenClawPluginApi) {
-  api.logger.info(`${LOG_PREFIX} Registering look-at tool (OpenClaw mode)`);
+  api.logger.info(`${LOG_PREFIX} Registering look-at tool`);
 
   api.registerTool({
     name: `${TOOL_PREFIX}look_at`,
     description: LOOK_AT_DESCRIPTION,
     parameters: LookAtParamsSchema,
     execute: async (_toolCallId: string, params: LookAtParams) => {
-      api.logger.info(`${LOG_PREFIX_LOOK_AT} Analyzing file: ${params.file_path}, goal: ${params.goal}`);
+      api.logger.info(`${LOG_PREFIX_LOOK_AT} Analyzing file: ${params.file_path}`);
 
-      const file_path = params.file_path;
-      const goal = params.goal;
-      const fileType = detectFileType(file_path);
+      const rawPath = params.file_path;
+      const file_path = isAbsolute(rawPath) ? rawPath : resolve(rawPath);
 
-      // Check if file exists
       if (!existsSync(file_path)) {
         return toolError(`File not found: ${file_path}`);
       }
 
-      // Method 1: Try OpenClaw summarize CLI (supports images, PDFs, audio, video)
+      const fileType = detectFileType(file_path);
+      const goal = params.goal;
+      const model = params.model;
+
       try {
-        const summarizeResult = await new Promise<ReturnType<typeof toolResponse> | null>((resolve) => {
-          execFile(
+        const summarizeResult = await new Promise<{ content: Array<{ type: string; text: string }> } | null>((resolve) => {
+          const args = ['summarize', file_path, '--prompt', goal];
+          if (model) args.push('--model', model);
+
+          const child = execFile(
             'openclaw',
-            ['summarize', file_path],
+            args,
             { timeout: OPENCLAW_TIMEOUT_MS, maxBuffer: 20 * 1024 * 1024 },
             (error, stdout, stderr) => {
+              if (stderr) {
+                api.logger.warn(`${LOG_PREFIX_LOOK_AT} summarize stderr: ${stderr.slice(0, 500)}`);
+              }
+
               if (error) {
                 api.logger.warn(`${LOG_PREFIX_LOOK_AT} summarize CLI failed: ${(error as any).message}`);
                 resolve(null);
@@ -83,100 +84,35 @@ export function registerLookAtTool(api: OpenClawPluginApi) {
 
               const output = stdout?.trim();
               if (output) {
-                const response = `📋 OpenClaw Analysis Result (${fileType}):\n\n${output}\n\n---\n🎯 User Goal: ${goal}`;
+                const response = `📋 Analysis of \`${file_path}\` (${fileType})\n\n${output}\n\n---\n🎯 Goal: ${goal}`;
                 resolve(toolResponse(response));
               } else {
+                api.logger.warn(`${LOG_PREFIX_LOOK_AT} summarize CLI returned empty output`);
                 resolve(null);
               }
             },
           );
+
+          child.on('error', (err) => {
+            api.logger.warn(`${LOG_PREFIX_LOOK_AT} summarize spawn error: ${err.message}`);
+            resolve(null);
+          });
         });
 
         if (summarizeResult) {
           return summarizeResult;
         }
       } catch (e) {
-        api.logger.warn(`${LOG_PREFIX_LOOK_AT} summarize CLI error: ${(e as Error).message}`);
+        api.logger.warn(`${LOG_PREFIX_LOOK_AT} summarize error: ${(e as Error).message}`);
       }
 
-      // Method 2: Fallback - provide guidance for using OpenClaw built-in tools
-      const guidance = getBuiltInToolGuidance(file_path, fileType, goal);
-      return toolResponse(guidance);
+      return toolError(
+        `Failed to analyze \`${file_path}\` via OpenClaw summarize CLI. ` +
+        `Try using the built-in \`image\`, \`pdf\`, or \`read\` tools instead.`
+      );
     },
     optional: true,
   });
 
-  api.logger.info(`${LOG_PREFIX} Look-at tool registered successfully (OpenClaw mode)`);
-}
-
-/**
- * Generate guidance for using OpenClaw built-in tools when summarize CLI is not available.
- */
-function getBuiltInToolGuidance(filePath: string, fileType: string, goal: string): string {
-  const lines: string[] = [
-    `📋 File Analysis Request: ${filePath}`,
-    `🎯 Goal: ${goal}`,
-    `📁 File Type: ${fileType}`,
-    '',
-    '---',
-    '',
-    '💡 The Gemini CLI is not available, but you can use OpenClaw\'s built-in tools:',
-    '',
-  ];
-
-  switch (fileType) {
-    case 'image':
-      lines.push(
-        'For image analysis, OpenClaw has a built-in `image` tool:',
-        '',
-        '```',
-        `image(image: "${filePath}", prompt: "${goal}")`,
-        '```',
-        '',
-        'Supported formats: JPG, PNG, GIF, WebP, BMP, SVG',
-      );
-      break;
-
-    case 'pdf':
-      lines.push(
-        'For PDF analysis, OpenClaw has a built-in `pdf` tool:',
-        '',
-        '```',
-        `pdf(pdf: "${filePath}", prompt: "${goal}")`,
-        '```',
-        '',
-        'The PDF tool can extract text, analyze layout, and answer questions about content.',
-      );
-      break;
-
-    case 'document':
-      lines.push(
-        'For document analysis, you can use the built-in `read` tool:',
-        '',
-        '```',
-        `read(path: "${filePath}")`,
-        '```',
-        '',
-        'Or for summarization, use the `summarize` tool if available.',
-      );
-      break;
-
-    default:
-      lines.push(
-        'Try using the appropriate built-in tool based on file type:',
-        '- `image` for images',
-        '- `pdf` for PDFs',
-        '- `read` for text files',
-      );
-  }
-
-  lines.push(
-    '',
-    '---',
-    '',
-    '📝 Simply ask the AI to analyze the file using the appropriate tool above.',
-    'The AI will automatically select the right tool based on the file type.',
-  );
-
-  return lines.join('\n');
+  api.logger.info(`${LOG_PREFIX} Look-at tool registered successfully`);
 }

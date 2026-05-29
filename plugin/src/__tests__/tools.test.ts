@@ -324,7 +324,7 @@ describe('registerLookAtTool', () => {
     expect(toolConfig.optional).toBe(true);
   });
 
-  it('calls execFile with openclaw summarize and correct arguments', async () => {
+  it('calls execFile with openclaw summarize, --prompt, and path resolution', async () => {
     mockedExecFile.mockImplementation((_cmd: string, _args: string[], _opts: any, cb: Function) => {
       cb(null, 'Analysis result text', '');
     });
@@ -340,12 +340,51 @@ describe('registerLookAtTool', () => {
     expect(mockedExecFile).toHaveBeenCalledOnce();
     const [cmd, args, opts] = mockedExecFile.mock.calls[0];
     expect(cmd).toBe('openclaw');
-    expect(args).toEqual(['summarize', '/path/to/image.png']);
-    expect(opts).toMatchObject({ timeout: 60_000, maxBuffer: 20 * 1024 * 1024 });
+    expect(args).toEqual(['summarize', '/path/to/image.png', '--prompt', 'describe this image']);
+    expect(opts).toMatchObject({ timeout: 120_000, maxBuffer: 20 * 1024 * 1024 });
     expect(result.content[0].text).toContain('Analysis result text');
   });
 
-  it('returns built-in tool guidance when summarize CLI has non-zero exit', async () => {
+  it('passes --model when provided', async () => {
+    mockedExecFile.mockImplementation((_cmd: string, _args: string[], _opts: any, cb: Function) => {
+      cb(null, 'result', '');
+    });
+
+    registerLookAtTool(mockApi);
+    const toolConfig = mockApi.registerTool.mock.calls[0][0];
+
+    await toolConfig.execute('test-call-id', {
+      file_path: '/test.pdf',
+      goal: 'summarize',
+      model: 'gemini-pro',
+    });
+
+    const [, args] = mockedExecFile.mock.calls[0];
+    expect(args).toContain('--model');
+    expect(args).toContain('gemini-pro');
+  });
+
+  it('resolves relative paths to absolute', async () => {
+    mockedExecFile.mockImplementation((_cmd: string, _args: string[], _opts: any, cb: Function) => {
+      cb(null, 'ok', '');
+    });
+
+    registerLookAtTool(mockApi);
+    const toolConfig = mockApi.registerTool.mock.calls[0][0];
+
+    await toolConfig.execute('test-call-id', {
+      file_path: './foo.png',
+      goal: 'test',
+    });
+
+    const [, args] = mockedExecFile.mock.calls[0];
+    const resolvedPath = args[1];
+    expect(resolvedPath).not.toBe('./foo.png');
+    expect(resolvedPath).toContain('foo.png');
+    expect(resolvedPath.startsWith('/')).toBe(true);
+  });
+
+  it('returns error when summarize CLI has non-zero exit', async () => {
     mockedExecFile.mockImplementation((_cmd: string, _args: string[], _opts: any, cb: Function) => {
       const error = new Error('exit 1') as any;
       error.code = 1;
@@ -360,11 +399,11 @@ describe('registerLookAtTool', () => {
       goal: 'analyze',
     });
 
-    expect(result.content[0].text).toContain('File Analysis Request');
-    expect(result.content[0].text).toContain('OpenClaw');
+    expect(result.content[0].text).toContain('Error:');
+    expect(result.content[0].text).toContain('Failed to analyze');
   });
 
-  it('returns built-in tool guidance when summarize CLI times out', async () => {
+  it('returns error when summarize CLI times out', async () => {
     mockedExecFile.mockImplementation((_cmd: string, _args: string[], _opts: any, cb: Function) => {
       const error = new Error('process killed') as any;
       error.killed = true;
@@ -379,10 +418,10 @@ describe('registerLookAtTool', () => {
       goal: 'summarize',
     });
 
-    expect(result.content[0].text).toContain('File Analysis Request');
+    expect(result.content[0].text).toContain('Error:');
   });
 
-  it('returns built-in tool guidance for empty summarize output', async () => {
+  it('returns error for empty summarize output', async () => {
     mockedExecFile.mockImplementation((_cmd: string, _args: string[], _opts: any, cb: Function) => {
       cb(null, '   ', '');
     });
@@ -395,7 +434,7 @@ describe('registerLookAtTool', () => {
       goal: 'describe',
     });
 
-    expect(result.content[0].text).toContain('File Analysis Request');
+    expect(result.content[0].text).toContain('Error:');
   });
 
   it('parameters schema has required file_path and goal fields', () => {

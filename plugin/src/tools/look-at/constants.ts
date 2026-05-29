@@ -1,3 +1,3 @@
 export const MULTIMODAL_LOOKER_AGENT = "multimodal-looker" as const
 
-export const LOOK_AT_DESCRIPTION = `Analyze media files (PDFs, images, diagrams) using OpenClaw's built-in tools. Supports images (JPG/PNG/GIF/WebP), PDFs, and documents. Uses OpenClaw summarize CLI when available, falls back to guidance for built-in image/pdf/read tools. No external API key required.`
+export const LOOK_AT_DESCRIPTION = `Analyze media files (images, PDFs, Office docs, text) via OpenClaw CLI. Supports JPG/PNG/GIF/WebP, PDF, DOCX/PPTX/XLSX, and documents. Passes --prompt for targeted analysis and --model for model override. No external API key required.`
