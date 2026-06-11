@@ -150,6 +150,7 @@ export function registerSessionCleanup(api: OpenClawPluginApi): void {
 
 export function resetTodoReminderCounters(): void {
   sessionCounters.clear();
+  agentEndCooldowns.clear();
 }
 
-export { sessionCounters as _sessionCounters };
+export { sessionCounters as _sessionCounters, agentEndCooldowns as _agentEndCooldowns };
