@@ -1,9 +1,8 @@
 /**
  * Project Guard — Hook 注册
  *
- * 所有判断逻辑完整保留，但当前模式为「仅日志不拦截」：
- * - 安全区内的操作：静默放行
- * - 越界操作：打印 warn 日志后放行
+ * 在 before_tool_call 中拦截 write/edit/exec 越界操作，
+ * 通过 requireApproval 弹窗请求用户授权。
  *
  * 工作空间解析：
  * - 优先从 api.config.agents.list[] 中按 ctx.agentId 匹配 agent.workspace
@@ -18,11 +17,12 @@ import type {
   PluginHookAgentEndEvent,
 } from '../../types.js';
 import { LOG_PREFIX } from '../../constants.js';
-import { WRITE_TOOLS, EXEC_TOOL } from './guard-types.js';
+import { WRITE_TOOLS, EXEC_TOOL, turnGrantStore } from './guard-types.js';
 import {
   getActiveProjectPath,
   isInSafeZone,
   parseCdTarget,
+  addTurnGrant,
   clearTurnGrants,
   getTurnGrants,
 } from './guard-core.js';
@@ -104,13 +104,37 @@ export function registerProjectGuard(api: OpenClawPluginApi): void {
           return;
         }
 
-        // 仅日志，不拦截
         api.logger.warn(
-          `${LOG_PREFIX} Project Guard: write/edit WOULD BLOCK (passing) → path="${absolutePath}" ` +
-          `agent="${ctx.agentId || 'unknown'}" workspace="${workspaceDir}" ` +
-          `project="${projectPath}"`,
+          `${LOG_PREFIX} Project Guard: write/edit out-of-bounds → path="${absolutePath}" ` +
+          `agent="${ctx.agentId || 'unknown'}" project="${projectPath}"`,
         );
-        return;
+        return {
+          requireApproval: {
+            title: '⚠️ 项目边界越界',
+            description: [
+              `**write/edit** 操作的目标路径不在当前项目范围内。`,
+              ``,
+              `- **当前项目**：${projectName}`,
+              `- **项目路径**：${projectPath}`,
+              `- **目标路径**：${absolutePath}`,
+              ``,
+              `安全区域包括：项目目录、工作空间、/tmp、以及本轮已授权的路径。`,
+            ].join('\n'),
+            severity: 'warning',
+            allowedDecisions: ['allow-once', 'allow-always', 'deny'],
+            actions: [
+              { kind: 'decision', label: '单次', style: 'primary', decision: 'allow-once', commandTemplate: '单次' },
+              { kind: 'decision', label: '本轮', style: 'success', decision: 'allow-always', commandTemplate: '本轮' },
+              { kind: 'decision', label: '拒绝', style: 'danger', decision: 'deny', commandTemplate: '拒绝' },
+            ],
+            onResolution: (decision: string) => {
+              if (decision === 'allow-always') {
+                api.logger.info(`${LOG_PREFIX} guard: granted turn-wide write access to "${absolutePath}"`);
+                addTurnGrant(turnGrantStore, sessionKey, absolutePath);
+              }
+            },
+          },
+        };
       }
 
       // ── exec ──
@@ -136,13 +160,38 @@ export function registerProjectGuard(api: OpenClawPluginApi): void {
           return;
         }
 
-        // 仅日志，不拦截
         api.logger.warn(
-          `${LOG_PREFIX} Project Guard: exec WOULD BLOCK (passing) → cwd="${finalCwd}" ` +
-          `agent="${ctx.agentId || 'unknown'}" workspace="${workspaceDir}" ` +
-          `project="${projectPath}"`,
+          `${LOG_PREFIX} Project Guard: exec out-of-bounds → cwd="${finalCwd}" ` +
+          `agent="${ctx.agentId || 'unknown'}" project="${projectPath}"`,
         );
-        return;
+        return {
+          requireApproval: {
+            title: '⚠️ 项目边界越界',
+            description: [
+              `**exec** 命令的工作目录不在当前项目范围内。`,
+              ``,
+              `- **当前项目**：${projectName}`,
+              `- **项目路径**：${projectPath}`,
+              `- **命令 cwd**：${finalCwd}`,
+              `- **命令**：\`${command.slice(0, 200)}\``,
+              ``,
+              `安全区域包括：项目目录、工作空间、/tmp、以及本轮已授权的路径。`,
+            ].join('\n'),
+            severity: 'warning',
+            allowedDecisions: ['allow-once', 'allow-always', 'deny'],
+            actions: [
+              { kind: 'decision', label: '单次', style: 'primary', decision: 'allow-once', commandTemplate: '单次' },
+              { kind: 'decision', label: '本轮', style: 'success', decision: 'allow-always', commandTemplate: '本轮' },
+              { kind: 'decision', label: '拒绝', style: 'danger', decision: 'deny', commandTemplate: '拒绝' },
+            ],
+            onResolution: (decision: string) => {
+              if (decision === 'allow-always') {
+                api.logger.info(`${LOG_PREFIX} guard: granted turn-wide exec access to "${finalCwd}"`);
+                addTurnGrant(turnGrantStore, sessionKey, finalCwd);
+              }
+            },
+          },
+        };
       }
 
       // ── other tools (read, grep, glob, etc.) ──

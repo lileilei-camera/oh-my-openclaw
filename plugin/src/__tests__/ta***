@@ -37,10 +37,6 @@ vi.mock('../utils/config.js', () => ({
   })),
 }));
 
-import { execFile } from 'child_process';
-import * as nodeFs from 'node:fs';
-import { promises as fs } from 'fs';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
 import {
   createTodo,
   listTodos,
@@ -384,62 +380,64 @@ describe('Agent End Reminder', () => {
     expect(mockApi.on.mock.calls[0][2]).toEqual({ priority: 50 });
   });
 
-  it('fires enqueueSystemEvent when incomplete todos exist', async () => {
-    mockApi.config.sessionKey = 'test-session';
-    createTodo('Implement auth', 'high', 'pending', 'test-session');
-    createTodo('Write tests', 'medium', 'in_progress', 'test-session');
-    createTodo('Deploy', 'low', 'completed', 'test-session');
+  it('logs incomplete todos when session is dashboard', async () => {
+    const sessionKey = 'test-session:dashboard:abc123';
+    mockApi.config.sessionKey = sessionKey;
+    createTodo('Implement auth', 'high', 'pending', sessionKey);
+    createTodo('Write tests', 'medium', 'in_progress', sessionKey);
+    createTodo('Deploy', 'low', 'completed', sessionKey);
 
     registerAgentEndReminder(mockApi);
     const handler = getOnHandler(mockApi, 'agent_end');
 
-    await handler({ messages: [], success: true }, { sessionKey: 'test-session' });
+    await handler({ messages: [], success: true }, { sessionKey });
 
-    expect(mockApi.runtime.system.enqueueSystemEvent).toHaveBeenCalledOnce();
-    const [warning, opts] = mockApi.runtime.system.enqueueSystemEvent.mock.calls[0];
+    expect(mockApi.logger.warn).toHaveBeenCalledOnce();
+    const warning = mockApi.logger.warn.mock.calls[0][0];
     expect(warning).toContain('2 incomplete todo(s)');
     expect(warning).toContain('Implement auth');
     expect(warning).toContain('Write tests');
     expect(warning).not.toContain('Deploy');
-    expect(warning).toContain('omoc_todo_list');
-    expect(opts.sessionKey).toBe('test-session');
   });
 
-  it('does not fire when all todos are complete', async () => {
-    mockApi.config.sessionKey = 'test-session';
-    createTodo('Task A', 'high', 'completed', 'test-session');
-    createTodo('Task B', 'medium', 'completed', 'test-session');
+  it('does not log when all todos are complete', async () => {
+    const sessionKey = 'test-session:dashboard:abc123';
+    mockApi.config.sessionKey = sessionKey;
+    createTodo('Task A', 'high', 'completed', sessionKey);
+    createTodo('Task B', 'medium', 'completed', sessionKey);
 
     registerAgentEndReminder(mockApi);
     const handler = getOnHandler(mockApi, 'agent_end');
 
-    await handler({ messages: [], success: true });
+    await handler({ messages: [], success: true }, { sessionKey });
 
-    expect(mockApi.runtime.system.enqueueSystemEvent).not.toHaveBeenCalled();
+    expect(mockApi.logger.warn).not.toHaveBeenCalled();
   });
 
-  it('does not fire when no todos exist', async () => {
-    mockApi.config.sessionKey = 'test-session';
+  it('does not log when no todos exist', async () => {
+    const sessionKey = 'test-session:dashboard:abc123';
+    mockApi.config.sessionKey = sessionKey;
     registerAgentEndReminder(mockApi);
     const handler = getOnHandler(mockApi, 'agent_end');
 
-    await handler({ messages: [], success: true });
+    await handler({ messages: [], success: true }, { sessionKey });
 
-    expect(mockApi.runtime.system.enqueueSystemEvent).not.toHaveBeenCalled();
+    expect(mockApi.logger.warn).not.toHaveBeenCalled();
   });
 
   it('uses sessionKey from ctx parameter', async () => {
+    const sessionKey = 'ctx-session:dashboard:abc123';
     mockApi.config.sessionId = 'should-not-use-this';
     mockApi.config.sessionKey = 'should-not-use-this-either';
-    createTodo('Pending task', 'high', 'pending', 'ctx-session');
+    createTodo('Pending task', 'high', 'pending', sessionKey);
 
     registerAgentEndReminder(mockApi);
     const handler = getOnHandler(mockApi, 'agent_end');
 
-    await handler({ messages: [], success: true }, { sessionKey: 'ctx-session' });
+    await handler({ messages: [], success: true }, { sessionKey });
 
-    const [, opts] = mockApi.runtime.system.enqueueSystemEvent.mock.calls[0];
-    expect(opts.sessionKey).toBe('ctx-session');
+    expect(mockApi.logger.warn).toHaveBeenCalledOnce();
+    expect(mockApi.logger.warn.mock.calls[0][0]).toContain('Pending task');
   });
 
   it('does not throw on errors (graceful degradation)', async () => {
@@ -457,13 +455,14 @@ describe('Agent End Reminder', () => {
   });
 
   it('logs warning when incomplete todos found', async () => {
-    mockApi.config.sessionKey = 'test-session';
-    createTodo('Pending', 'high', 'pending', 'test-session');
+    const sessionKey = 'test-session:dashboard:abc123';
+    mockApi.config.sessionKey = sessionKey;
+    createTodo('Pending', 'high', 'pending', sessionKey);
 
     registerAgentEndReminder(mockApi);
     const handler = getOnHandler(mockApi, 'agent_end');
 
-    await handler({ messages: [], success: true }, { sessionKey: 'test-session' });
+    await handler({ messages: [], success: true }, { sessionKey });
 
     expect(mockApi.logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('1 incomplete todo(s)'),

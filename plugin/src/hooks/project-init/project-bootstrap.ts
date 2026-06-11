@@ -109,7 +109,16 @@ export function registerProjectBootstrap(api: OpenClawPluginApi) {
         `## Active Project: ${project.name}`,
         `路径: ${project.path}`,
       ].join('\n');
-      parts.push(projectInfo);
+
+      const guardPrompt = [
+        ``,
+        `### 🔒 项目路径保护`,
+        `  - 始终以 **${project.path}** 为当前工作目录`,
+        `  - 偶尔需切到项目外查信息（如 cd /other && ls），完成后**立刻切回项目路径**`,
+        `  - write/edit/exec 越界会弹窗请求授权`,
+      ].join('\n');
+
+      parts.push(projectInfo + '\n' + guardPrompt);
 
       // Inject each agent.md with full path header
       for (const { fullPath, content, frontmatter } of fileContents) {

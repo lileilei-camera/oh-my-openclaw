@@ -6,6 +6,12 @@ import { toolResponse, toolError } from '../utils/helpers.js';
 
 const VALID_ACP_AGENTS = ['omoc_coder', 'omoc_expert', 'omoc_architect', 'codex', 'claude', 'gemini', 'pi'] as const;
 
+/** Native OpenClaw agents that use runtime: "subagent", not "acp" */
+const NATIVE_AGENTS = new Set(['omoc_coder', 'omoc_expert', 'omoc_architect']);
+
+/** ACP harness ids that use runtime: "acp" */
+const ACP_AGENTS = new Set(['codex', 'claude', 'gemini', 'pi']);
+
 const OmoDelegateParamsSchema = Type.Object({
   task: Type.String({ description: 'What OmO (OpenCode) should do — the coding task description. Use @agentname prefix to invoke OpenCode subagents (e.g., "@explore find auth files").' }),
   agent: Type.Optional(Type.String({ description: 'ACP harness agent ID (default: "omoc_coder"). Valid: omoc_coder, omoc_expert, omoc_architect, codex, claude, gemini, pi' })),
@@ -42,12 +48,17 @@ export function registerOmoDelegateTool(api: OpenClawPluginApi) {
 
       api.logger.info(`${LOG_PREFIX} OmO delegation:`, { agent, opencode_agent: params.opencode_agent, model: params.model, thread: params.thread });
 
+      const isNative = NATIVE_AGENTS.has(agent);
+      const isAcp = ACP_AGENTS.has(agent);
+      const runtime = isAcp ? 'acp' : 'subagent';
+      const runtimeLabel = isAcp ? 'ACP harness' : 'subagent';
+
       const instruction = [
-        `OmO Delegation → ACP runtime → harness "${agent}"`,
+        `OmO Delegation → ${runtimeLabel} → "${agent}"`,
         '',
         '⚡ NOW CALL sessions_spawn with these parameters:',
         `  task: "${params.task}"`,
-        `  runtime: "acp"`,
+        `  runtime: "${runtime}"`,
         `  agentId: "${agent}"`,
         `  mode: "${sessionMode}"`,
         params.model ? `  model: "${params.model}"` : '',
@@ -56,14 +67,14 @@ export function registerOmoDelegateTool(api: OpenClawPluginApi) {
         params.cwd ? `  cwd: "${params.cwd}"` : '',
         '',
         'Do NOT just return this metadata. Actually call sessions_spawn NOW.',
-        params.opencode_agent ? [
+        isAcp && params.opencode_agent ? [
           '',
           `🔀 AFTER session is created, switch agent mode to "${params.opencode_agent}":`,
           `  Use ACP session mode switching (setSessionMode) to select "${params.opencode_agent}"`,
           '  Available modes are returned in the session creation response',
         ].join('\n') : '',
         '',
-        '⚠️ AFTER the ACP session completes:',
+        `⚠️ AFTER the ${runtimeLabel} session completes:`,
         '  1. Check the announce result immediately',
         '  2. Verify with git status/diff',
         '  3. Proceed to next task — do NOT stop',

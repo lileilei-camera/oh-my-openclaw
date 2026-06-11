@@ -239,7 +239,7 @@ describe('todo-enforcer continuation hook (before_prompt_build)', () => {
     );
 
     expect(result).toBeDefined();
-    expect(result!.prependContext).toContain('SUBAGENT CONTINUATION');
+    expect(result!.prependContext).toContain('SYSTEM OVERRIDE - HIGHEST PRIORITY');
     expect(result!.prependContext).toContain('Build the feature');
     expect(result!.prependContext).toContain('Write tests');
   });

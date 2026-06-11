@@ -125,28 +125,28 @@ export function registerSubagentTracker(api: OpenClawPluginApi): void {
 
       api.logger.info(`${LOG_PREFIX} subagent_ended received: runId=${runId} (callerSession=${callerSession ?? 'unknown'})`);
 
-      const config = getPluginConfig(api);
-      if (config.webhook_bridge_enabled && config.gateway_url && config.hooks_token) {
-        // Use callerSession from tracking store (reliable), not api.config.requesterSessionKey
-        const requesterSessionKey = callerSession;
-        const wakeMessage = requesterSessionKey
-          ? `[System] Sub-agent completed (runId=${runId}, requester=${requesterSessionKey}). Process the result and continue pending work.`
-          : `[System] Sub-agent completed (runId=${runId}). Process the result and continue pending work.`;
-
-        api.logger.info(`${LOG_PREFIX} Sending hooks/wake for runId=${runId} requesterSessionKey=${requesterSessionKey ?? 'N/A'}`);
-        const result = await callHooksWake(
-          wakeMessage,
-          { gateway_url: config.gateway_url, hooks_token: config.hooks_token },
-          api.logger,
-          requesterSessionKey ? { sessionKey: requesterSessionKey } : undefined,
-        );
-
-        if (result.ok) {
-          api.logger.info(`${LOG_PREFIX} Wake triggered from subagent_ended: runId=${runId}`);
-        } else {
-          api.logger.warn(`${LOG_PREFIX} Wake from subagent_ended failed: ${result.error ?? `status ${result.status}`}`);
-        }
-      }
+      // const config = getPluginConfig(api);
+      // if (config.webhook_bridge_enabled && config.gateway_url && config.hooks_token) {
+      //   // Use callerSession from tracking store (reliable), not api.config.requesterSessionKey
+      //   const requesterSessionKey = callerSession;
+      //   const wakeMessage = requesterSessionKey
+      //     ? `[System] Sub-agent completed (runId=${runId}, requester=${requesterSessionKey}). Process the result and continue pending work.`
+      //     : `[System] Sub-agent completed (runId=${runId}). Process the result and continue pending work.`;
+      //
+      //   api.logger.info(`${LOG_PREFIX} Sending hooks/wake for runId=${runId} requesterSessionKey=${requesterSessionKey ?? 'N/A'}`);
+      //   const result = await callHooksWake(
+      //     wakeMessage,
+      //     { gateway_url: config.gateway_url, hooks_token: config.hooks_token },
+      //     api.logger,
+      //     requesterSessionKey ? { sessionKey: requesterSessionKey } : undefined,
+      //   );
+      //
+      //   if (result.ok) {
+      //     api.logger.info(`${LOG_PREFIX} Wake triggered from subagent_ended: runId=${runId}`);
+      //   } else {
+      //     api.logger.warn(`${LOG_PREFIX} Wake from subagent_ended failed: ${result.error ?? `status ${result.status}`}`);
+      //   }
+      // }
     },
     { priority: 120 },
   );
@@ -169,20 +169,20 @@ export function registerSubagentTracker(api: OpenClawPluginApi): void {
       api.logger.info(`${LOG_PREFIX} Sub-agent announce detected: runId=${matchedRunId} (callerSession=${callerSession ?? 'unknown'})`);
 
       // Use /hooks/wake to directly inject into main session and trigger heartbeat
-      const config = getPluginConfig(api);
-      if (config.webhook_bridge_enabled && config.gateway_url && config.hooks_token) {
-        void callHooksWake(
-          `[System] Sub-agent completed (runId=${matchedRunId}). Process the announce result and continue any pending work.`,
-          { gateway_url: config.gateway_url, hooks_token: config.hooks_token },
-          api.logger,
-        ).then((result) => {
-          if (result.ok) {
-            api.logger.info(`${LOG_PREFIX} Wake triggered after sub-agent announce: runId=${matchedRunId}`);
-          } else {
-            api.logger.warn(`${LOG_PREFIX} Wake after announce failed: ${result.error ?? `status ${result.status}`}`);
-          }
-        });
-      }
+      // const config = getPluginConfig(api);
+      // if (config.webhook_bridge_enabled && config.gateway_url && config.hooks_token) {
+      //   void callHooksWake(
+      //     `[System] Sub-agent completed (runId=${matchedRunId}). Process the announce result and continue any pending work.`,
+      //     { gateway_url: config.gateway_url, hooks_token: config.hooks_token },
+      //     api.logger,
+      //   ).then((result) => {
+      //     if (result.ok) {
+      //       api.logger.info(`${LOG_PREFIX} Wake triggered after sub-agent announce: runId=${matchedRunId}`);
+      //     } else {
+      //       api.logger.warn(`${LOG_PREFIX} Wake after announce failed: ${result.error ?? `status ${result.status}`}`);
+      //     }
+      //   });
+      // }
     },
     { priority: 100 },
   );
